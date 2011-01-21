@@ -25,6 +25,7 @@ class Options{
 
 public:
   bool   rCode;
+  // this is a comment
   char currentDirectory[MAX_FILE_NAME];
   char *pdbfolder;
   char *pdbListfile;
