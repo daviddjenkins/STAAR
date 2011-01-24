@@ -1,5 +1,14 @@
-Testing
+STAAR
+Version 2.0; January 2011
+Copyright (C) 2011 University of Tennessee, Knoxville
+------------------------------------------------------------------
 
-test2
+STAAR searches a set of PDB files for possible anion-quadrupole 
+interactions.
 
-test3
+Other files to read in the top-level source directory:
+
+    INSTALL         Installation instructions.
+    LICENSE         The GNU General Public License (GPLv3).
+
+------------------------------------------------------------------
