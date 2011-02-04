@@ -41,6 +41,7 @@
 #include <algorithm>
 #include "PDB.hpp"
 #include "Utils.hpp"
+#include "../gzstream/gzstream.h"
 
 // Constructor to initialize the PDB class object by 
 // ensuring all the vectors are empty
@@ -81,11 +82,12 @@ void PDB::parsePDB(char * fn, Options& opt)
   filename = fn;
 
   // Open the file
-  ifstream PDBfile(fn, ifstream::in);
+  //ifstream PDBfile(fn, ifstream::in);
+  igzstream PDBfile(fn);
   string line; // this is a temp var to hold the current line from the file
   
   // Ensure the file opened correctly
-  if( !PDBfile.is_open() || PDBfile.fail() ){
+  if( PDBfile.fail() || !PDBfile.good()){
     cerr << "Failed to open PDB file " << fn << endl;
     perror("\t");
     failure=true;

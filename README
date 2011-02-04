@@ -1,15 +1,21 @@
 STAAR
 Version 2.0; January 2011
 Copyright (C) 2011 University of Tennessee, Knoxville
-------------------------------------------------------------------
+-----------------------------------------------------------------------
 
 STAAR searches a set of PDB files for possible anion-quadrupole 
 interactions.
 
 Other files to read in the top-level source directory:
 
-    INSTALL         Installation instructions.
-    LICENSE         The GNU General Public License (GPLv3).
+    INSTALL           Installation instructions.
+    LICENSE           The GNU General Public License (GPLv3).
 
-------------------------------------------------------------------
+STAAR uses the gzstream library for the decompression of PDB files that
+are compressed.  The library source code can be found in its entirety
+in the gzstream folder.  The gzstream library is freely available under
+the LGPLv2.1 library that can be seen in gzstream/COPYING.lib.  For 
+more information on the gzstream library, please visit their page at:
+    http://www.cs.unc.edu/Research/compgeom/gzstream/
+-----------------------------------------------------------------------
 
