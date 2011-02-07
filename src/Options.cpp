@@ -40,7 +40,7 @@
 // Initialize the Options to empty stuff
 Options::Options()
 {
-  center = true;
+  center = false;
   pdbfile = NULL;
   outputfile = NULL;
   failure = false;
@@ -50,7 +50,7 @@ Options::Options()
 // Intialize options then parse the cmd line arguments
 Options::Options( int argc, char **argv )
 {
-  center = true;
+  center = false;
   pdbfile = NULL;
   outputfile = NULL;
   failure = false;

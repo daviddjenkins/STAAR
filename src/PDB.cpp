@@ -3,9 +3,12 @@
 //  Author: David Jenkins (david.d.jenkins@gmail.com)
 //  File: PDB.cpp
 //  Date: 12 Jan 2011
+//  Date Modified: 4 Feb 2011
 //  Version: 1.0
 //  Description: Actual does all PDB file reading. Also splits info into chains for further
 //               analysis.
+//
+//  Updates: Added ability to read .gz files (4 Feb 2011)
 //
 /***************************************************************************************************/
 //
