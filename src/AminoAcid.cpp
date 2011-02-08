@@ -528,14 +528,14 @@ void AminoAcid::centerASP_nocharge()
   // since we are looking for 3 atoms, the size of the outer vector
   // is 3 while the size of the inner vectors are dependent on the 
   // number of alternate locations for each one. Indexes are:
-  // CD = 0 ; OD1 = 1 ; OD2 = 2
+  // CG = 0 ; OD1 = 1 ; OD2 = 2
   vector< vector <Atom*> > temp;
   temp.resize(3);
 
   // Push all of the important atoms in their respective vectors  
   for(unsigned int i =0; i< atom.size(); i++)
     {
-      if(atom[i]->name == " CD ")
+      if(atom[i]->name == " CG ")
 	{
 	  temp[0].push_back(atom[i]);
 	}
@@ -552,8 +552,8 @@ void AminoAcid::centerASP_nocharge()
   // Error check.  If we don't have at least one of each
   // of the atoms, we throw a warning, set an ignore flag
   // for future reference, and leave the function
-  if(temp[0].size() == 0 || temp[1].size() == 0 ||
-     temp[2].size() == 0)
+  if( temp[1].size() == 0 ||
+      temp[2].size() == 0)
     {
       skip = true;
       cout << "WARNING: Could not find all atoms in the ASP side chain at "
@@ -567,8 +567,7 @@ void AminoAcid::centerASP_nocharge()
   // And go through all combinations of the alternate locations
   unsigned int index = 0;
   for(unsigned int k = 0; k < temp[1].size(); k++) // go through all the OD1
-    {
-      
+    {      
       for(unsigned int j = 0; j < temp[0].size(); j++) // go through all the CD
 	{
 	  for(unsigned int l = 0; l < temp[2].size(); l++, index++) // go through all the OD2
@@ -600,72 +599,6 @@ void AminoAcid::centerASP_nocharge()
 	    }
 	}
     }
-//   int od1_count=0;
-//   int od2_count=0;
-//   vector< vector<Coordinates*> > temp;
-//   // Go through all of the atoms looking for OD1 and OD2
-//   // pushing their coordinates into the center vector
-//   for(unsigned int i =0; i< atom.size(); i++)
-//     {
-//       if(atom[i]->name == " OD1")
-// 	{
-// 	  center.push_back(atom[i]->coord);
-// 	  //center.plane_info.resize(3);
-// 	  string t;
-// 	  t.insert(t.end(),1,atom[i]->altLoc);
-// 	  center.back().altLoc = t;
-// 	  od1_count++;
-// 	  //center.back().plane_info[O_1_PLANE_COORD_AG].push_back(atom[i]);
-// #ifdef DEBUG
-// 	  cout << "CHECK: ASP" << atom[0]->resSeq << " : " << atom[i]->coord << endl;
-// #endif
-// 	}
-//       else if(atom[i]->name == " OD2")
-// 	{
-// 	  center.push_back(atom[i]->coord);
-// 	  //center.plane_info.resize(3);
-// 	  string t;
-// 	  t.insert(t.end(),1,atom[i]->altLoc);
-// 	  center.back().altLoc = t;
-// 	  od2_count++;
-// 	  //center.back().plane_info[O_2_PLANE_COORD_AG].push_back(atom[i]);
-// #ifdef DEBUG
-// 	  cout << "CHECK: ASP" << atom[0]->resSeq << " : " << atom[i]->coord << endl;
-// #endif
-// 	}
-//       else if(atom[i]->name == "CG")
-// 	{
-// 	  //center.plane_info.resize(3);
-// 	  //center.back().plane_info[C__PLANE_COORD_AG].push_back(atom[i]);
-// 	}
-//     }
-
-//   // Error check.  There must be at least one of the OD1 or OD2
-//   if( od1_count == 0 || od2_count == 0 )
-//     {
-//       // if there are no OD1 or OD2, let's set the ignore flag for
-//       // future reference
-//       if( center.size() == 0 )
-// 	{
-// 	  skip = true;
-// 	  cout << "WARNING: Could not find any O atoms in the ASP side chain at "
-// 	       << atom[0]->resSeq << endl;
-// 	  return;
-// 	}
-//       // otherwise just print a warning message
-//       else
-// 	{
-// 	  cout << "WARNING: Could only find 1 of the O atoms in the ASP side chain at "
-// 	       << atom[0]->resSeq << endl;
-// 	}
-//     }
-//   else if( plane_info[C__PLANE_COORD_AG].size() == 0 )
-//     {
-//       skip = true;
-//       cout << "WARNING: Could not find the CG atom in the ASP side chain at "
-// 	   << atom[0]->resSeq << endl;
-//       return;
-//     }
 }
 
 // Calculate the centers for ASP
@@ -722,7 +655,6 @@ void AminoAcid::centerGLU_nocharge()
   unsigned int index = 0;
   for(unsigned int k = 0; k < temp[1].size(); k++) // go through all the OE1
     {
-      
       for(unsigned int j = 0; j < temp[0].size(); j++) // go through all the CD
 	{
 	  for(unsigned int l = 0; l < temp[2].size(); l++, index++) // go through all the OE2
@@ -754,69 +686,6 @@ void AminoAcid::centerGLU_nocharge()
 	    }
 	}
     }
-//   int oe1_count=0;
-//   int oe2_count=0;
-
-//   // Go through all of the atoms looking for OD1 and OD2
-//   // pushing their coordinates into the center vector
-//   for(unsigned int i =0; i< atom.size(); i++)
-//     {
-//       if(atom[i]->name == " OE1")
-// 	{
-// 	  plane_info[O_1_PLANE_COORD_AG].push_back(atom[i]);
-// 	  center.push_back(atom[i]->coord);
-// 	  string t;
-// 	  t.insert(t.end(),1,atom[i]->altLoc);
-// 	  center.back().altLoc = t;
-// 	  oe1_count++;
-// #ifdef DEBUG
-// 	  cout << "CHECK: GLU" << atom[0]->resSeq << " : " << atom[i]->coord << endl;
-// #endif
-// 	}
-//       else if(atom[i]->name == " OE2")
-// 	{
-// 	  plane_info[O_2_PLANE_COORD_AG].push_back(atom[i]);
-// 	  center.push_back(atom[i]->coord);
-// 	  string t;
-// 	  t.insert(t.end(),1,atom[i]->altLoc);
-// 	  center.back().altLoc = t;
-// 	  oe2_count++;
-// #ifdef DEBUG
-// 	  cout << "CHECK: GLU" << atom[0]->resSeq << " : " << atom[i]->coord << endl;
-// #endif
-// 	}
-//       else if(atom[i]->name == "CD")
-// 	{
-// 	  plane_info[C__PLANE_COORD_AG].push_back(atom[i]);
-// 	}
-//     }
-
-//   // Error check.  There must be at least one of the OD1 or OD2
-//   if( oe1_count == 0 || oe2_count == 0 )
-//     {
-//       // if there are no OD1 or OD2, let's set the ignore flag for
-//       // future reference
-//       if( center.size() == 0 )
-// 	{
-// 	  skip = true;
-// 	  cout << "WARNING: Could not find any O atoms in the GLU side chain at "
-// 	       << atom[0]->resSeq << endl;
-// 	  return;
-// 	}
-//             // otherwise just print a warning message
-//       else
-// 	{
-// 	  cout << "WARNING: Could only find 1 of the O atoms in the GLU side chain at "
-// 	       << atom[0]->resSeq << endl;
-// 	}
-//     }
-//   else if( plane_info[C__PLANE_COORD_AG].size() == 0 )
-//     {
-//       skip = true;
-//       cout << "WARNING: Could not find the CD atom in the GLU side chain at "
-// 	   << atom[0]->resSeq << endl;
-//       return;
-//     }
 }
 
 // Calculates the center of the amino acid

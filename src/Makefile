@@ -1,4 +1,4 @@
-DEFINES = 
+DEFINES = -DDEBUG
 LIBS  = z gzstream m
 LIB_PATH = ../lib
 INCLUDES = ../include
