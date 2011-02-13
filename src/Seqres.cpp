@@ -45,9 +45,9 @@ using namespace std;
 // Default constructor to reset everything
 Seqres::Seqres()
 {
-  serialNumber = -1;
+  serialNumber = 0;
   chainID = '-';
-  numberOfResidues = -1;
+  numberOfResidues = 0;
   failure = false;
 }
 
@@ -61,9 +61,9 @@ Seqres::Seqres(string line)
 // Destructor to reset everything
 Seqres::~Seqres()
 {
-  serialNumber = -1;
+  serialNumber = 0;
   chainID = '-';
-  numberOfResidues = -1;
+  numberOfResidues = 0;
   failure = false;
   //residues.clear();
 }

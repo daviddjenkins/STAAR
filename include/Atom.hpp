@@ -72,12 +72,15 @@ public:
   char          chainID;       //Chain identifier:   22
   unsigned int  resSeq;        //Residue sequence #: 23-26
   char          iCode;         //Insertion code:     27
-  Coordinates   coord;         //Coordinates:        28-54
+  Coordinates   coord;         //Coordinates:        31-54
   double        occupancy;     //Occupancy:          55-60
   double        tempFactor;    //Temperature Factor: 61-66
   string        element;       //Element Symbol:     77-78
   string        charge;        //Atom charge:        79-80
   bool failure;
+
+  friend ostream& operator<<(ostream& output, const Atom& p);
+
 };
 
 

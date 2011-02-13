@@ -6,6 +6,8 @@
 //  Version: 1.0
 //  Description: Header file for the command line parser and Options class
 //
+//  Updates: Added the ability to pick same chain or not (11 Feb 2011)
+//
 /***************************************************************************************************/
 //
 /***************************************************************************************************/
@@ -58,6 +60,10 @@ public:
   char  *outputfile;            // File that the results are written to
   float  threshold;		// Holds the cutoff for what is considered a close
                                 // distance between residues
+  bool sameChain;     		// Flag indicating whether to look only on same 
+                                // chain for interactions or not
+  vector<string>residue1;	// first group of residues to be matches with...
+  vector<string>residue2;  	// ...these!
   // Constructor that sets everything to empty stuff
   Options();  
   // Constructor to parse the command line args

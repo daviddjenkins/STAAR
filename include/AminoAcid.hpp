@@ -88,6 +88,10 @@ public:
   string residue;
   // true of this AA isn't important, false otherwise
   bool skip;
+  // true if there is an alt loc in ATOM line
+  bool altLoc;
+
+  friend ostream& operator<<(ostream& output, const AminoAcid& p);
 
 };
 

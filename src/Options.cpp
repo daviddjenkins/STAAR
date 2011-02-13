@@ -6,7 +6,7 @@
 //  Version: 1.0
 //  Description: Implementation file for the command line parser and Options class
 //
-//  TODO: after fixing center of charge stuff, change the default back to false
+//  Updates: Added the ability to input residues of interest through the cmd line (11 Feb 2011)
 //
 /***************************************************************************************************/
 //
@@ -44,6 +44,7 @@ Options::Options()
   pdbfile = NULL;
   outputfile = NULL;
   failure = false;
+  sameChain = false;
   threshold = 15.0;
 }
 
@@ -54,6 +55,7 @@ Options::Options( int argc, char **argv )
   pdbfile = NULL;
   outputfile = NULL;
   failure = false;
+  sameChain = false;
   threshold = 15.0;
   parseCmdline( argc, argv );
 }
@@ -67,8 +69,13 @@ void printHelp()
   cerr << "-h or --help          " << "Displays this message" << endl;
   cerr << "-p or --pdbdir        " << "Specifies the folder for PDB files" << endl;
   cerr << "-o or --out           " << "Specifies the output file" << endl;
+  cerr << "-r or --residues      " << "Set the residues that we are going to analyze" << endl;
+  cerr << "                      " << " residues are set as follows (include quotations):" << endl;
+  cerr << "                      " << " \"PHE,TYR,TRP;GLU,ASP\"" << endl;
+  cerr << "                      " << " can only have 1 ; but as many , as you want" << endl;
   cerr << "-c or --center        " << "Specifies whether to calculate center of charge" << endl;
   cerr << "-t or --threshold     " << "Set the distance threshold between amino acids" << endl;
+  cerr << "-s or --samechain     " << "Look for interactions in same chain only" << endl;
 }
 
 // Return true of cmd line parsing failed, false otherwise
@@ -88,20 +95,23 @@ void Options::parseCmdline( int argc, char **argv )
       {"help",		required_argument, 0, 'h'},
       {"pdbdir",	required_argument, 0, 'p'},
       {"out",		required_argument, 0, 'o'}, 
-      {"center",	required_argument, 0, 'c'},
+      {"center",	no_argument,       0, 'c'},
       {"threshold",	required_argument, 0, 't'},
+      {"samechain",     no_argument,       0, 's'},
+      {"residues",      required_argument, 0, 'r'},
       {0, 0, 0, 0}
     };
   int option_index;
 
   // Go through the options and set them to variables
-  while( !( ( c = getopt_long(argc, argv, "hp:o:ct:", long_options, &option_index) ) < 0 ) )
+  while( !( ( c = getopt_long(argc, argv, "hp:o:ct:sr:", long_options, &option_index) ) < 0 ) )
     {
     switch(c)
       {
       case 'h':
 	// the user is asking for help here
         printHelp();
+	exit(1);
         break;
 
       case 'p':
@@ -142,12 +152,31 @@ void Options::parseCmdline( int argc, char **argv )
 	  }
         break;
 
+      case 's':
+	// user wants to look for interactions within the same chains only
+	this->sameChain = true;
+        break;
+
+      case 'r':
+	{
+	  vector<string> temp = split( (string)optarg, ';' );
+	  if(temp.size() != 2)
+	    {
+	      cerr << "Residue string must have 1 semicolon. No more, no less." << endl;
+	      printHelp();
+	      exit(1);
+	    }
+	  this->residue1 = split( temp[0], ',' );
+	  this->residue2 = split( temp[1], ',' );
+	}
+	break;
+
       default:
 	printHelp();
 	exit(1);
 	break;
       }
-  }
+    }
 
   // Error check to make sure there wasn't extra crap on the command line
   // and all necessary arguments were set

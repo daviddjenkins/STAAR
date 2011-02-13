@@ -44,6 +44,7 @@ AminoAcid::AminoAcid()
   center.clear();
   plane_info.clear();
   skip = false;
+  altLoc = false;
 }
 
 AminoAcid::~AminoAcid()
@@ -52,6 +53,7 @@ AminoAcid::~AminoAcid()
   center.clear();
   plane_info.clear();
   skip = false;
+  altLoc = false;
 }
 
 // All combinations of centers are calculated for every possible
@@ -101,6 +103,10 @@ void AminoAcid::centerPHEorTYR()
   // Push all of the important atoms in their respective vectors
   for(unsigned int i =0; i< atom.size(); i++)
     {
+      if(atom[i]->altLoc != ' ' )
+	{
+	  altLoc = true;
+	}
       if(atom[i]->name == " CG ")
 	{
 	  temp[0].push_back(atom[i]);
@@ -211,6 +217,10 @@ void AminoAcid::centerTRP()
   // Push all of the important atoms in their respective vectors
   for(unsigned int i =0; i< atom.size(); i++)
     {
+      if(atom[i]->altLoc != ' ' )
+	{
+	  altLoc = true;
+	}
       if(atom[i]->name == " CG ")
 	{
 	  temp[0].push_back(atom[i]);
@@ -351,6 +361,10 @@ void AminoAcid::centerASP()
   // Push all of the important atoms in their respective vectors
   for(unsigned int i =0; i< atom.size(); i++)
     {
+      if(atom[i]->altLoc != ' ')
+	{
+	  altLoc = true;
+	}
       if(atom[i]->name == " CG ")
 	{
 	  temp[0].push_back(atom[i]);
@@ -441,6 +455,10 @@ void AminoAcid::centerGLU()
   // Push all of the important atoms in their respective vectors  
   for(unsigned int i =0; i< atom.size(); i++)
     {
+      if(atom[i]->altLoc != ' ')
+	{
+	  altLoc = true;
+	}
       if(atom[i]->name == " CG ")
 	{
 	  temp[0].push_back(atom[i]);
@@ -535,6 +553,10 @@ void AminoAcid::centerASP_nocharge()
   // Push all of the important atoms in their respective vectors  
   for(unsigned int i =0; i< atom.size(); i++)
     {
+      if(atom[i]->altLoc != ' ')
+	{
+	  altLoc = true;
+	}
       if(atom[i]->name == " CG ")
 	{
 	  temp[0].push_back(atom[i]);
@@ -622,6 +644,10 @@ void AminoAcid::centerGLU_nocharge()
   // Push all of the important atoms in their respective vectors  
   for(unsigned int i =0; i< atom.size(); i++)
     {
+      if(atom[i]->altLoc != ' ')
+	{
+	  altLoc = true;
+	}
       if(atom[i]->name == " CD ")
 	{
 	  temp[0].push_back(atom[i]);
@@ -733,4 +759,12 @@ void AminoAcid::calculateCenter(bool center)
     {
       //cerr << "ERROR: " << residue << " is not yet supported." << endl;
     }
+}
+
+ostream& operator<<(ostream& output, const AminoAcid& p) {
+  for(int i=0; i < p.atom.size(); i++)
+    {
+      output << *(p.atom[i]) << endl;
+    }
+  return output;  // for multiple << operators.
 }

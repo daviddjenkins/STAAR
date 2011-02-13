@@ -95,6 +95,7 @@ bool isDirectory( char* path )
       exit(1);
     }
 }
+
 // returns the current time in seconds.
 // used for timing the program
 double getTime()
@@ -102,4 +103,16 @@ double getTime()
   struct timeval t;
   gettimeofday(&t,NULL);
   return t.tv_sec+((double)t.tv_usec)/1000000.0;
+}
+
+vector<string> split(const string &s, char delim) 
+{
+  vector<string> elems;
+  stringstream ss(s);
+  string item;
+  while(getline(ss, item, delim))
+    {
+      elems.push_back(item);
+    }
+  return elems;
 }

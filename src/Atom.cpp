@@ -167,4 +167,27 @@ void Atom::parseAtom(string line)
   // Store the element and charge
   element = line.substr(76,2);
   charge = line.substr(78,2);
+
+}
+
+ostream& operator<<(ostream& output, const Atom& p) {
+  output << "ATOM  "
+	 << setw(5) << right << p.serialNumber << " "
+	 << setw(4) << left  << p.name
+	 << p.altLoc
+	 << setw(3) << p.residueName << " "
+	 << p.chainID
+	 << setw(4) << right << p.resSeq
+	 << p.iCode << "   "
+	 << fixed
+	 << setw(8) << right << setprecision(3) << p.coord.x
+	 << setw(8) << right << setprecision(3) << p.coord.y
+	 << setw(8) << right << setprecision(3) << p.coord.z
+	 << setw(6) << right << setprecision(2) << p.occupancy
+	 << setw(6) << right << setprecision(2) << p.tempFactor
+	 << "          ";
+  output << setw(2) << right << p.element
+	 << setw(2) << left  << p.charge;
+
+  return output;  // for multiple << operators.
 }

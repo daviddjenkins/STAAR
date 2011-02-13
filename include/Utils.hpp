@@ -62,6 +62,10 @@ bool isDirectory( char* path );
 // returns the time in seconds
 double getTime();
 
+// Splits a line up by a given delimiter.  Used many for parsing the
+// residue command line option
+vector<string> split(const string &s, char delim);
+
 //from_string template also included with Utils.hpp
 // Converts a string to any class specified by T
 template <class T>

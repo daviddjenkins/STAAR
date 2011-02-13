@@ -1,13 +1,15 @@
 /****************************************************************************************************/
 //  COPYRIGHT 2011, University of Tennessee
 //  Author: David Jenkins (david.d.jenkins@gmail.com)
-//  File: readpdb.cpp
+//  File: staar.cpp
 //  Date: 12 Jan 2011
 //  Version: 1.0
 //  Description: This is the STAAR program. It will take a PDB file/directory parsing through it
 //               looking for possible anion-quadrople interactions.  It will output into a
 //               specified file all possible interactions that are within a specified distance 
 //               threshold and the angles at which the two residues are interacting at.
+//
+//  Updates: Added the ability to input residues of interest through the cmd line (11 Feb 2011)
 //
 /***************************************************************************************************/
 //
@@ -55,7 +57,7 @@
 // Parses through a single PDB file checking for interactions
 bool processSinglePDBFile(char* filename,
                           Options& opts,
-			  ofstream& output_file);
+                          ofstream& output_file);
 
 // Traverses through a directory of PDB files processing each one
 bool processPDBDirectory(Options& opts);
@@ -67,24 +69,24 @@ void searchChainInformation(PDB & PDBfile,
                             string residue1,
                             string residue2,
                             Options & opts,
-			    ofstream& output_file);
+                            ofstream& output_file);
 
 // Finds the closest interaction among all of the possible 
 // amino acid centers
 void findBestInteraction( AminoAcid& aa1,
-			  AminoAcid& aa2,
-			  float threshold,
-			  string filename,
-			  ofstream& output_file);
+                          AminoAcid& aa2,
+                          float threshold,
+                          string filename,
+                          ofstream& output_file);
 
 // Calculates all of the angles that are outputted to a file
 void calculateAngles(AminoAcid& aa1,
-		     AminoAcid& aa2,
-		     int index1,
-		     int index2,
-		     float* angle,
-		     float* angle1,
-		     float* angleP);
+                     AminoAcid& aa2,
+                     int index1,
+                     int index2,
+                     float* angle,
+                     float* angle1,
+                     float* angleP);
 
 void write_output_head(ofstream& out);
 
@@ -124,8 +126,8 @@ int main(int argc, char* argv[]){
 }
 
 bool processSinglePDBFile(char* filename,
-			  Options& opts,
-			  ofstream& output_file)
+                          Options& opts,
+                          ofstream& output_file)
 {
 
   // Read in the PDB file
@@ -142,19 +144,31 @@ bool processSinglePDBFile(char* filename,
 
   PDBfile.populateChains(opts);
 
-  int numRes1 = 3;
-  int numRes2 = 2;
+  int numRes1 = opts.residue1.size();
+  int numRes2 = opts.residue2.size();
 
   // Set the residue combinations to look for.
   // Possibly add this as a cmd line arg later for more a generic program
-  string residue1[] = {"TYR", "PHE", "TRP"};
-  string residue2[] = {"GLU", "ASP"};
+  //string residue1[] = {"TYR", "PHE", "TRP"};
+  //string residue2[] = {"GLU", "ASP"};
 
   // Searching for interations within each chain
   for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
     {
+      // if we want to look for interactions between the ith chain
+      // and each of the other chains, we set the indices to loop
+      // though all the chains
+      unsigned int start = 0;
+      unsigned int end   = PDBfile.chains.size();
 
-      for(unsigned int j = 0; j < PDBfile.chains.size(); j++)
+      // otherwise we just set the indices to go through the ith chain
+      if(opts.sameChain)
+        {
+          start = i;
+          end   = i+1;
+        }
+
+      for(unsigned int j = start; j < end; j++)
         {
           for(int ii = 0; ii < numRes1; ii++)
             {
@@ -162,16 +176,17 @@ bool processSinglePDBFile(char* filename,
                 {
                   // Search for different residue combinations
                    searchChainInformation(PDBfile,
-					  i,
-					  j,
-					  residue1[ii],
-					  residue2[jj],
-					  opts,
-					  output_file);
+                                          i,
+                                          j,
+                                          opts.residue1[ii],
+                                          opts.residue2[jj],
+                                          opts,
+                                          output_file);
                 }
             }
         }
     }
+
   return true;
 }
 
@@ -205,7 +220,7 @@ bool processPDBDirectory(Options& opts)
               sprintf(fullFilePath, "%s/%s", opts.pdbfile, filename->d_name);
 
               // perform some work on the current file
-              if (processSinglePDBFile(fullFilePath, opts, output_file) == -1)
+              if ( !processSinglePDBFile(fullFilePath, opts, output_file) )
                 {
                   closedir(directory);
                   return false;
@@ -229,12 +244,12 @@ void searchChainInformation(PDB & PDBfile,
                             string residue1,
                             string residue2,
                             Options & opts,
-			    ofstream& output_file)
+                            ofstream& output_file)
 {
   Chain* c1 = &(PDBfile.chains[chain1]);
   Chain* c2 = &(PDBfile.chains[chain2]);
-  unsigned int length_chain1 = c1->seqres[0]->numberOfResidues;
-  unsigned int length_chain2 = c2->seqres[0]->numberOfResidues;
+  // unsigned int length_chain1 = c1->seqres[0]->numberOfResidues;
+  // unsigned int length_chain2 = c2->seqres[0]->numberOfResidues;
 
   // cout << "Checking for res1= "<< residue1 << ", res2= "<< residue2
   //      << " in chains " << c1->id << " and " << c2->id << "..." << endl;
@@ -251,16 +266,16 @@ void searchChainInformation(PDB & PDBfile,
         {
           for(unsigned int j = 0; j < c2->aa.size(); j++)
             {
-	      if(c2->aa[j].residue == residue2 && !(c2->aa[j].skip))
-		{
-		  // Find the best interaction out of all the centers
-		  // for this AA pair
-		  findBestInteraction( c1->aa[i],
-				       c2->aa[j],
-				       opts.threshold,
-				       PDBfile.filename,
-				       output_file);
-		}
+              if(c2->aa[j].residue == residue2 && !(c2->aa[j].skip))
+                {
+                  // Find the best interaction out of all the centers
+                  // for this AA pair
+                  findBestInteraction( c1->aa[i],
+                                       c2->aa[j],
+                                       opts.threshold,
+                                       PDBfile.filename,
+                                       output_file);
+                }
             }
         }
     }
@@ -269,10 +284,10 @@ void searchChainInformation(PDB & PDBfile,
 }
 
 void findBestInteraction( AminoAcid& aa1,
-			  AminoAcid& aa2,
-			  float threshold,
-			  string input_filename,
-			  ofstream& output_file)
+                          AminoAcid& aa2,
+                          float threshold,
+                          string input_filename,
+                          ofstream& output_file)
 {
   float closestDist = FLT_MAX;
   int closestDist_index1 = 0;
@@ -287,16 +302,16 @@ void findBestInteraction( AminoAcid& aa1,
   for( unsigned int i = 0; i < aa1.center.size(); i++ )
     {
       for( unsigned int j = 0; j < aa2.center.size(); j++ )
-	{
-	  dist = aa1.center[i].distance(aa2.center[j]);
-	  // flag it if is the closest and within the threshold
-	  if( dist < closestDist && dist < threshold )
-	    {
-	      closestDist_index1 = i;
-	      closestDist_index2 = j;
-	      closestDist = dist;
-	    }
-	}
+        {
+          dist = aa1.center[i].distance(aa2.center[j]);
+          // flag it if is the closest and within the threshold
+          if( dist < closestDist && dist < threshold )
+            {
+              closestDist_index1 = i;
+              closestDist_index2 = j;
+              closestDist = dist;
+            }
+        }
     }
 
   // if we found something output it to the file
@@ -306,19 +321,20 @@ void findBestInteraction( AminoAcid& aa1,
       // Just some codes that were in the original STAAR
       char code1 = 'I';
       if( aa1.atom[0]->chainID != aa2.atom[0]->chainID )
-	code1 = 'X';
+        code1 = 'X';
       char code2 = 'S';
-      if( aa1.center.size() > 1 || aa2.center.size() > 1 )
-	code2 = 'M';
+      //if( aa1.center.size() > 1 || aa2.center.size() > 1 )
+      if( aa1.altLoc || aa2.altLoc )
+        code2 = 'M';
 
       // calculate the angles of this interaction
       calculateAngles(aa1,
-		      aa2,
-		      closestDist_index1,
-		      closestDist_index2,
-		      &angle,
-		      &angle1,
-		      &angleP);
+                      aa2,
+                      closestDist_index1,
+                      closestDist_index2,
+                      &angle,
+                      &angle1,
+                      &angleP);
 
       // and we finally output some results!
       output_file << aa1.residue                        << "\t"
@@ -339,42 +355,42 @@ void findBestInteraction( AminoAcid& aa1,
 }
 
 void calculateAngles(AminoAcid& aa1,
-		     AminoAcid& aa2,
-		     int index1,
-		     int index2,
-		     float* angle,
-		     float* angle1,
-		     float* angleP )
+                     AminoAcid& aa2,
+                     int index1,
+                     int index2,
+                     float* angle,
+                     float* angle1,
+                     float* angleP )
 {
   Coordinates planeP;
   Coordinates planeProject;
   
   // Calculate the equation of the plane
   float det = getPlaneEquation( *(aa1.center[index1].plane_info[ CG_PLANE_COORD_PTT]),
-				*(aa1.center[index1].plane_info[CD1_PLANE_COORD_PTT]),
-				*(aa1.center[index1].plane_info[CD2_PLANE_COORD_PTT]),
-				&planeP);
+                                *(aa1.center[index1].plane_info[CD1_PLANE_COORD_PTT]),
+                                *(aa1.center[index1].plane_info[CD2_PLANE_COORD_PTT]),
+                                &planeP);
 
   // Calculate the angle between a plane and a line
   *angle = angleBetweenPlaneAndLine( planeP,
-				     aa1.center[index1],
-				     aa2.center[index2]);
+                                     aa1.center[index1],
+                                     aa2.center[index2]);
   
   // Calculate the "plane project" coordinates
   planeProjectCoordinate( planeP, 
-			  aa2.center[index2],
-			  -1 * det, 
-			  &planeProject);
+                          aa2.center[index2],
+                          -1 * det, 
+                          &planeProject);
   
   // find the second angle betwen the CG ATOM and the "plane project"
   *angle1 = findAngle(*aa1.center[index1].plane_info[ CG_PLANE_COORD_PTT],
-  		      aa1.center[index1],
-  		      planeProject);
+                      aa1.center[index1],
+                      planeProject);
   
   // finally, calculate the angle between the planes of AA1 and AA2
   *angleP = calculateAngleBetweenPlanes( planeP,
-					 aa2,
-					 index2 );
+                                         aa2,
+                                         index2 );
 
 }
 
