@@ -7,20 +7,23 @@ LINK := $(CPP)
 MODULES := src include
 
 CFLAGS := -O3
+CPPFLAGS := -O3
 LFLAGS := -O3
-LIBS := -lm -lz -lgzstream -Llib
+LIBS := -lm -lz -lgzstream -lopenbabel -Llib -L$(BABEL_LIBDIR)
+
+BABEL_INCDIR := /data/AQ/openbabel-2.3.0/build/include/ /data/AQ/openbabel-2.3.0/include/
 
 # You shouldn't have to go below here
 
 DIRNAME = `dirname $1`
-MAKEDEPS = gcc -MM -MG $2 $3 | sed -e "s@^\(.*\)\.o:@.dep/$1/\1.d obj/$1/\1.o:@"
+MAKEDEPS = $(CC) -MM -MG $2 $3 | sed -e "s@^\(.*\)\.o:@.dep/$1/\1.d obj/$1/\1.o:@"
 
 .PHONY : all
 
 all : $(NAME)
 
 # look for include files in each of the modules
-INCLUDEFLAGS := $(patsubst %, -I%, $(MODULES))
+INCLUDEFLAGS := $(patsubst %, -I%, $(MODULES)) $(addprefix -I,$(BABEL_INCDIR))
 
 CFLAGS += $(INCLUDEFLAGS)
 CPPFLAGS += $(INCLUDEFLAGS)
@@ -50,7 +53,9 @@ obj/%.o : %.cpp
 # include the C include dependencies
 DEP := $(patsubst obj/%.o, .dep/%.d, $(OBJ))
 
-include $(DEP)
+ifneq ($(MAKECMDGOALS),clean)
+-include $(DEP)
+endif
 
 clean :
 	-@rm $(NAME) $(OBJ) $(DEP)

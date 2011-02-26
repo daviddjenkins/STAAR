@@ -761,7 +761,71 @@ void AminoAcid::calculateCenter(bool center)
     }
 }
 
-ostream& operator<<(ostream& output, const AminoAcid& p) {
+void AminoAcid::printPHEorTYR(FILE* output)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if(atom[i]->name == " CD1" || 
+	 atom[i]->name == " CD2" || 
+	 atom[i]->name == " CE1" || 
+	 atom[i]->name == " CE2" || 
+	 atom[i]->name == " CZ " ||
+	 atom[i]->name == " CG ")
+	{
+	  this->atom[i]->print(output);
+	}
+    }
+}
+
+void AminoAcid::printASP(FILE* output)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if(atom[i]->name == " OD1" || 
+	 atom[i]->name == " OD2" || 
+	 atom[i]->name == " CG " )
+	{
+	  this->atom[i]->print(output);
+	}
+    }
+}
+
+void AminoAcid::printGLU(FILE* output)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if(atom[i]->name == " OE1" || 
+	 atom[i]->name == " OE2" || 
+	 atom[i]->name == " CD " )
+	{
+	  this->atom[i]->print(output);
+	}
+    }
+}
+
+void AminoAcid::printNeededAtoms(FILE* output)
+{
+
+  if(residue == "PHE" || residue == "TYR")
+    {
+      printPHEorTYR(output);
+    }
+  else if(residue == "ASP")
+    {
+      printASP(output);
+    }
+  else if(residue == "GLU")
+    {
+      printGLU(output);
+    }
+  else
+    {
+      cerr << "Unsupported residue" << endl;
+    }
+}
+
+ostream& operator<<(ostream& output, const AminoAcid& p) 
+{
   for(int i=0; i < p.atom.size(); i++)
     {
       output << *(p.atom[i]) << endl;

@@ -56,12 +56,16 @@ public:
   Atom();
   // Constructor that will parse an ATOM or HETATM line
   Atom(string line);
+  // Constructor that will parse an ATOM or HETATM line
+  Atom(char* line);
   // Destructor to reset everything
   ~Atom();
   // Parses an ATOM or HETATM line
   void parseAtom(string line);
   // Prints out all the values space delimited
   void print();
+  // Prints out atom in pdb format to the given FILE*
+  void print(FILE* output);
   // Returns true if parsing failed, false otherwise
   bool fail();
 
@@ -79,7 +83,10 @@ public:
   string        charge;        //Atom charge:        79-80
   bool failure;
 
+  string line;
+
   friend ostream& operator<<(ostream& output, const Atom& p);
+  bool operator<(const Atom& rhs) const;
 
 };
 

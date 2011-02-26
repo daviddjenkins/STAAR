@@ -39,12 +39,17 @@
 
 #include <vector>
 #include <algorithm>
+#include <sys/stat.h>
+#include <openbabel/obconversion.h>
+#include <openbabel/mol.h>
 #include "Options.hpp"
 #include "AminoAcid.hpp"
 #include "Atom.hpp"
 #include "Seqres.hpp"
 #include "Utils.hpp"
 #include "Chain.hpp"
+
+using namespace OpenBabel;
 
 class PDB
 {
@@ -56,12 +61,19 @@ private:
 
   // Indicates parsing success or failure
   bool failure;
+
+  void parsePDBstream(istream& PDBfile);
+  bool atomsCompare();
 public:
   // Default constructor that ensures everything is empty
   PDB();
 
+  // Constructor that parses the file pointed to by 
+  // supplied filename
+  PDB(char* fn);
+
   // Constructor that parses the supplied file
-  PDB(char* fn, Options& opt);
+  PDB(istream& file);
 
   // Destructed that empties everything
   ~PDB();
@@ -70,19 +82,27 @@ public:
   bool fail();
   
   // Parses the file and stores the data
-  void parsePDB(char* fn, Options& opt);
+  void parsePDB(char* fn);
+  void parsePDB(istream& file);
+
+  // Calls Babel to add the hydrogens and inputs them into the PDB
+  void addHydrogensToPair(AminoAcid& a, AminoAcid& b);
 
   // Organizes the data read from parsePDB into chains
-  void populateChains(Options& opt);
+  void populateChains(bool center);
 
-  
+  void sortAtoms();
+
   vector<Chain>         chains;         // Variable to hold the chain information
   vector<Atom>          atoms;          // Vector hold all the atom lines
   vector<Atom>          hetatms;        // Vector holding all the hetatm lines
   vector<Seqres>        seqres;         // Vector holding all the seqres lines
-  char*                 filename;       // holds the filename, if needed
-  
+  char*                 filename;       // Holds the filename, if needed
+  OBConversion          conv;           // Holds OpenBabel reading of important
+                                        //  residue pairs adding H. Will also 
+                                        //  be used to output to GAMESS format
 };
+  
 
 
 #endif

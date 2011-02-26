@@ -69,6 +69,13 @@ Atom::Atom(string line)
   parseAtom(line);
 }
 
+// Constructor that parses an ATOM line from a PDB file
+Atom::Atom(char* linecs)
+{
+  string line(linecs);
+  parseAtom(line);
+}
+
 // Destructor setting everything to initial values
 Atom::~Atom()
 {
@@ -106,6 +113,7 @@ void Atom::print()
 void Atom::parseAtom(string line)
 {
   failure = false;
+  this->line = line;
 
   // Error check to ensure the file is formatted correctly
   if(line.length() != 80)
@@ -169,25 +177,54 @@ void Atom::parseAtom(string line)
   charge = line.substr(78,2);
 
 }
+// Outputs the ATOM line into a file
+void Atom::print(FILE* output)
+{
+  // fprintf(output,
+  //  	  "ATOM  %5u %-4s%c%3s %c%4u%c   %8.3lf%8.3lf%8.3lf%6.2lf%6.2lf          %2s%-s\n",
+  //  	  this->serialNumber,
+  //  	  this->name.c_str(),
+  //  	  this->altLoc,
+  //  	  this->residueName.c_str(),
+  //  	  this->chainID,
+  //  	  this->resSeq,
+  //  	  this->iCode,
+  //  	  this->coord.x,
+  //  	  this->coord.y,
+  //  	  this->coord.z,
+  //  	  this->occupancy,
+  //  	  this->tempFactor,
+  //  	  this->element.c_str(),
+  //  	  this->charge.c_str());
+  fprintf(output, "%s\n",line.c_str());
+}
 
-ostream& operator<<(ostream& output, const Atom& p) {
-  output << "ATOM  "
-	 << setw(5) << right << p.serialNumber << " "
-	 << setw(4) << left  << p.name
-	 << p.altLoc
-	 << setw(3) << p.residueName << " "
-	 << p.chainID
-	 << setw(4) << right << p.resSeq
-	 << p.iCode << "   "
-	 << fixed
-	 << setw(8) << right << setprecision(3) << p.coord.x
-	 << setw(8) << right << setprecision(3) << p.coord.y
-	 << setw(8) << right << setprecision(3) << p.coord.z
-	 << setw(6) << right << setprecision(2) << p.occupancy
-	 << setw(6) << right << setprecision(2) << p.tempFactor
-	 << "          ";
-  output << setw(2) << right << p.element
-	 << setw(2) << left  << p.charge;
+// Outputs the ATOM line to a stream
+ostream& operator<<(ostream& output, const Atom& p) 
+{
+  // output << "ATOM  "
+  // 	 << setw(5) << right << p.serialNumber << " "
+  // 	 << setw(4) << left  << p.name
+  // 	 << p.altLoc
+  // 	 << setw(3) << p.residueName << " "
+  // 	 << p.chainID
+  // 	 << setw(4) << right << p.resSeq
+  // 	 << p.iCode << "   "
+  // 	 << fixed
+  // 	 << setw(8) << right << setprecision(3) << p.coord.x
+  // 	 << setw(8) << right << setprecision(3) << p.coord.y
+  // 	 << setw(8) << right << setprecision(3) << p.coord.z
+  // 	 << setw(6) << right << setprecision(2) << p.occupancy
+  // 	 << setw(6) << right << setprecision(2) << p.tempFactor
+  // 	 << "          ";
+  // output << setw(2) << right << p.element
+  // 	 << setw(2) << left  << p.charge;
+  output << p.line;
 
   return output;  // for multiple << operators.
+}
+
+bool Atom::operator<(const Atom &rhs) const
+{
+  return this->resSeq < rhs.resSeq;
 }

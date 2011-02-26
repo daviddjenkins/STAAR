@@ -66,6 +66,9 @@ private:
   // however these does set the plane information correctly
   void centerASP_nocharge();
   void centerGLU_nocharge();
+  void printPHEorTYR(FILE* output);
+  void printASP(FILE* output);
+  void printGLU(FILE* output);
 
 public:
   // constructor
@@ -77,6 +80,8 @@ public:
   // calculate the center of the AA. Calls the individual
   // functions above depending on AA
   void calculateCenter(bool center);
+
+  void printNeededAtoms(FILE* output);
 
   // this holds pointers to the ATOM strings
   vector<Atom*> atom;
@@ -90,6 +95,8 @@ public:
   bool skip;
   // true if there is an alt loc in ATOM line
   bool altLoc;
+
+  string line;
 
   friend ostream& operator<<(ostream& output, const AminoAcid& p);
 

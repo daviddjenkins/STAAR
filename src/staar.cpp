@@ -71,6 +71,14 @@ void searchChainInformation(PDB & PDBfile,
                             Options & opts,
                             ofstream& output_file);
 
+// Finds the closest distance among all of the centers
+// associated with each amino acid
+double findClosestDistance(AminoAcid& aa1,
+			   AminoAcid& aa2,
+			   float threshold,
+			   unsigned int* closest_index1,
+			   unsigned int* closest_index2);
+
 // Finds the closest interaction among all of the possible 
 // amino acid centers
 void findBestInteraction( AminoAcid& aa1,
@@ -91,7 +99,6 @@ void calculateAngles(AminoAcid& aa1,
 void write_output_head(ofstream& out);
 
 int main(int argc, char* argv[]){
-
   int return_value;
   double start = getTime();
 
@@ -134,7 +141,7 @@ bool processSinglePDBFile(char* filename,
   // This function actually reads and stores more information than
   // we really need, but the files are relatively small so it isn't
   // taking up much RAM (from what I saw, < 5MB each PDB file)
-  PDB PDBfile(filename, opts);
+  PDB PDBfile(filename);
 
   if(PDBfile.fail())
     {
@@ -142,7 +149,7 @@ bool processSinglePDBFile(char* filename,
       return false;
     }
 
-  PDBfile.populateChains(opts);
+  PDBfile.populateChains(opts.center);
 
   int numRes1 = opts.residue1.size();
   int numRes2 = opts.residue2.size();
@@ -167,7 +174,6 @@ bool processSinglePDBFile(char* filename,
           start = i;
           end   = i+1;
         }
-
       for(unsigned int j = start; j < end; j++)
         {
           for(int ii = 0; ii < numRes1; ii++)
@@ -246,6 +252,7 @@ void searchChainInformation(PDB & PDBfile,
                             Options & opts,
                             ofstream& output_file)
 {
+
   Chain* c1 = &(PDBfile.chains[chain1]);
   Chain* c2 = &(PDBfile.chains[chain2]);
   // unsigned int length_chain1 = c1->seqres[0]->numberOfResidues;
@@ -283,19 +290,16 @@ void searchChainInformation(PDB & PDBfile,
   // cout << "\tDone" << endl;
 }
 
-void findBestInteraction( AminoAcid& aa1,
-                          AminoAcid& aa2,
-                          float threshold,
-                          string input_filename,
-                          ofstream& output_file)
+// Finds the closest distance among all of the centers
+// associated with each amino acid
+double findClosestDistance(AminoAcid& aa1,
+			   AminoAcid& aa2,
+			   float threshold,
+			   unsigned int* closest_index1,
+			   unsigned int* closest_index2)
 {
-  float closestDist = FLT_MAX;
-  int closestDist_index1 = 0;
-  int closestDist_index2 = 0;
-  float dist;
-  float angle;
-  float angle1;
-  float angleP;
+  double dist;
+  double closest = FLT_MAX;
 
   // Go through all combination of distances looking 
   // for the closet pair
@@ -305,16 +309,42 @@ void findBestInteraction( AminoAcid& aa1,
         {
           dist = aa1.center[i].distance(aa2.center[j]);
           // flag it if is the closest and within the threshold
-          if( dist < closestDist && dist < threshold )
+          if( dist < closest && dist < threshold )
             {
-              closestDist_index1 = i;
-              closestDist_index2 = j;
-              closestDist = dist;
+              *closest_index1 = i;
+              *closest_index2 = j;
+              closest = dist;
             }
         }
     }
+  return closest;
+}
 
-  // if we found something output it to the file
+void findBestInteraction( AminoAcid& aa1,
+                          AminoAcid& aa2,
+                          float threshold,
+                          string input_filename,
+                          ofstream& output_file)
+{
+  float closestDist = FLT_MAX;
+  unsigned int closestDist_index1 = 0;
+  unsigned int closestDist_index2 = 0;
+  float dist;
+  float angle;
+  float angle1;
+  float angleP;
+
+  // Go through all combination of distances looking 
+  // for the closet pair
+  closestDist = findClosestDistance(aa1, 
+				    aa2, 
+				    threshold,
+				    &closestDist_index1, 
+				    &closestDist_index2);
+
+  // AND WE HAVE A WINNER! (sorta)
+  // if we found something output it to the file,
+  // add hydrogens, and try the process again
   if( closestDist != FLT_MAX )
     {
 
@@ -328,13 +358,13 @@ void findBestInteraction( AminoAcid& aa1,
         code2 = 'M';
 
       // calculate the angles of this interaction
-      calculateAngles(aa1,
-                      aa2,
-                      closestDist_index1,
-                      closestDist_index2,
-                      &angle,
-                      &angle1,
-                      &angleP);
+      // calculateAngles(aa1,
+      //                 aa2,
+      //                 closestDist_index1,
+      //                 closestDist_index2,
+      //                 &angle,
+      //                 &angle1,
+      //                 &angleP);
 
       // and we finally output some results!
       output_file << aa1.residue                        << "\t"
@@ -351,6 +381,19 @@ void findBestInteraction( AminoAcid& aa1,
                   << aa2.atom[0]->chainID               << "\t"
                   << aa1.center[closestDist_index1]     << "\t"
                   << aa2.center[closestDist_index2]     << endl;
+
+      PDB pairWithHydrogen;
+      pairWithHydrogen.addHydrogensToPair(aa1,aa2);
+      
+      // Now we are looking at the distances between the AA's
+      // and center of charges of the GLU and ASP
+      closestDist = findClosestDistance(aa1, 
+					aa2, 
+					threshold,
+					&closestDist_index1, 
+					&closestDist_index2);
+      
+      
     }
 }
 

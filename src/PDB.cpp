@@ -42,9 +42,12 @@
 #include <iostream>
 #include <fstream>
 #include <algorithm>
+#include <string>
 #include "PDB.hpp"
 #include "Utils.hpp"
 #include "../gzstream/gzstream.h"
+
+using namespace OpenBabel;
 
 // Constructor to initialize the PDB class object by 
 // ensuring all the vectors are empty
@@ -58,10 +61,17 @@ PDB::PDB()
 }
 
 // Constructor to parse the inputted PDB file
-PDB::PDB(char* fn, Options& opt)
+PDB::PDB(char* fn)
 {
   failure = false;
-  parsePDB(fn, opt);
+  parsePDB(fn);
+}
+
+// Constructor to parse the inputted PDB file
+PDB::PDB(istream& file)
+{
+  failure = false;
+  parsePDBstream(file);
 }
 
 // Destructor to empty the arrays
@@ -80,15 +90,12 @@ bool PDB::fail()
 }
 
 // Parses the given PDB file
-void PDB::parsePDB(char * fn, Options& opt)
+void PDB::parsePDB(char * fn)
 {
   filename = fn;
 
   // Open the file
-  //ifstream PDBfile(fn, ifstream::in);
-  igzstream PDBfile(fn);
-  string line; // this is a temp var to hold the current line from the file
-  
+  igzstream PDBfile(fn); 
   // Ensure the file opened correctly
   if( PDBfile.fail() || !PDBfile.good()){
     cerr << "Failed to open PDB file " << fn << endl;
@@ -97,6 +104,20 @@ void PDB::parsePDB(char * fn, Options& opt)
     return;
   }
 
+  parsePDBstream(PDBfile);
+
+  PDBfile.close();
+}
+
+void PDB::parsePDB(istream& file)
+{
+  parsePDBstream(file);
+}
+
+void PDB::parsePDBstream(istream& PDBfile)
+{
+  string line; // this is a temp var to hold the current line from the file
+  
   // For each line in the file
   while( getline(PDBfile, line) && !failure)
     {
@@ -118,7 +139,7 @@ void PDB::parsePDB(char * fn, Options& opt)
           atoms.push_back(a);
         }
 
-      // This is current commented out because we aren't
+      // This is currently commented out because we aren't
       // doing anything with the HETATM lines so there
       // is no reason to read them
       // // Parse the line if we are on a HETATM line
@@ -131,9 +152,69 @@ void PDB::parsePDB(char * fn, Options& opt)
       //   }
     }
 
-  
-  PDBfile.close();
-  
+}
+
+// This function will call the Babel library to add 
+// hydrogens to the residues
+void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
+{
+  OBMol mol;
+  string addedH;
+  istringstream tempss;
+  // This section is just to suppress all of the 
+  // warning message that aren't important to us
+  {
+    OBConversion apiConv;
+    OBFormat* pAPI = OBConversion::FindFormat("obapi");
+    if(pAPI)
+      {
+	apiConv.SetOutFormat(pAPI);
+	apiConv.AddOption("errorlevel", OBConversion::GENOPTIONS, "0");
+	apiConv.Write(NULL, &std::cout);
+      }
+  }
+
+
+  // Now, let's pack up the information into a string
+  string packedFile="";
+  for(unsigned int i=0; i < a.atom.size(); i++)
+    {
+      packedFile += a.atom[i]->line + "\n";
+    }
+
+  for(unsigned int i=0; i < b.atom.size(); i++)
+    {
+      packedFile += b.atom[i]->line + "\n";
+    }
+
+  // Now, let's set up some Babel information
+  // First, we get the PDB format to tell
+  // Babel how to read the information and 
+  // how to output it
+  OBFormat* pdbformat = this->conv.FindFormat("pdb");
+  this->conv.SetInFormat(pdbformat);
+  this->conv.SetOutFormat(pdbformat);
+
+  // Here is where Babel reads everything
+  // and adds hydrogens to the pair
+  // TO ADD: option to set pH
+  this->conv.ReadString(&mol,packedFile);
+  mol.AddHydrogens(false,true,7.0);
+
+  // Let's write the newly written hydrogens to 
+  // a string and parse it
+  addedH = this->conv.WriteString(&mol);
+  tempss.str(addedH);
+  this->failure = false;
+  this->parsePDB(tempss);
+
+  // This is just to ensure that all of the atoms
+  // are grouped together because Babel just 
+  // appends the H to the end of the file
+  this->sortAtoms();
+
+  // Split the atoms up into amino acids and chains
+  this->populateChains(true);
 }
 
 // Search the chain by id
@@ -145,7 +226,7 @@ vector<Chain>::iterator PDB::findChainNumber(char id)
 }
 
 // Organizes the the data by chains
-void PDB::populateChains(Options& opt)
+void PDB::populateChains(bool center)
 {
   // Flag to hold the current chain id
   char chainID =  '-';
@@ -182,7 +263,7 @@ void PDB::populateChains(Options& opt)
 	 aa.residue == "TYR" || aa.residue == "ASP" ||
 	 aa.residue == "GLU")
 	{
-	  aa.calculateCenter(opt.center);
+	  aa.calculateCenter(center);
 	}
       else
 	{
@@ -232,4 +313,9 @@ void PDB::populateChains(Options& opt)
       chains[chainIndex].addSeqres(&seqres[i]);
     }
 
+}
+
+void PDB::sortAtoms()
+{
+  sort(atoms.begin(),atoms.end());
 }
