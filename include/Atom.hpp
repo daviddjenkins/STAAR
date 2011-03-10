@@ -83,6 +83,8 @@ public:
   string        charge;        //Atom charge:        79-80
   bool failure;
 
+  bool skip;
+
   string line;
 
   friend ostream& operator<<(ostream& output, const Atom& p);

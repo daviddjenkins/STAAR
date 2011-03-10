@@ -46,6 +46,7 @@
 #include "PDB.hpp"
 #include "Utils.hpp"
 #include "../gzstream/gzstream.h"
+#include "CoutColors.hpp"
 
 using namespace OpenBabel;
 
@@ -96,9 +97,10 @@ void PDB::parsePDB(char * fn)
 
   // Open the file
   igzstream PDBfile(fn); 
+
   // Ensure the file opened correctly
   if( PDBfile.fail() || !PDBfile.good()){
-    cerr << "Failed to open PDB file " << fn << endl;
+    cerr << red << "Error" << reset << ": Failed to open PDB file " << fn << endl;
     perror("\t");
     failure=true;
     return;
@@ -139,17 +141,15 @@ void PDB::parsePDBstream(istream& PDBfile)
           atoms.push_back(a);
         }
 
-      // This is currently commented out because we aren't
-      // doing anything with the HETATM lines so there
-      // is no reason to read them
-      // // Parse the line if we are on a HETATM line
-      // found = line.find("HETATM");
-      // if( found == 0 )
-      //   {
-      //     Atom h(line);
-      //     //failure = h.fail();
-      //     hetatms.push_back(h);
-      //   }
+      // Parse the line if we are on a HETATM line
+      // Used to find ligands
+      found = line.find("HETATM");
+      if( found == 0 )
+        {
+          Atom h(line);
+          failure = h.fail();
+          hetatms.push_back(h);
+        }
     }
 
 }
@@ -179,12 +179,18 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   string packedFile="";
   for(unsigned int i=0; i < a.atom.size(); i++)
     {
-      packedFile += a.atom[i]->line + "\n";
+      if( !a.atom[i]->skip )
+	{
+	  packedFile += a.atom[i]->line + "\n";
+	}
     }
 
   for(unsigned int i=0; i < b.atom.size(); i++)
     {
-      packedFile += b.atom[i]->line + "\n";
+      if( !b.atom[i]->skip )
+	{
+	  packedFile += b.atom[i]->line + "\n";
+	}
     }
 
   // Now, let's set up some Babel information
@@ -211,7 +217,9 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   // This is just to ensure that all of the atoms
   // are grouped together because Babel just 
   // appends the H to the end of the file
+  //cout << brown << *this << endl;
   this->sortAtoms();
+  //cout << gray << *this << endl;
 
   // Split the atoms up into amino acids and chains
   this->populateChains(true);
@@ -318,4 +326,14 @@ void PDB::populateChains(bool center)
 void PDB::sortAtoms()
 {
   sort(atoms.begin(),atoms.end());
+}
+
+
+ostream& operator<<(ostream& output, const PDB& p) 
+{
+  for(unsigned int i = 0; i<p.atoms.size(); i++)
+    {
+      output << p.atoms[i] << endl;
+    }
+  return output;
 }

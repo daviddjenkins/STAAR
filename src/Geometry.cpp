@@ -37,6 +37,7 @@
 
 #include "float.h"
 #include "Geometry.hpp"
+#include "CoutColors.hpp"
 
 // Find the dot product between 2 points
 float dotProduct( Coordinates& point1,
@@ -147,7 +148,7 @@ float angleBetweenPlaneAndLine ( Coordinates& plane,
   // double check that we aren't doing anything illegal with arccos
   if( cosValue < -1.0 || cosValue > 1.0 )
     {
-      cerr << "Error: Cosine of angle, " << cosValue << ", lies outside of -1 and 1" << endl;
+      cerr << red << "Error" << reset << ":Error: Cosine of angle, " << cosValue << ", lies outside of -1 and 1" << endl;
       angle = 1000;
     }
   else
@@ -225,7 +226,7 @@ float findAngle(Coordinates& point1,
   // error check to make sure we don't do something retarded
   if( cosValue < -1 || cosValue >1 )
     {
-      cerr << "Error: Cosine of angle, " << cosValue << ", lies outside of -1 and 1" << endl;
+      cerr << red << "Error" << reset << ":Error: Cosine of angle, " << cosValue << ", lies outside of -1 and 1" << endl;
       return 1000;      
     }
   else
@@ -272,7 +273,7 @@ float calculateAngleBetweenPlanes( Coordinates& planeP,
   // error check
   if( cosValue < -1 || cosValue > 1 )
     {
-      cerr << "Error: Cosine of angle, " << cosValue << ", lies outside of -1 and 1" << endl;
+      cerr << red << "Error" << reset << ":Error: Cosine of angle, " << cosValue << ", lies outside of -1 and 1" << endl;
       return 1000;            
     }
   else

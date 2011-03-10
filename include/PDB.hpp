@@ -91,6 +91,10 @@ public:
   // Organizes the data read from parsePDB into chains
   void populateChains(bool center);
 
+  // Organizes ligands into an array
+  void findLigands();
+
+  // Puts the atoms in order by their sequence number
   void sortAtoms();
 
   vector<Chain>         chains;         // Variable to hold the chain information
@@ -101,6 +105,7 @@ public:
   OBConversion          conv;           // Holds OpenBabel reading of important
                                         //  residue pairs adding H. Will also 
                                         //  be used to output to GAMESS format
+  friend ostream& operator<<(ostream& output, const PDB& p);
 };
   
 

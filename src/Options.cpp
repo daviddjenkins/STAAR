@@ -36,6 +36,7 @@
 /*************************************************************************************************/
 
 #include "Options.hpp"
+#include "CoutColors.hpp"
 
 // Initialize the Options to empty stuff
 Options::Options()
@@ -72,10 +73,13 @@ void printHelp()
   cerr << "-r or --residues      " << "Set the residues that we are going to analyze" << endl;
   cerr << "                      " << " residues are set as follows (include quotations):" << endl;
   cerr << "                      " << " \"PHE,TYR,TRP;GLU,ASP\"" << endl;
-  cerr << "                      " << " can only have 1 ; but as many , as you want" << endl;
+  cerr << "                      " << " at least 1, but as many as you want" << endl;
   cerr << "-c or --center        " << "Specifies whether to calculate center of charge" << endl;
   cerr << "-t or --threshold     " << "Set the distance threshold between amino acids" << endl;
   cerr << "-s or --samechain     " << "Look for interactions in same chain only" << endl;
+  cerr << "-l or --ligand        " << "Look for interactions with ligands" << endl;
+  cerr << "                      " << " add in the residue name looking for in HETATM:" << endl;
+  cerr << "                      " << " \"2HP,WO2\"" << endl;
 }
 
 // Return true of cmd line parsing failed, false otherwise
@@ -128,7 +132,7 @@ void Options::parseCmdline( int argc, char **argv )
 	  }
 	else
 	  {
-	    cerr << "Output file must be a file, not a directory" << endl;
+	    cerr << red << "Error" << reset << ": Output file must be a file, not a directory" << endl;
 	    printHelp();
 	    exit(1);
 	  }
@@ -146,7 +150,7 @@ void Options::parseCmdline( int argc, char **argv )
 	// sure that an actual number was inputted and not just a string
 	if ( sscanf(optarg, "%f", &(this->threshold)) != 1 )
 	  {
-	    cerr << "Must insert a valid number for the threshold" << endl;
+	    cerr << red << "Error" << reset << ": Must insert a valid number for the threshold" << endl;
 	    printHelp();
 	    exit(1);
 	  }
@@ -162,7 +166,7 @@ void Options::parseCmdline( int argc, char **argv )
 	  vector<string> temp = split( (string)optarg, ';' );
 	  if(temp.size() != 2)
 	    {
-	      cerr << "Residue string must have 1 semicolon. No more, no less." << endl;
+	      cerr << red << "Error" << reset << ": Residue string must have 1 semicolon. No more, no less." << endl;
 	      printHelp();
 	      exit(1);
 	    }
@@ -181,16 +185,16 @@ void Options::parseCmdline( int argc, char **argv )
   // Error check to make sure there wasn't extra crap on the command line
   // and all necessary arguments were set
   if( optind < argc ){
-    cerr << "There are some extra commands inputted. Please cleanup the command line!" << endl;
+    cerr << red << "Error" << reset << ": There are some extra commands inputted. Please cleanup the command line!" << endl;
     // print some help info
     printHelp();
     failure=true;
   }else if( !pdbfile ){
-    cerr << "Must specify the PDB list file with -p or --pdblist" <<  endl;
+    cerr << red << "Error" << reset << ": Must specify the PDB list file with -p or --pdblist" <<  endl;
     printHelp();
     failure=true;
   }else if( !outputfile ){
-    cerr << "Must specify the op file with -o or --op" <<  endl;
+    cerr << red << "Error" << reset << ": Must specify the op file with -o or --op" <<  endl;
     printHelp();
     failure=true;
   }

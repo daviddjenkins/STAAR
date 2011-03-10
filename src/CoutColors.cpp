@@ -1,11 +1,10 @@
 /****************************************************************************************************/
 //  COPYRIGHT 2011, University of Tennessee
 //  Author: David Jenkins (david.d.jenkins@gmail.com)
-//  File: Utils.hpp
-//  Date: 11 Jan 2011
+//  File: CoutColors.cpp
+//  Date: 09 Mar 2011
 //  Version: 1.0
-//  Description: Contains a number of function declarations that will be used to do various,
-//               non-application specific tasks such as converting a string to any type
+//  Description: Makes outputting color easier
 //
 /***************************************************************************************************/
 //
@@ -34,51 +33,108 @@
 //  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*************************************************************************************************/
 
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
-
-#include <cstdlib>
-#include <cstdio>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <cmath>
-#include <getopt.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <vector>
-#include <sys/time.h>
-#include <sys/stat.h>
+#include "CoutColors.hpp"
 
 using namespace std;
 
-// Simply makes a system call to count the number of files a directory
-int countFilesInDirectory( char* path );
+static int _COLOR_FORMAT_FLAG;
 
-// checks to see if the path given is a directory
-bool isDirectory( char* path );
-
-// returns the time in seconds
-double getTime();
-
-// Splits a line up by a given delimiter.  Used many for parsing the
-// residue command line option
-vector<string> split(const string &s, char delim);
-
-// Just prints the logo and header information at start of prog
-void printHeader(ostream & os = cout);
-
-//from_string template also included with Utils.hpp
-// Converts a string to any class specified by T
-template <class T>
-bool from_string(T&                     t,
-                 const std::string&     s,
-                 std::ios_base& (*f)(std::ios_base&))
+ostream& reset(ostream &os)
 {
-  std::istringstream    iss(s);
-  return !(iss >> f >> t).fail();
+  if(_COLOR_FORMAT_FLAG==1)
+    {
+      os << "\e[m";
+      _COLOR_FORMAT_FLAG = 0;
+    }
+
+  return os;
 }
 
+ostream& black(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
 
-#endif
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[30m";
+
+  return os;
+}
+
+ostream& red(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[31m";
+
+  return os;
+}
+
+ostream& green(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[32m";
+
+  return os;
+}
+
+ostream& brown(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[33m";
+
+  return os;
+}
+
+ostream& blue(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[34m";
+
+  return os;
+}
+
+ostream& purple(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[35m";
+
+  return os;
+}
+
+ostream& cyan(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[36m";
+
+  return os;
+}
+
+ostream& gray(ostream &os)
+{
+  if(_COLOR_FORMAT_FLAG==1)
+    os << "\e[m";
+
+  _COLOR_FORMAT_FLAG=1;
+  os << "\e[37m";
+
+  return os;
+}
+

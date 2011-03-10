@@ -39,6 +39,7 @@
 #include <fstream>
 #include <string>
 #include "Seqres.hpp"
+#include "CoutColors.hpp"
 
 using namespace std;
 
@@ -81,14 +82,14 @@ int Seqres::parseLine(string line)
   // Error check to ensure the file is formatted correctly
   if(line.length() != 80)
     {
-      cerr << "Possible malformed PDB file on SEQRES line." << endl;
+      cerr << red << "Error" << reset << ":Possible malformed PDB file on SEQRES line." << endl;
       failure = true;
     }
 
   // Grab the serial number, chain id, and number of residues
   if(!from_string<unsigned int>(serialNumber,line.substr(7,3),dec))
     {
-      cerr << "failed to convert serial number into an unsigned int in Seqres::parseLine" << endl;
+      cerr << red << "Error" << reset << ":failed to convert serial number into an unsigned int in Seqres::parseLine" << endl;
       failure = true;
       return -1;
     }
@@ -97,7 +98,7 @@ int Seqres::parseLine(string line)
 
   if(!from_string<unsigned int>(numberOfResidues,line.substr(13,4),dec))
     {
-      cerr << "failed to convert serial number into an unsigned int in Seqres::parseLine" << endl;
+      cerr << red << "Error" << reset << ":failed to convert serial number into an unsigned int in Seqres::parseLine" << endl;
       failure = true;
       return -1;
     }

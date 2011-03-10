@@ -51,6 +51,7 @@
 #include "Geometry.hpp"
 #include "AminoAcid.hpp"
 #include "Coordinates.hpp"
+#include "CoutColors.hpp"
 
 #define MAX_STR_LENGTH 1024
 
@@ -99,6 +100,7 @@ void calculateAngles(AminoAcid& aa1,
 void write_output_head(ofstream& out);
 
 int main(int argc, char* argv[]){
+  printHeader();
   int return_value;
   double start = getTime();
 
@@ -145,11 +147,12 @@ bool processSinglePDBFile(char* filename,
 
   if(PDBfile.fail())
     {
-      cerr << "Parsing PDB file, " << opts.pdbfile << ", failed!" << endl;
+      cerr << red << "Error" << reset << ": Parsing PDB file, " << opts.pdbfile << ", failed!" << endl;
       return false;
     }
 
-  PDBfile.populateChains(opts.center);
+  //PDBfile.populateChains(opts.center);
+  PDBfile.populateChains(false);
 
   int numRes1 = opts.residue1.size();
   int numRes2 = opts.residue2.size();
@@ -219,7 +222,7 @@ bool processPDBDirectory(Options& opts)
             {
               count++;
               // Checkpoint
-              cout << "File " << count << "/" << numberOfFiles << " : " << filename->d_name << endl;
+              cout << purple << "File " << count << "/" << numberOfFiles << " : " << filename->d_name << endl;
 
               //create the full path to the file
               char fullFilePath [MAX_STR_LENGTH];
@@ -255,15 +258,16 @@ void searchChainInformation(PDB & PDBfile,
 
   Chain* c1 = &(PDBfile.chains[chain1]);
   Chain* c2 = &(PDBfile.chains[chain2]);
-  // unsigned int length_chain1 = c1->seqres[0]->numberOfResidues;
-  // unsigned int length_chain2 = c2->seqres[0]->numberOfResidues;
+#ifdef DEBUG
+  unsigned int length_chain1 = c1->seqres[0]->numberOfResidues;
+  unsigned int length_chain2 = c2->seqres[0]->numberOfResidues;
 
-  // cout << "Checking for res1= "<< residue1 << ", res2= "<< residue2
-  //      << " in chains " << c1->id << " and " << c2->id << "..." << endl;
+  cout << purple << "Checking for res1= "<< residue1 << ", res2= "<< residue2 << endl;
+       << " in chains " << c1->id << " and " << c2->id << "..." << endl;
 
-  // cout << "length(Chain1)= " << length_chain1
-  //      << " length(Chain2)= " << length_chain2 << endl;
-
+  cout << purple << "length(Chain1)= " << length_chain1
+       << " length(Chain2)= " << length_chain2 << endl;
+#endif
   // Go through each AA in the first chain
   for(unsigned int i = 0; i < c1->aa.size(); i++)
     {
@@ -286,8 +290,9 @@ void searchChainInformation(PDB & PDBfile,
             }
         }
     }
-
-  // cout << "\tDone" << endl;
+#ifdef DEBUG
+  cout << purple << "\tDone" << endl;
+#endif
 }
 
 // Finds the closest distance among all of the centers
@@ -333,6 +338,8 @@ void findBestInteraction( AminoAcid& aa1,
   float angle;
   float angle1;
   float angleP;
+  AminoAcid aa1h;
+  AminoAcid aa2h;
 
   // Go through all combination of distances looking 
   // for the closet pair
@@ -347,7 +354,6 @@ void findBestInteraction( AminoAcid& aa1,
   // add hydrogens, and try the process again
   if( closestDist != FLT_MAX )
     {
-
       // Just some codes that were in the original STAAR
       char code1 = 'I';
       if( aa1.atom[0]->chainID != aa2.atom[0]->chainID )
@@ -356,44 +362,74 @@ void findBestInteraction( AminoAcid& aa1,
       //if( aa1.center.size() > 1 || aa2.center.size() > 1 )
       if( aa1.altLoc || aa2.altLoc )
         code2 = 'M';
-
-      // calculate the angles of this interaction
-      // calculateAngles(aa1,
-      //                 aa2,
-      //                 closestDist_index1,
-      //                 closestDist_index2,
-      //                 &angle,
-      //                 &angle1,
-      //                 &angleP);
-
-      // and we finally output some results!
-      output_file << aa1.residue                        << "\t"
-                  << aa2.residue                        << "\t"
-                  << closestDist                        << "\t"
-                  << angle                              << "\t"
-                  << angleP                             << "\t"
-                  << angle1                             << "\t"
-                  << aa1.atom[0]->resSeq                << "\t"
-                  << aa2.atom[0]->resSeq                << "\t"
-                  << code1 << code2                     << "\t"
-                  << input_filename                     << "\t"
-                  << aa1.atom[0]->chainID               << "\t"
-                  << aa2.atom[0]->chainID               << "\t"
-                  << aa1.center[closestDist_index1]     << "\t"
-                  << aa2.center[closestDist_index2]     << endl;
-
+      
       PDB pairWithHydrogen;
       pairWithHydrogen.addHydrogensToPair(aa1,aa2);
-      
+      //cout << pairWithHydrogen << endl;
+      //exit(1);
       // Now we are looking at the distances between the AA's
       // and center of charges of the GLU and ASP
-      closestDist = findClosestDistance(aa1, 
-					aa2, 
+      if( code1 == 'X' )
+	{
+	  if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
+	    {
+	      aa1h = pairWithHydrogen.chains[0].aa[0];
+	      aa2h = pairWithHydrogen.chains[1].aa[0];
+	    }
+	  else
+	    {
+	      aa1h = pairWithHydrogen.chains[1].aa[0];
+	      aa2h = pairWithHydrogen.chains[0].aa[0];
+	    }
+	}
+      else
+	{
+	  if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
+	    {
+	      aa1h = pairWithHydrogen.chains[0].aa[0];
+	      aa2h = pairWithHydrogen.chains[0].aa[1];
+	    }
+	  else
+	    {
+	      aa1h = pairWithHydrogen.chains[0].aa[1];
+	      aa2h = pairWithHydrogen.chains[0].aa[0];
+	    }
+	}
+
+      closestDist = findClosestDistance(aa1h,
+					aa2h,
 					threshold,
 					&closestDist_index1, 
 					&closestDist_index2);
       
       
+      if( closestDist != FLT_MAX )
+	{
+	  // calculate the angles of this interaction
+	  calculateAngles(aa1h,
+			  aa2h,
+			  closestDist_index1,
+			  closestDist_index2,
+			  &angle,
+			  &angle1,
+			  &angleP);
+	  
+	  // and we finally output some results!
+	  output_file << aa1h.residue                        << "\t"
+		      << aa2h.residue                        << "\t"
+		      << closestDist                         << "\t"
+		      << angle                               << "\t"
+		      << angleP                              << "\t"
+		      << angle1                              << "\t"
+		      << aa1h.atom[0]->resSeq                << "\t"
+		      << aa2h.atom[0]->resSeq                << "\t"
+		      << code1 << code2                      << "\t"
+		      << input_filename                      << "\t"
+		      << aa1h.atom[0]->chainID               << "\t"
+		      << aa2h.atom[0]->chainID               << "\t"
+		      << aa1h.center[closestDist_index1]     << "\t"
+		      << aa2h.center[closestDist_index2]     << endl;
+	}      
     }
 }
 

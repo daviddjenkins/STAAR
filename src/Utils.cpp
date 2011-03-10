@@ -35,7 +35,7 @@
 /*************************************************************************************************/
 
 #include "Utils.hpp"
-
+#include "CoutColors.hpp"
 
 
 // Simply makes a system call to count the number of files a directory
@@ -52,13 +52,13 @@ int countFilesInDirectory( char* path )
 
   // Try to read the command output
   if ( !fgets(command, strlen(path), fp) ){
-    cerr << "Failed to get the number of files in given directory" << endl;
+    cerr << red << "Error" << reset << ": Failed to get the number of files in given directory" << endl;
     return -1;
   }
 
   // Try to convert the output to an int
   if(!from_string<int>(count,command,dec)){
-    cerr << "Failed to convert number into integer to get number of files in given directory" << endl;
+    cerr << red << "Error" << reset << ": Failed to convert number into integer to get number of files in given directory" << endl;
     return -1;
   }
   fclose(fp);
@@ -91,7 +91,7 @@ bool isDirectory( char* path )
   // and this is something else!
   else 
     {
-      cerr << "Inputted file must be either a single file or a directory." << endl;
+      cerr << red << "Error" << reset << ": Inputted file must be either a single file or a directory." << endl;
       exit(1);
     }
 }
@@ -116,3 +116,23 @@ vector<string> split(const string &s, char delim)
     }
   return elems;
 }
+
+void printHeader(ostream & os)
+{
+  // This is just the STAAR logo
+  os << brown << " #####    #######      #         #      ######  " << endl;
+  os << brown << "#     #      #        # #       # #     #     # " << endl;
+  os << brown << "#            #       #   #     #   #    #     # " << endl;
+  os << brown << " #####       #      #     #   #     #   ######  " << endl;
+  os << brown << "      #      #      #######   #######   #   #   " << endl;
+  os << brown << "#     #      #      #     #   #     #   #    #  " << endl;
+  os << brown << " #####       #      #     #   #     #   #     # " << endl;
+  os << brown << " STAAR: \e[33mST\e[matistical \e[33mA\e[mnalysis of "
+     <<"\e[33mA\e[mromatic \e[33mR\e[mings " << endl;
+  os << endl;
+  // This is just some other basic info
+  os << "Version 2.0" << endl;
+  os << "University of Tennessee (C) 2011" << endl;
+  os << endl;
+}
+

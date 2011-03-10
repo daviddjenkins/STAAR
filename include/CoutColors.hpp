@@ -1,11 +1,10 @@
 /****************************************************************************************************/
 //  COPYRIGHT 2011, University of Tennessee
 //  Author: David Jenkins (david.d.jenkins@gmail.com)
-//  File: Utils.hpp
-//  Date: 11 Jan 2011
+//  File: CoutColors.hpp
+//  Date: 09 Mar 2011
 //  Version: 1.0
-//  Description: Contains a number of function declarations that will be used to do various,
-//               non-application specific tasks such as converting a string to any type
+//  Description: Contains the function declarations for the cout color functions
 //
 /***************************************************************************************************/
 //
@@ -34,51 +33,22 @@
 //  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*************************************************************************************************/
 
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
+
+#ifndef __COUTCOLORS_HPP__
+#define __COUTCOLORS_HPP__
 
 #include <cstdlib>
-#include <cstdio>
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <cmath>
-#include <getopt.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <vector>
-#include <sys/time.h>
-#include <sys/stat.h>
 
-using namespace std;
+#define endl reset<<endl
 
-// Simply makes a system call to count the number of files a directory
-int countFilesInDirectory( char* path );
-
-// checks to see if the path given is a directory
-bool isDirectory( char* path );
-
-// returns the time in seconds
-double getTime();
-
-// Splits a line up by a given delimiter.  Used many for parsing the
-// residue command line option
-vector<string> split(const string &s, char delim);
-
-// Just prints the logo and header information at start of prog
-void printHeader(ostream & os = cout);
-
-//from_string template also included with Utils.hpp
-// Converts a string to any class specified by T
-template <class T>
-bool from_string(T&                     t,
-                 const std::string&     s,
-                 std::ios_base& (*f)(std::ios_base&))
-{
-  std::istringstream    iss(s);
-  return !(iss >> f >> t).fail();
-}
-
+std::ostream& reset(std::ostream &os);
+std::ostream& red(std::ostream &os);
+std::ostream& green(std::ostream &os);
+std::ostream& brown(std::ostream &os);
+std::ostream& blue(std::ostream &os);
+std::ostream& purple(std::ostream &os);
+std::ostream& cyan(std::ostream &os);
+std::ostream& gray(std::ostream &os);
 
 #endif

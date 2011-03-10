@@ -37,6 +37,7 @@
 /*************************************************************************************************/
 
 #include "AminoAcid.hpp"
+#include "CoutColors.hpp"
 
 AminoAcid::AminoAcid()
 {
@@ -131,6 +132,11 @@ void AminoAcid::centerPHEorTYR()
 	{
 	  temp[5].push_back(atom[i]);
 	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it 
+	  atom[i]->skip = true;
+	}
     }
   
   // Error check.  If we don't have at least one of each
@@ -141,7 +147,7 @@ void AminoAcid::centerPHEorTYR()
      temp[4].size() == 0 || temp[5].size() == 0 )
     {
       skip = true;
-      cout << "WARNING: Could not find all atoms in the TRP ring at "
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
 	   << atom[0]->resSeq << endl;
       return;
     }
@@ -257,6 +263,11 @@ void AminoAcid::centerTRP()
 	{
 	  temp[8].push_back(atom[i]);
 	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it 
+	  atom[i]->skip = true;
+	}
     }
 
   // Error check.  If we don't have at least one of each
@@ -269,7 +280,7 @@ void AminoAcid::centerTRP()
      temp[8].size() == 0)
     {
       skip = true;
-      cout << "WARNING: Could not find all atoms in the TRP ring at "
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
 	   << atom[0]->resSeq << endl;
       return;
     }
@@ -369,7 +380,7 @@ void AminoAcid::centerASP()
 	{
 	  temp[0].push_back(atom[i]);
 	}
-      else if(atom[i]->name == " CB ")
+      else if(atom[i]->name == " H  ")
 	{
 	  temp[1].push_back(atom[i]);
 	}
@@ -381,6 +392,11 @@ void AminoAcid::centerASP()
 	{
 	  temp[3].push_back(atom[i]);
 	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it 
+	  atom[i]->skip = true;
+	}
     }
 
   // Error check.  If we don't have at least one of each
@@ -390,8 +406,8 @@ void AminoAcid::centerASP()
      temp[2].size() == 0 || temp[3].size() == 0)
     {
       skip = true;
-      cout << "WARNING: Could not find all atoms in the ASP side chain at "
-	   << atom[0]->resSeq << endl;
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
+  	   << atom[0]->resSeq << endl;
       return;
     }
 
@@ -459,7 +475,7 @@ void AminoAcid::centerGLU()
 	{
 	  altLoc = true;
 	}
-      if(atom[i]->name == " CG ")
+      if(atom[i]->name == " H  ")
 	{
 	  temp[0].push_back(atom[i]);
 	}
@@ -475,6 +491,11 @@ void AminoAcid::centerGLU()
 	{
 	  temp[3].push_back(atom[i]);
 	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it 
+	  atom[i]->skip = true;
+	}
     }
 
   // Error check.  If we don't have at least one of each
@@ -484,8 +505,8 @@ void AminoAcid::centerGLU()
      temp[2].size() == 0 || temp[3].size() == 0)
     {
       skip = true;
-      cout << "WARNING: Could not find all atoms in the GLU side chain at "
-	   << atom[0]->resSeq << endl;
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
+  	   << atom[0]->resSeq << endl;
       return;
     }
 
@@ -569,6 +590,11 @@ void AminoAcid::centerASP_nocharge()
 	{
 	  temp[2].push_back(atom[i]);
 	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it 
+	  atom[i]->skip = true;
+	}
     }
 
   // Error check.  If we don't have at least one of each
@@ -578,7 +604,7 @@ void AminoAcid::centerASP_nocharge()
       temp[2].size() == 0)
     {
       skip = true;
-      cout << "WARNING: Could not find all atoms in the ASP side chain at "
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
 	   << atom[0]->resSeq << endl;
       return;
     }
@@ -660,6 +686,11 @@ void AminoAcid::centerGLU_nocharge()
 	{
 	  temp[2].push_back(atom[i]);
 	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it 
+	  atom[i]->skip = true;
+	}
     }
 
   // Error check.  If we don't have at least one of each
@@ -669,7 +700,7 @@ void AminoAcid::centerGLU_nocharge()
      temp[2].size() == 0)
     {
       skip = true;
-      cout << "WARNING: Could not find all atoms in the GLU side chain at "
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
 	   << atom[0]->resSeq << endl;
       return;
     }
@@ -820,7 +851,7 @@ void AminoAcid::printNeededAtoms(FILE* output)
     }
   else
     {
-      cerr << "Unsupported residue" << endl;
+      cerr << red << "Error" << reset << ": Unsupported residue" << endl;
     }
 }
 

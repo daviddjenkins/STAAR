@@ -45,6 +45,7 @@
 #include <string>
 #include "Atom.hpp"
 #include "Coordinates.hpp"
+#include "CoutColors.hpp"
 
 // Constructor setting everything to initial values
 Atom::Atom()
@@ -61,6 +62,7 @@ Atom::Atom()
   element = "";
   charge = "";
   failure = false;
+  skip = false;
 }
 
 // Constructor that parses an ATOM line from a PDB file
@@ -91,6 +93,7 @@ Atom::~Atom()
   element = "";
   charge = "";
   failure = false;
+  skip = false;
 }
 
 // Returns true if the parsing failed, false otherwise
@@ -118,14 +121,14 @@ void Atom::parseAtom(string line)
   // Error check to ensure the file is formatted correctly
   if(line.length() != 80)
     {
-      cerr << "Possible malformed PDB file on ATOM/HETATM line." << endl;
+      cerr << red << "Error" << reset << ":Possible malformed PDB file on ATOM/HETATM line." << endl;
       failure = true;
     }
 
   // Get the serial number and error check
   if(!from_string<unsigned int>(serialNumber,line.substr(6,5),dec))
     {
-      cerr << "failed to convert aa into an unsigned int" << endl;
+      cerr << red << "Error" << reset << ":failed to convert aa into an unsigned int" << endl;
       failure = true;
     }
 
@@ -138,7 +141,7 @@ void Atom::parseAtom(string line)
   // Grab the residue sequence number
   if(!from_string<unsigned int>(resSeq,line.substr(22,4),dec))
     {
-      cerr << "failed to convert aa into an unsigned int" << endl;
+      cerr << red << "Error" << reset << ":failed to convert aa into an unsigned int" << endl;
       failure = true;
     }
 
@@ -148,27 +151,27 @@ void Atom::parseAtom(string line)
   // Grab the coordinates, occupancy and temperature factor
   if(!from_string<float>(coord.x,line.substr(30,8),dec))
     {
-      cerr << "failed to convert x coordinate into a double" << endl;
+      cerr << red << "Error" << reset << ":failed to convert x coordinate into a double" << endl;
       failure = true;
     }
   if(!from_string<float>(coord.y,line.substr(38,8),dec))
     {
-      cerr << "failed to convert y coordinate into a double" << endl;
+      cerr << red << "Error" << reset << ":failed to convert y coordinate into a double" << endl;
       failure = true;
     }
   if(!from_string<float>(coord.z,line.substr(46,8),dec))
     {
-      cerr << "failed to convert z coordinate into a double" << endl;
+      cerr << red << "Error" << reset << ":failed to convert z coordinate into a double" << endl;
       failure = true;
     }
   if(!from_string<double>(occupancy,line.substr(54,6),dec))
     {
-      cerr << "failed to convert occupancy into a double" << endl;
+      cerr << red << "Error" << reset << ":failed to convert occupancy into a double" << endl;
       failure = true;
     }
   if(!from_string<double>(tempFactor,line.substr(60,8),dec))
     {
-      cerr << "failed to convert temperature factor into a double" << endl;
+      cerr << red << "Error" << reset << ":failed to convert temperature factor into a double" << endl;
       failure = true;
     }
 
