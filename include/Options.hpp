@@ -64,6 +64,12 @@ public:
                                 // chain for interactions or not
   vector<string>residue1;	// first group of residues to be matches with...
   vector<string>residue2;  	// ...these!
+  vector<string>ligands;        // Ligands that residue1 will be matches with
+  int numLigands; 		// Number of ligands
+  char* gamessfolder;		// Directory in which all of the GAMESS INP files
+                                // will be stored.
+  bool outputGamessINP;		// True if GAMESS INP are to be outputted
+
   // Constructor that sets everything to empty stuff
   Options();  
   // Constructor to parse the command line args

@@ -79,9 +79,7 @@ float getPlaneEquation( Coordinates& point1,
 			Coordinates& point3,
 			Coordinates* result )
 {
-  
   Coordinates t1, t2, t3;
-
   t1.set(1, point1.y, point1.z);
   t2.set(1, point2.y, point2.z);
   t3.set(1, point3.y, point3.z);

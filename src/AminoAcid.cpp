@@ -37,13 +37,13 @@
 /*************************************************************************************************/
 
 #include "AminoAcid.hpp"
+#include "Geometry.hpp"
 #include "CoutColors.hpp"
 
 AminoAcid::AminoAcid()
 {
   atom.clear();
   center.clear();
-  plane_info.clear();
   skip = false;
   altLoc = false;
 }
@@ -52,7 +52,6 @@ AminoAcid::~AminoAcid()
 {
   atom.clear();
   center.clear();
-  plane_info.clear();
   skip = false;
   altLoc = false;
 }
@@ -193,7 +192,7 @@ void AminoAcid::centerPHEorTYR()
 			  t.insert(t.end(),1,temp[5][n]->altLoc);
 			  center[index].altLoc = t;
 #ifdef DEBUG
-			  cout << "CHECK: TRP" << atom[0]->resSeq << " : " << center[index] << endl;
+			  cout << "CHECK: " << residue << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
 			}
 		    }
@@ -353,6 +352,9 @@ void AminoAcid::centerTRP()
     }
 }
 
+// DO NOT USE THIS!!!! If you use this, a fairy will lose its wings!
+// This is only here for legacy reasons because this is what the old
+// STAAR code used.  It is wrong.
 // Calculate the centers of charge for ASP
 // these AA need the following atoms:
 //   CG, CB, OD1, OD2
@@ -452,6 +454,9 @@ void AminoAcid::centerASP()
     }
 }
 
+// DO NOT USE THIS!!!! If you use this, puppies will be harmed!
+// This is only here for legacy reasons because this is what the old
+// STAAR code used.  It is wrong.  
 // Calculate the centers of charge for GLU
 // these AA need the following atoms:
 //   CG, CD, OE1, OE2
@@ -558,10 +563,10 @@ void AminoAcid::centerGLU()
 //   OD1 and OD2
 // all of the other ones don't affect the center
 // This is is really simple: all it does is add the
-// OD1 and OD2 coords to the center charge.
+// OD1 and OD2 coords to the center vector.
 // This also sets the plane coordinates used to calculate 
 // the angle later in the program
-void AminoAcid::centerASP_nocharge()
+void AminoAcid::centerASP_oxygen()
 {
   // This makes a vector of a vector of ATOM* 
   // since we are looking for 3 atoms, the size of the outer vector
@@ -649,15 +654,15 @@ void AminoAcid::centerASP_nocharge()
     }
 }
 
-// Calculate the centers for ASP
+// Calculate the centers for GLU
 // these AA need the following atoms:
 //   OE1 and OE2
 // all of the other ones don't affect the center
 // This is is really simple: all it does is add the
-// OE1 and OE2 coords to the center charge.
+// OE1 and OE2 coords to the center vector.
 // This also sets the plane coordinates used to calculate 
 // the angle later in the program
-void AminoAcid::centerGLU_nocharge()
+void AminoAcid::centerGLU_oxygen()
 {
   // This makes a vector of a vector of ATOM* 
   // since we are looking for 3 atoms, the size of the outer vector
@@ -745,52 +750,287 @@ void AminoAcid::centerGLU_nocharge()
     }
 }
 
-// Calculates the center of the amino acid
-void AminoAcid::calculateCenter(bool center)
+void AminoAcid::centerPHEorTYR_simplified()
 {
-  // TRP
-  if ( residue == "TRP" )
+  center.resize(1);
+
+  // Temp variable that will have the center coordinates
+  Coordinates tempCenter(0.0, 0.0, 0.0);
+
+  // Here, we are just getting 2 C atoms. Doesn't matter
+  // which ones we choose as long as they are
+  // diametrically opposed. Based off of 
+  // http://comp.chem.nottingham.ac.uk/dichrocalc/files/atomlabels-sidechains.png
+  // the following are diametically opposed:
+  //   CG  - CZ
+  //   CD2 - CE1
+  //   CD1 - CE2
+  center[0].set(0.0, 0.0, 0.0);
+  center[0].plane_info.resize(3);
+  for(unsigned int i =0; i< atom.size(); i++)
     {
-      centerTRP();
-    }
-  // PHE or TYR
-  else if ( residue == "PHE" || residue == "TYR" )
-    {
-      centerPHEorTYR();
-    }
-  // ASP
-  else if (residue == "ASP")
-    {
-      // Center of charge
-      if( center )
+      if(atom[i]->name == " CE2")
 	{
-	  centerASP();
+	  center[0] += atom[i]->coord;
+	  center[0].plane_info[CE2_PLANE_COORD_PTT] = &atom[i]->coord;
 	}
+      else if(atom[i]->name == " CD1")
+	{
+	  center[0] += atom[i]->coord;
+	  center[0].plane_info[CD1_PLANE_COORD_PTT] = &atom[i]->coord;
+	}
+      else if(atom[i]->name == " CG ")
+	{
+	  center[0].plane_info[CG_PLANE_COORD_PTT] = &atom[i]->coord;
+	}
+    }
+  center[0] /= 2;
+}
+
+void AminoAcid::centerASP_charge()
+{
+  center.resize(1);
+  Coordinates tempCenter(0.0, 0.0, 0.0);
+  for(unsigned int i =0; i< atom.size(); i++)
+    {
+      if(atom[i]->name == " CG ")
+	{
+	  center[0] = atom[i]->coord;
+	  tempCenter += atom[i]->coord;
+	}
+      else if(atom[i]->name == " H  ")
+	{
+	  tempCenter -= atom[i]->coord;
+	}
+    }
+  center[0] += (tempCenter * HYDROGEN_BOND_DISTANCE) / tempCenter.norm();
+}
+
+void AminoAcid::centerGLU_charge()
+{
+  center.resize(1);
+  Coordinates tempCenter(0.0, 0.0, 0.0);
+  for(unsigned int i =0; i< atom.size(); i++)
+    {
+      if(atom[i]->name == " CD ")
+	{
+	  center[0] = atom[i]->coord;
+	  tempCenter += atom[i]->coord;
+	}
+      else if(atom[i]->name == " H  ")
+	{
+	  tempCenter -= atom[i]->coord;
+	}
+    }
+  center[0] += (tempCenter * HYDROGEN_BOND_DISTANCE) / tempCenter.norm();
+}
+
+// Calculates the center of the amino acid
+void AminoAcid::calculateCenter(bool centerOfCharge)
+{
+  if( !centerOfCharge )
+    {
+      // TRP
+      if ( residue == "TRP" )
+	{
+	  centerTRP();
+	}
+      // PHE or TYR
+      else if ( residue == "PHE" || residue == "TYR" )
+	{
+	  centerPHEorTYR();
+	}
+      // ASP
+      else if (residue == "ASP")
+	{
+	  centerASP_oxygen();
+	}
+      // GLU
+      else if (residue == "GLU")
+	{
+	  centerGLU_oxygen();
+	}
+      // This is for all of other amino acids out there that we 
+      // don't support
       else
 	{
-	  centerASP_nocharge();
+	  cerr << red << "ERROR" << reset << ": " << residue << " is not yet supported." << endl;
 	}
     }
-  // GLU
-  else if (residue == "GLU")
-    {
-      // Center of charge
-      if( center )
-	{
-	  centerGLU();
-	}
-      else
-	{
-	  centerGLU_nocharge();
-	}
-    }
-  // This is for all of other amino acids out there that we 
-  // don't support
+  // Now we are going to calculate the center of charges for the formate
   else
     {
-      //cerr << "ERROR: " << residue << " is not yet supported." << endl;
+      // PHE or TYR
+      if ( residue == "PHE" || residue == "TYR" )
+  	{
+  	  // So, this does a simplified center of mass calculation that
+  	  // Dr. Hinde used.  See function notes above for details.
+  	  centerPHEorTYR_simplified();
+  	}
+      // ASP
+      else if (residue == "ASP")
+  	{
+  	  centerASP_charge();
+  	}
+       // GLU
+      else if (residue == "GLU")
+  	{
+  	  centerGLU_charge();
+  	}
     }
 }
+
+void AminoAcid::calculateAnglesPreHydrogens(AminoAcid aa2,
+					    int index1,
+					    int index2,
+					    float* angle,
+					    float* angle1,
+					    float* angleP)
+{
+  AminoAcid aa1 = *this;
+  Coordinates planeP;
+  Coordinates planeProject;
+
+  // Calculate the equation of the plane
+  float det = getPlaneEquation( *(aa1.center[index1].plane_info[ CG_PLANE_COORD_PTT]),
+                                *(aa1.center[index1].plane_info[CD1_PLANE_COORD_PTT]),
+                                *(aa1.center[index1].plane_info[C_2_PLANE_COORD_PTT]),
+                                &planeP);
+
+  // Calculate the angle between a plane and a line
+  *angle = angleBetweenPlaneAndLine( planeP,
+                                     aa1.center[index1],
+                                     aa2.center[index2]);
+  
+  // Calculate the "plane project" coordinates
+  planeProjectCoordinate( planeP, 
+                          aa2.center[index2],
+                          -1 * det, 
+                          &planeProject);
+  
+  // find the second angle betwen the CG ATOM and the "plane project"
+  *angle1 = findAngle(*aa1.center[index1].plane_info[ CG_PLANE_COORD_PTT],
+                      aa1.center[index1],
+                      planeProject);
+  
+  // finally, calculate the angle between the planes of AA1 and AA2
+  *angleP = calculateAngleBetweenPlanes( planeP,
+                                         aa2,
+                                         index2 );
+
+}
+
+bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
+							 Coordinates closestOxygen,
+							 float* dist,
+							 float* distOxy,
+							 float* distOxy2,
+							 float* angle,
+							 float* angleOxy,
+							 float* angleOxy2)
+{
+  AminoAcid aa1 = *this;
+  
+  // These are the 3 points in the benzene ring determined in centerPHEorTYR_simplified()
+  Coordinates dBenzene1 = *aa1.center[0].plane_info[1] - *aa1.center[0].plane_info[0];
+  Coordinates dBenzene2 = *aa1.center[0].plane_info[2] - *aa1.center[0].plane_info[0];
+
+  // These values are just to match the Perl script
+  float a = dBenzene1.x;
+  float b = dBenzene1.y;
+  float c = dBenzene1.z;
+  float d = dBenzene2.x;
+  float e = dBenzene2.y;
+  float f = dBenzene2.z;
+
+  // Get the perpendicular vector
+  float xp = b * f - c * e;
+  float yp = c * d - a * f;
+  float zp = a * e - b * d;
+  Coordinates perp(xp, yp, zp);  
+
+  // Calculate the distance between the centers
+  // This is the vector pointing from the benzene center to formate center of charge
+  Coordinates distance = aa2.center[0] - aa1.center[0];
+
+  
+  float num = dotProduct(perp, distance);
+  float perpnorm = perp.norm();
+  float distFromMassToChg = distance.norm();
+  float denom = perpnorm * distFromMassToChg;
+
+  if(denom == 0)
+    {
+      cerr << red << "Error" << reset << ": denom is zero.  Skipping residue" << endl;
+      return false;
+    }  
+
+  // We already have one of the oxygens as an input param
+  // Now let's find the other one
+  Coordinates otherOxygen;
+  for(int i = 0; i < aa2.atom.size(); i++)
+    {
+      // Only look at the oxygen atoms
+      if(aa2.atom[i]->element == "O")
+	{
+	  // Make sure this oxygen is different than the closest one
+	  if(aa2.atom[i]->coord.x != closestOxygen.x ||
+	     aa2.atom[i]->coord.y != closestOxygen.y ||
+	     aa2.atom[i]->coord.z != closestOxygen.z)
+	    {
+	      otherOxygen = aa2.atom[i]->coord;
+	    }
+	}
+    }
+
+  // Vector between benzene center of mass and closest oxygen
+  Coordinates oD  = closestOxygen - aa1.center[0];
+  // Vector between benzene center of mass and the other oxygen
+  Coordinates oD2 = otherOxygen - aa1.center[0];
+  
+  // Oxygen dot product
+  float oxy_numerator  = dotProduct(perp, oD); 
+  float oxy_numerator2 = dotProduct(perp, oD2); 
+
+  // distance from beneze center and the oxygens
+  float distFromCenterToOxy  = oD.norm();
+  float distFromCenterToOxy2 = oD2.norm();
+
+  // Denominators
+  float oxy_denom  = perpnorm * distFromCenterToOxy;
+  float oxy_denom2 = perpnorm * distFromCenterToOxy2;
+
+  if(oxy_denom == 0)
+    {
+      cerr << red << "Error" << reset << ": oxy_denom are zero.  Skipping residue" << endl;
+      return false;
+    }
+  
+  float u = num / denom;
+  float uOxy  = oxy_numerator  / oxy_denom;
+  float uOxy2 = oxy_numerator2 / oxy_denom2;
+
+  // Force u to be [-1,1]
+  if(u > 1)       u =  1;
+  else if(u < -1) u = -1;
+
+  if(uOxy > 1)       uOxy =  1;
+  else if(uOxy < -1) uOxy = -1;
+
+  if(uOxy2 > 1)       uOxy2 =  1;
+  else if(uOxy2 < -1) uOxy2 = -1;
+
+  // Get the angle and change it to degrees
+  // take absolute vale to put it in [0,90]
+  *dist      = distFromMassToChg;
+  *distOxy   = distFromCenterToOxy;
+  *distOxy2  = distFromCenterToOxy2;
+  *angle     = fabs( 90 - acos(u)     * 180/3.14159 );
+  *angleOxy  = fabs( 90 - acos(uOxy)  * 180/3.14159 );
+  *angleOxy2 = fabs( 90 - acos(uOxy2) * 180/3.14159 );
+
+}
+
 
 void AminoAcid::printPHEorTYR(FILE* output)
 {

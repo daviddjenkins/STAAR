@@ -46,7 +46,10 @@ Options::Options()
   outputfile = NULL;
   failure = false;
   sameChain = false;
-  threshold = 15.0;
+  gamessfolder = NULL;
+  outputGamessINP = false;
+  threshold = 7.0;
+  numLigands = 0;
 }
 
 // Intialize options then parse the cmd line arguments
@@ -57,7 +60,10 @@ Options::Options( int argc, char **argv )
   outputfile = NULL;
   failure = false;
   sameChain = false;
-  threshold = 15.0;
+  threshold = 7.0;
+  numLigands = 0;
+  gamessfolder = NULL;
+  outputGamessINP = false;
   parseCmdline( argc, argv );
 }
 
@@ -74,10 +80,11 @@ void printHelp()
   cerr << "                      " << " residues are set as follows (include quotations):" << endl;
   cerr << "                      " << " \"PHE,TYR,TRP;GLU,ASP\"" << endl;
   cerr << "                      " << " at least 1, but as many as you want" << endl;
+  cerr << "-g or --gamess        " << "Output folder of the GAMESS files\n" << endl;
   cerr << "-c or --center        " << "Specifies whether to calculate center of charge" << endl;
   cerr << "-t or --threshold     " << "Set the distance threshold between amino acids" << endl;
   cerr << "-s or --samechain     " << "Look for interactions in same chain only" << endl;
-  cerr << "-l or --ligand        " << "Look for interactions with ligands" << endl;
+  cerr << "-l or --ligands       " << "Look for interactions with ligands" << endl;
   cerr << "                      " << " add in the residue name looking for in HETATM:" << endl;
   cerr << "                      " << " \"2HP,WO2\"" << endl;
 }
@@ -103,12 +110,14 @@ void Options::parseCmdline( int argc, char **argv )
       {"threshold",	required_argument, 0, 't'},
       {"samechain",     no_argument,       0, 's'},
       {"residues",      required_argument, 0, 'r'},
+      {"ligands",       required_argument, 0, 'l'},
+      {"gamess",        required_argument, 0, 'g'},
       {0, 0, 0, 0}
     };
   int option_index;
 
   // Go through the options and set them to variables
-  while( !( ( c = getopt_long(argc, argv, "hp:o:ct:sr:", long_options, &option_index) ) < 0 ) )
+  while( !( ( c = getopt_long(argc, argv, "hp:o:ct:sr:l:g:", long_options, &option_index) ) < 0 ) )
     {
     switch(c)
       {
@@ -163,6 +172,7 @@ void Options::parseCmdline( int argc, char **argv )
 
       case 'r':
 	{
+	  // Get the two lists of residues
 	  vector<string> temp = split( (string)optarg, ';' );
 	  if(temp.size() != 2)
 	    {
@@ -170,10 +180,36 @@ void Options::parseCmdline( int argc, char **argv )
 	      printHelp();
 	      exit(1);
 	    }
+	  // Get the first list of residues
 	  this->residue1 = split( temp[0], ',' );
+	  // Get the second list of residues
 	  this->residue2 = split( temp[1], ',' );
 	}
 	break;
+
+      case 'l':
+	{
+	  // Get the list of ligands
+	  this->ligands = split( (string)optarg, ',' );
+	  this->numLigands = this->ligands.size();
+	}
+	break;
+
+      case 'g':
+	{
+	  if( isDirectory( optarg ) )
+	    {
+	      this->gamessfolder = optarg;
+	      outputGamessINP = true;
+	    }
+	  else
+	    {
+	      cerr << red << "Error" << reset << ": Ensure GAMESS output directory exists and is a directory" << endl;
+	      printHelp();
+	      exit(1);
+	    }
+	  break;
+	}
 
       default:
 	printHelp();
@@ -197,6 +233,8 @@ void Options::parseCmdline( int argc, char **argv )
     cerr << red << "Error" << reset << ": Must specify the op file with -o or --op" <<  endl;
     printHelp();
     failure=true;
+  }else if( !gamessfolder ){
+    outputGamessINP = false;
   }
 
 }

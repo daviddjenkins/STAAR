@@ -86,16 +86,14 @@ void findBestInteraction( AminoAcid& aa1,
                           AminoAcid& aa2,
                           float threshold,
                           string filename,
+			  char* gamessfolder,
                           ofstream& output_file);
 
-// Calculates all of the angles that are outputted to a file
-void calculateAngles(AminoAcid& aa1,
-                     AminoAcid& aa2,
-                     int index1,
-                     int index2,
-                     float* angle,
-                     float* angle1,
-                     float* angleP);
+// Writes the INP files
+void outputINPfile(string input_filename,
+		   char* filename, 
+		   AminoAcid& aa1h, 
+		   AminoAcid& aa2h);
 
 void write_output_head(ofstream& out);
 
@@ -143,6 +141,7 @@ bool processSinglePDBFile(char* filename,
   // This function actually reads and stores more information than
   // we really need, but the files are relatively small so it isn't
   // taking up much RAM (from what I saw, < 5MB each PDB file)
+  // with a few exceptions
   PDB PDBfile(filename);
 
   if(PDBfile.fail())
@@ -151,16 +150,15 @@ bool processSinglePDBFile(char* filename,
       return false;
     }
 
-  //PDBfile.populateChains(opts.center);
   PDBfile.populateChains(false);
+
+  if( opts.numLigands )
+    {
+      PDBfile.findLigands( opts.ligands );
+    }
 
   int numRes1 = opts.residue1.size();
   int numRes2 = opts.residue2.size();
-
-  // Set the residue combinations to look for.
-  // Possibly add this as a cmd line arg later for more a generic program
-  //string residue1[] = {"TYR", "PHE", "TRP"};
-  //string residue2[] = {"GLU", "ASP"};
 
   // Searching for interations within each chain
   for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
@@ -194,6 +192,10 @@ bool processSinglePDBFile(char* filename,
                 }
             }
         }
+      // for(unsigned int j = 0; j<opts.numLigands; j++)
+      // 	{
+	  
+      // 	}
     }
 
   return true;
@@ -285,6 +287,7 @@ void searchChainInformation(PDB & PDBfile,
                                        c2->aa[j],
                                        opts.threshold,
                                        PDBfile.filename,
+				       opts.gamessfolder,
                                        output_file);
                 }
             }
@@ -329,6 +332,7 @@ void findBestInteraction( AminoAcid& aa1,
                           AminoAcid& aa2,
                           float threshold,
                           string input_filename,
+			  char* gamessfolder,
                           ofstream& output_file)
 {
   float closestDist = FLT_MAX;
@@ -338,8 +342,13 @@ void findBestInteraction( AminoAcid& aa1,
   float angle;
   float angle1;
   float angleP;
+  float angleh;
+  float angleOxy;
+  float angleOxy2;
   AminoAcid aa1h;
   AminoAcid aa2h;
+  char output_filename[1024] = "N/A";
+  static int numOutputted = 0;
 
   // Go through all combination of distances looking 
   // for the closet pair
@@ -365,115 +374,162 @@ void findBestInteraction( AminoAcid& aa1,
       
       PDB pairWithHydrogen;
       pairWithHydrogen.addHydrogensToPair(aa1,aa2);
-      //cout << pairWithHydrogen << endl;
-      //exit(1);
+      
+      // The following is just to put the benzene in aa1h
+      // and the formate in aa2h just so that I can keep
+      // this straight in my head.  This may not be necessary
+      // but it helps me when I am looking through the code.
+
+      // If these residues were in different chains
+      if( pairWithHydrogen.chains.size() != 1 )
+      	{
+      	  // If the benzene was naturally first, 
+      	  // it is in the first chain while the formate
+      	  // is in the second chain
+      	  if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
+      	    {
+      	      aa1h = pairWithHydrogen.chains[0].aa[0];
+      	      aa2h = pairWithHydrogen.chains[1].aa[0];
+      	    }
+      	  // otherwise they are in the opposite order
+      	  else
+      	    {
+      	      aa1h = pairWithHydrogen.chains[1].aa[0];
+      	      aa2h = pairWithHydrogen.chains[0].aa[0];
+      	    }
+      	}
+      // If these residues were in the same chain
+      else
+      	{
+      	  // If the benzene was naturally first, 
+      	  // it is in the first chain while the formate
+      	  // is in the second chain
+      	  if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
+      	    {
+      	      aa1h = pairWithHydrogen.chains[0].aa[0];
+      	      aa2h = pairWithHydrogen.chains[0].aa[1];
+      	    }
+      	  // otherwise they are in the opposite order
+      	  else
+      	    {
+      	      aa1h = pairWithHydrogen.chains[0].aa[1];
+      	      aa2h = pairWithHydrogen.chains[0].aa[0];
+      	    }
+      	}
+
       // Now we are looking at the distances between the AA's
       // and center of charges of the GLU and ASP
-      if( code1 == 'X' )
-	{
-	  if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
-	    {
-	      aa1h = pairWithHydrogen.chains[0].aa[0];
-	      aa2h = pairWithHydrogen.chains[1].aa[0];
-	    }
-	  else
-	    {
-	      aa1h = pairWithHydrogen.chains[1].aa[0];
-	      aa2h = pairWithHydrogen.chains[0].aa[0];
-	    }
-	}
-      else
-	{
-	  if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
-	    {
-	      aa1h = pairWithHydrogen.chains[0].aa[0];
-	      aa2h = pairWithHydrogen.chains[0].aa[1];
-	    }
-	  else
-	    {
-	      aa1h = pairWithHydrogen.chains[0].aa[1];
-	      aa2h = pairWithHydrogen.chains[0].aa[0];
-	    }
-	}
-
-      closestDist = findClosestDistance(aa1h,
-					aa2h,
-					threshold,
-					&closestDist_index1, 
-					&closestDist_index2);
-      
       
       if( closestDist != FLT_MAX )
 	{
 	  // calculate the angles of this interaction
-	  calculateAngles(aa1h,
-			  aa2h,
-			  closestDist_index1,
-			  closestDist_index2,
-			  &angle,
-			  &angle1,
-			  &angleP);
+	  aa1.calculateAnglesPreHydrogens(aa2,
+	  				  closestDist_index1,
+	  				  closestDist_index2,
+	  				  &angle,
+	  				  &angle1,
+	  				  &angleP);
+	  
+	  float dist;
+	  float distOxy;
+	  float distOxy2;
+	  aa1h.calculateDistancesAndAnglesPostHydrogens(aa2h,
+							aa2.center[closestDist_index2],
+							&dist,
+							&distOxy,
+							&distOxy2,
+							&angleh,
+							&angleOxy,
+							&angleOxy2);
+	  
+	  // Here, we are outputting the 
+	  if( gamessfolder )
+	    {
+	      numOutputted++;
+	      sprintf(output_filename, "%s/gamessinp-%d.inp", gamessfolder, numOutputted);
+	      outputINPfile(input_filename, output_filename, aa1h, aa2h);
+	    }
+	  else 
+	    {
+	      sprintf(output_filename, "N/A");
+	    }
 	  
 	  // and we finally output some results!
-	  output_file << aa1h.residue                        << "\t"
-		      << aa2h.residue                        << "\t"
-		      << closestDist                         << "\t"
-		      << angle                               << "\t"
-		      << angleP                              << "\t"
-		      << angle1                              << "\t"
-		      << aa1h.atom[0]->resSeq                << "\t"
-		      << aa2h.atom[0]->resSeq                << "\t"
-		      << code1 << code2                      << "\t"
-		      << input_filename                      << "\t"
-		      << aa1h.atom[0]->chainID               << "\t"
-		      << aa2h.atom[0]->chainID               << "\t"
-		      << aa1h.center[closestDist_index1]     << "\t"
-		      << aa2h.center[closestDist_index2]     << endl;
+	  output_file << aa1.residue                        << "\t"
+		      << aa2.residue                        << "\t"
+		      << closestDist                        << "\t"
+		      << angle                              << "\t"
+		      << angleP                             << "\t"
+		      << angle1                             << "\t"
+		      << aa1.atom[0]->resSeq                << "\t"
+		      << aa2.atom[0]->resSeq                << "\t"
+		      << code1 << code2                     << "\t"
+		      << input_filename                     << "\t"
+		      << output_filename                    << "\t"
+		      << aa1.atom[0]->chainID               << "\t"
+		      << aa2.atom[0]->chainID               << "\t"
+		      << aa1.center[closestDist_index1]     << "\t"
+		      << aa2.center[closestDist_index2]     << "\t" 
+		      << aa1h.center[0]                     << "\t" 
+		      << aa2h.center[0]                     << "\t"
+		      << dist                               << "\t"
+		      << distOxy                            << "\t"
+		      << distOxy2                           << "\t "
+		      << angleh                             << "\t"
+		      << angleOxy                           << "\t "
+		      << angleOxy2                          << "\t" << endl;
 	}      
     }
 }
 
-void calculateAngles(AminoAcid& aa1,
-                     AminoAcid& aa2,
-                     int index1,
-                     int index2,
-                     float* angle,
-                     float* angle1,
-                     float* angleP )
+void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, AminoAcid& aa2h)
 {
-  Coordinates planeP;
-  Coordinates planeProject;
-  
-  // Calculate the equation of the plane
-  float det = getPlaneEquation( *(aa1.center[index1].plane_info[ CG_PLANE_COORD_PTT]),
-                                *(aa1.center[index1].plane_info[CD1_PLANE_COORD_PTT]),
-                                *(aa1.center[index1].plane_info[CD2_PLANE_COORD_PTT]),
-                                &planeP);
+  ofstream inpout(filename);
 
-  // Calculate the angle between a plane and a line
-  *angle = angleBetweenPlaneAndLine( planeP,
-                                     aa1.center[index1],
-                                     aa2.center[index2]);
+  inpout << INPheader << endl;
+  inpout << " $MOROKM IATM(1)=" << aa1h.atom.size() << "," << aa2h.atom.size() << " ICHM(1)=0,-1" << " $END" << endl;
+  inpout << " $DATA" << endl;
+  inpout << input_filename << endl;
+  inpout << "C1" << endl;
+  for(int i=0; i<aa1h.atom.size(); i++)
+    {
+      if( aa1h.atom[i]->element == " H" )
+	{
+	  inpout << "H      1.0     ";
+	}
+      else if( aa1h.atom[i]->element == " C")
+	{
+	  inpout << "C      6.0     ";
+	}
+      else if( aa1h.atom[i]->element == " O")
+	{
+	  inpout << "O      8.0     ";
+	}
+      inpout << aa1h.atom[i]->coord << endl;
+    }
   
-  // Calculate the "plane project" coordinates
-  planeProjectCoordinate( planeP, 
-                          aa2.center[index2],
-                          -1 * det, 
-                          &planeProject);
+  for(int i=0; i<aa2h.atom.size(); i++)
+    {
+      if( aa2h.atom[i]->element == " H")
+	{
+	  inpout << "H      1.0     ";
+	}
+      else if( aa2h.atom[i]->element == " C")
+	{
+	  inpout << "C      6.0     ";
+	}
+      else if( aa2h.atom[i]->element == " O")
+	{
+	  inpout << "O      8.0     ";
+	}
+      inpout << aa2h.atom[i]->coord << endl;
+    }
   
-  // find the second angle betwen the CG ATOM and the "plane project"
-  *angle1 = findAngle(*aa1.center[index1].plane_info[ CG_PLANE_COORD_PTT],
-                      aa1.center[index1],
-                      planeProject);
-  
-  // finally, calculate the angle between the planes of AA1 and AA2
-  *angleP = calculateAngleBetweenPlanes( planeP,
-                                         aa2,
-                                         index2 );
-
+  inpout << " $END" << endl;
+  inpout.close();
 }
 
 void write_output_head(ofstream& out)
 {
-  out <<"res1\tres2\tdist\tangle\tangleP\tangle1\tloc1\tloc2\tcode\tpdbID\tchain1\tchain2" << endl;
+  out <<"# res1  res2    dist    angle   angleP  angle1  loc1    loc2    code    pdbID                           gamessinput             center1                 center2                 center1h                center2h                dist    distOxy     distOxy2 angleh         angleOxy angleOxy2" << endl;
 }

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Name of the job
+#$ -N STAAR-test
+
+# Pass all of the enivornment variables to job
+#$ -V
+
+# Set the file to which STDERR will be written
+#$ -e /data/AQ/data/d/STAAR.err
+
+# Set the file to which STDOUT will be written
+#$ -o /data/AQ/data/d/STAAR.out
+
+# Set what queue we are going to run it in
+#$ -q medium*
+
+# Move to the current working directory
+#$ -cwd
+
+# Email address to send completion notice to
+#$ -M david.d.jenkins@gmail.com
+
+# Send an email on suspension of the job
+#$ -m bes
+
+./staar -p /data/AQ/Jason/PDB/ -o /data/AQ/data/d/STAARtable.out -r "PHE;GLU,ASP" -s -t 7 -g /data/AQ/data/d/INP

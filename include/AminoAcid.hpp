@@ -46,14 +46,22 @@
 #include "Atom.hpp"
 
 // Defines to set indexes for the vector that holds plane information
+// This is only to make reading the code easier so that when you look
+// through the code you don't see just numbers without any explanation
+// But, these are for PHE
 #define CG_PLANE_COORD_PTT  0 
 #define CD1_PLANE_COORD_PTT 1
 #define CD2_PLANE_COORD_PTT 2
+#define CE2_PLANE_COORD_PTT 2
+#define C_2_PLANE_COORD_PTT 2
 
+// And these are for GLU and ASP.  Don't ask why I used different 
+// indexes than I did above, because I'm not quite sure
 #define C__PLANE_COORD_AG  2
 #define O_1_PLANE_COORD_AG 0
 #define O_2_PLANE_COORD_AG 1
 
+#define HYDROGEN_BOND_DISTANCE 0.632469
 
 class AminoAcid{
 private:
@@ -61,11 +69,21 @@ private:
   // information order to calculate the angle later
   void centerPHEorTYR();
   void centerTRP();
+
+  // DO NOT USE THESE!!!! If you use this, puppies will be harmed!
+  // This is only here for legacy reasons because this is what the old
+  // STAAR code used.  It is wrong.
   void centerASP();
   void centerGLU();
-  // however these does set the plane information correctly
-  void centerASP_nocharge();
-  void centerGLU_nocharge();
+
+  // These find the oxygens that will later be used for distances for ASP and GLU
+  void centerASP_oxygen();
+  void centerGLU_oxygen();
+
+  void centerPHEorTYR_simplified();
+  void centerASP_charge();
+  void centerGLU_charge();
+
   void printPHEorTYR(FILE* output);
   void printASP(FILE* output);
   void printGLU(FILE* output);
@@ -81,18 +99,36 @@ public:
   // functions above depending on AA
   void calculateCenter(bool center);
 
+  void calculateAnglesPreHydrogens(AminoAcid aa2,
+				   int index1,
+				   int index2,
+				   float* angle,
+				   float* angle1,
+				   float* angleP);
+  bool calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
+						Coordinates closestOxygen,
+						float* dist,
+						float* distOxy,
+						float* distOxy2,
+						float* angle,
+						float* angle1,
+						float* angleP);
+
+  // Prints out only the atoms that we need to create benzene or formate
   void printNeededAtoms(FILE* output);
 
   // this holds pointers to the ATOM strings
   vector<Atom*> atom;
-  // holds the coordinates of the atoms to calculate the plane
-  vector< vector <Atom*> > plane_info;
+
   // holds the calculated centers that will be examined
   vector<Coordinates>  center;
+
   // holds the residue name
   string residue;
+
   // true of this AA isn't important, false otherwise
   bool skip;
+
   // true if there is an alt loc in ATOM line
   bool altLoc;
 

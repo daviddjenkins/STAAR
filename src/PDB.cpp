@@ -219,7 +219,6 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   // appends the H to the end of the file
   //cout << brown << *this << endl;
   this->sortAtoms();
-  //cout << gray << *this << endl;
 
   // Split the atoms up into amino acids and chains
   this->populateChains(true);
@@ -321,6 +320,22 @@ void PDB::populateChains(bool center)
       chains[chainIndex].addSeqres(&seqres[i]);
     }
 
+}
+
+void PDB::findLigands(vector<string> ligandsToFind)
+{
+  int hetsize = this->hetatms.size();
+  int ligsize = ligandsToFind.size();
+  for(int i=0; i<hetsize; i++)
+    {
+      for(int j=0; j<ligsize; j++)
+	{
+	  if(this->hetatms[i].residueName == ligandsToFind[j])
+	    {
+	      this->ligands.push_back(&(this->hetatms[i]));
+	    }
+	}
+    }
 }
 
 void PDB::sortAtoms()

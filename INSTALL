@@ -1,8 +1,25 @@
 Brief installation instructions
 STAAR v2.0; January 2011
-------------------------------------------------------------------
+--------------------------------------------------------------------------------
 
-Type make.
-That's it, just type make
+1. Download OpenBabel from http://openbabel.org/
+   - At the time of writing, OpenBabel v2.3 was the most recent
+     version.  We have not tested this with a newer version.
 
-------------------------------------------------------------------
+2. Ensure that the OpenBabel library path is in your $LD_LIBRARY_PATH.
+   - example in Bash:
+     export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/data/AQ/openbabel-2.3.0/build/lib/
+
+3. Ensure that the OpenBabel library path is set according to the OpenBabel 
+   instructions
+   - example in Bash:
+     export BABEL_LIBDIR=/data/AQ/openbabel-2.3.0/build/lib/
+
+4. Edit the Makefile line that begins with BABEL_INCDIR to being the path to 
+   the OpenBabel include directories.
+   - example can be seen in the Makefile
+
+5. Now it is finally time to compile everything! Just type 
+       make
+
+--------------------------------------------------------------------------------

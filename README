@@ -18,5 +18,21 @@ the LGPLv2.1 library that can be seen in gzstream/COPYING.lib.  For
 more information on the gzstream library, please visit their page at:
     http://www.cs.unc.edu/Research/compgeom/gzstream/
 
+The STAAR code was not intended to be library of code that you could 
+plug into to develop more code.  This is evident by the amount of 
+hoops you would have to jump through just to compile it.  This is
+mainly due to the OpenBabel dependency.  However, if you wish to use
+it as a library, you should be able to as we have done it a couple
+of times.  The only thing that is truly specifc to STAAR are the 
+Options.{cpp,hpp} files, but from my recollection nothing else
+depends on those files.  There is limited options in the PDB reader
+as we were only concerned with the ATOM lines (well, for one of our
+side projects, HETATM lines). If you need support for other PDB 
+features, you will need to edit PDB.{cpp,hpp}.  Anyway, good luck.
+
+Oh, and if you don't want to use this code on your own computer, we 
+have considered developing a web page to take user requests to run on
+our own server.  But that is just in talks so far...
+
 -----------------------------------------------------------------------
 

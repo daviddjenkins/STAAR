@@ -49,7 +49,13 @@
 #include "Utils.hpp"
 #include "Chain.hpp"
 
-using namespace OpenBabel;
+static char INPheader[] = \
+  " $CONTRL SCFTYP=RHF  RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=60 $END\n" \
+  " $BASIS GBASIS=TZV $END\n"						\
+  " $GUESS GUESS=HUCKEL $END\n"						\
+  " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END";
+
+
 
 class PDB
 {
@@ -92,7 +98,7 @@ public:
   void populateChains(bool center);
 
   // Organizes ligands into an array
-  void findLigands();
+  void findLigands(vector<string> ligandsToFind);
 
   // Puts the atoms in order by their sequence number
   void sortAtoms();
@@ -100,9 +106,10 @@ public:
   vector<Chain>         chains;         // Variable to hold the chain information
   vector<Atom>          atoms;          // Vector hold all the atom lines
   vector<Atom>          hetatms;        // Vector holding all the hetatm lines
+  vector<Atom*>         ligands;        // Vector holding all the ligand lines
   vector<Seqres>        seqres;         // Vector holding all the seqres lines
   char*                 filename;       // Holds the filename, if needed
-  OBConversion          conv;           // Holds OpenBabel reading of important
+  OpenBabel::OBConversion          conv;// Holds OpenBabel reading of important
                                         //  residue pairs adding H. Will also 
                                         //  be used to output to GAMESS format
   friend ostream& operator<<(ostream& output, const PDB& p);
