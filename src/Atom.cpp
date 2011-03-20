@@ -124,27 +124,27 @@ void Atom::parseAtom(string line, int num)
     }
 
   // Error check to ensure the file is formatted correctly
-  if(line.length() != 80)
+  if(this->line.length() != 80)
     {
       cerr << red << "Error" << reset << ": Possible malformed PDB file on ATOM/HETATM line " << num << "." << endl;
       failure = true;
     }
 
   // Get the serial number and error check
-  if(!from_string<unsigned int>(serialNumber,line.substr(6,5),dec))
+  if(!from_string<unsigned int>(serialNumber,this->line.substr(6,5),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert aa into an unsigned int" << endl;
       failure = true;
     }
 
   // Grab the name, alternate location, residue name, and chain ID
-  name = line.substr(12,4);
-  altLoc = line[16];
-  residueName = line.substr(17,3);
-  chainID = line[21];
+  name = this->line.substr(12,4);
+  altLoc = this->line[16];
+  residueName = this->line.substr(17,3);
+  chainID = this->line[21];
 
   // Grab the residue sequence number
-  if(!from_string<unsigned int>(resSeq,line.substr(22,4),dec))
+  if(!from_string<unsigned int>(resSeq,this->line.substr(22,4),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert aa into an unsigned int" << endl;
       failure = true;
@@ -154,35 +154,35 @@ void Atom::parseAtom(string line, int num)
   iCode = line[26];
 
   // Grab the coordinates, occupancy and temperature factor
-  if(!from_string<float>(coord.x,line.substr(30,8),dec))
+  if(!from_string<float>(coord.x,this->line.substr(30,8),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert x coordinate into a double" << endl;
       failure = true;
     }
-  if(!from_string<float>(coord.y,line.substr(38,8),dec))
+  if(!from_string<float>(coord.y,this->line.substr(38,8),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert y coordinate into a double" << endl;
       failure = true;
     }
-  if(!from_string<float>(coord.z,line.substr(46,8),dec))
+  if(!from_string<float>(coord.z,this->line.substr(46,8),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert z coordinate into a double" << endl;
       failure = true;
     }
-  if(!from_string<double>(occupancy,line.substr(54,6),dec))
+  if(!from_string<double>(occupancy,this->line.substr(54,6),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert occupancy into a double" << endl;
       failure = true;
     }
-  if(!from_string<double>(tempFactor,line.substr(60,8),dec))
+  if(!from_string<double>(tempFactor,this->line.substr(60,8),dec))
     {
       cerr << red << "Error" << reset << ":failed to convert temperature factor into a double" << endl;
       failure = true;
     }
 
   // Store the element and charge
-  element = line.substr(76,2);
-  charge = line.substr(78,2);
+  element = this->line.substr(76,2);
+  charge = this->line.substr(78,2);
 
 }
 // Outputs the ATOM line into a file
@@ -204,7 +204,7 @@ void Atom::print(FILE* output)
   //      this->tempFactor,
   //      this->element.c_str(),
   //      this->charge.c_str());
-  fprintf(output, "%s\n",line.c_str());
+  fprintf(output, "%s\n",this->line.c_str());
 }
 
 // Outputs the ATOM line to a stream
