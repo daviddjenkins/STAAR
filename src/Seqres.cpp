@@ -78,7 +78,7 @@ bool Seqres::fail()
 // Parses the SEQRES line
 int Seqres::parseLine(string line)
 {
-  if(this->line[line.length()-1] == '\r')
+  if(line[line.length()-1] == '\r')
     {
       line.erase(line.length()-1,1);
     }

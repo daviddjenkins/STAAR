@@ -120,7 +120,7 @@ void Atom::parseAtom(string line, int num)
 
   if(this->line[line.length()-1] == '\r')
     {
-      line.erase(line.length()-1,1);
+      this->line.erase(line.length()-1,1);
     }
 
   // Error check to ensure the file is formatted correctly
