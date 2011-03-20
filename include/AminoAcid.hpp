@@ -45,6 +45,13 @@
 #include <string>
 #include "Atom.hpp"
 
+// This is just because I was dumb before and just called this library
+// AminoAcid, whereas it should have been Residue.  I just don't
+// want to go through all the files and change it, even though 
+// it wouldn't be that difficult. Either way, with this, we can use
+// either AminoAcid or Residue interchangeably.
+#define Residue AminoAcid
+
 // Defines to set indexes for the vector that holds plane information
 // This is only to make reading the code easier so that when you look
 // through the code you don't see just numbers without any explanation

@@ -71,9 +71,9 @@ void Chain::addAminoAcid(AminoAcid a)
 }
 
 // Adds reference to a HETATM to a vector of Atom*
-void Chain::addHetatm(Atom* h)
+void Chain::addHetatm(Residue r)
 {
-  hetatms.push_back(h);
+  hetatms.push_back(r);
 }
 
 // Adds reference to a SEQRES to a vector of Seqres*

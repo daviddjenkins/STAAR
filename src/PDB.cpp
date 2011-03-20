@@ -119,10 +119,11 @@ void PDB::parsePDB(istream& file)
 void PDB::parsePDBstream(istream& PDBfile)
 {
   string line; // this is a temp var to hold the current line from the file
-  
+  int count = 0;
   // For each line in the file
   while( getline(PDBfile, line) && !failure)
     {
+      count++;
       // Parse the line if we are on a SEQRES line
       int found = line.find("SEQRES");
       if( found == 0 )
@@ -136,7 +137,7 @@ void PDB::parsePDBstream(istream& PDBfile)
       found = line.find("ATOM");
       if( found == 0 )
         {
-          Atom a(line);
+          Atom a(line, count);
           failure = a.fail();
           atoms.push_back(a);
         }
@@ -146,7 +147,7 @@ void PDB::parsePDBstream(istream& PDBfile)
       found = line.find("HETATM");
       if( found == 0 )
         {
-          Atom h(line);
+          Atom h(line, count);
           failure = h.fail();
           hetatms.push_back(h);
         }
@@ -168,9 +169,9 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
     OBFormat* pAPI = OBConversion::FindFormat("obapi");
     if(pAPI)
       {
-	apiConv.SetOutFormat(pAPI);
-	apiConv.AddOption("errorlevel", OBConversion::GENOPTIONS, "0");
-	apiConv.Write(NULL, &std::cout);
+        apiConv.SetOutFormat(pAPI);
+        apiConv.AddOption("errorlevel", OBConversion::GENOPTIONS, "0");
+        apiConv.Write(NULL, &std::cout);
       }
   }
 
@@ -180,17 +181,17 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   for(unsigned int i=0; i < a.atom.size(); i++)
     {
       if( !a.atom[i]->skip )
-	{
-	  packedFile += a.atom[i]->line + "\n";
-	}
+        {
+          packedFile += a.atom[i]->line + "\n";
+        }
     }
 
   for(unsigned int i=0; i < b.atom.size(); i++)
     {
       if( !b.atom[i]->skip )
-	{
-	  packedFile += b.atom[i]->line + "\n";
-	}
+        {
+          packedFile += b.atom[i]->line + "\n";
+        }
     }
 
   // Now, let's set up some Babel information
@@ -239,7 +240,10 @@ void PDB::populateChains(bool center)
   char chainID =  '-';
   // Index for the chain
   int chainIndex = -1;
-  
+
+  // All of this assumes that the chains are in order
+  // and all atoms within the chain are grouped together
+
   // Go through each atom
   for(unsigned int i = 0; i < atoms.size(); i++)
     {
@@ -252,31 +256,31 @@ void PDB::populateChains(bool center)
           chains[chainIndex].id = chainID;
         }
 
+      // Separate the atoms into amino acids
       AminoAcid aa;
       unsigned int residue_number = atoms[i].resSeq;
       while(residue_number == atoms[i].resSeq)
-	{
-	  aa.atom.push_back(&atoms[i]);
-	  i++;
-	  if( i == atoms.size() )
-	    {
-	      break;
-	    }
-	}
+        {
+          aa.atom.push_back(&atoms[i]);
+          i++;
+          if( i == atoms.size() )
+            {
+              break;
+            }
+        }
       i--;
       
       aa.residue = atoms[i].residueName;
       if(aa.residue == "TRP" || aa.residue == "PHE" ||
-	 aa.residue == "TYR" || aa.residue == "ASP" ||
-	 aa.residue == "GLU")
-	{
-	  aa.calculateCenter(center);
-	}
+         aa.residue == "TYR" || aa.residue == "ASP" ||
+         aa.residue == "GLU")
+        {
+          aa.calculateCenter(center);
+        }
       else
-	{
-	  aa.skip = true;
-	}
-
+        {
+          aa.skip = true;
+        }
 
       // Store the reference of the atom in the corresponding chain info
       chains[chainIndex].addAminoAcid(aa);
@@ -286,25 +290,47 @@ void PDB::populateChains(bool center)
   chainID = '-';
   chainIndex = -1;
 
-  // This is current commented out because we aren't
-  // doing anything with the HETATM lines so there
-  // is no reason to read them
-  // // Go through each hetatm
-  // for(int i = 0; i < hetatms.size(); i++)
-  //   {
-  //     // Check if this is a new chain
-  //     if(hetatms[i].chainID != chainID )
-  //       {
-  //         chainIndex++;
-  //         chainID = hetatms[i].chainID;
-  //       }
-  //     // Store the reference of the hetatm in the corresponding chain info
-  //     chains[chainIndex].addHetatm(&hetatms[i]);
-  //   }
+  // Go through each hetatm
+  for(int i = 0; i < hetatms.size(); i++)
+    {
+      // Check if this is a new chain
+      if(hetatms[i].chainID != chainID )
+        {
+          chainIndex++;
+          // This is here because sometimes there are extra
+          // hetatms that aren't part of any chain (at least
+          // based on the chainID).  For example look at 
+          // 1A2Z at atom 7011
+          if(chainIndex == chains.size())
+            {
+              chains.resize(chainIndex+1);
+            }
+          chainID = hetatms[i].chainID;
+        }
+      
+      // Separate the hetatms into Residues
+      Residue r;
+      unsigned int residue_number = hetatms[i].resSeq;
+      while(residue_number == hetatms[i].resSeq)
+        {
+          r.atom.push_back(&hetatms[i]);
+          i++;
+          if( i == hetatms.size() )
+            {
+              break;
+            }
+        }
+      i--;
+      r.residue = hetatms[i].residueName;
+      r.calculateCenter(center);
+      
+      // Store the reference of the hetatm in the corresponding chain info
+      chains[chainIndex].addHetatm(r);
+    }
 
-  // // again, reset the flags
-  // chainID = '-';
-  // chainIndex = -1;
+  // again, reset the flags
+  chainID = '-';
+  chainIndex = -1;
 
   // Go through each seqres
   for(unsigned int i = 0; i < seqres.size(); i++)
@@ -324,17 +350,21 @@ void PDB::populateChains(bool center)
 
 void PDB::findLigands(vector<string> ligandsToFind)
 {
-  int hetsize = this->hetatms.size();
   int ligsize = ligandsToFind.size();
-  for(int i=0; i<hetsize; i++)
+
+  for(int i=0; i<chains.size(); i++)
     {
-      for(int j=0; j<ligsize; j++)
-	{
-	  if(this->hetatms[i].residueName == ligandsToFind[j])
-	    {
-	      this->ligands.push_back(&(this->hetatms[i]));
-	    }
-	}
+      int hetsize = this->chains[i].hetatms.size();
+      for(int j=0; j<hetsize; j++)
+        {
+          for(int k=0; k<ligsize; k++)
+            {
+              if(this->chains[i].hetatms[j].residue == ligandsToFind[k])
+                {
+                  this->ligands.push_back(&(this->chains[i].hetatms[j]));
+                }
+            }
+        }
     }
 }
 

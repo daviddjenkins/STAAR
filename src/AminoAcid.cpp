@@ -104,38 +104,38 @@ void AminoAcid::centerPHEorTYR()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->altLoc != ' ' )
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if(atom[i]->name == " CG ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CZ ")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CD1")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CD2")
-	{
-	  temp[3].push_back(atom[i]);
-	}
+        {
+          temp[3].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CE1")
-	{
-	  temp[4].push_back(atom[i]);
-	}
+        {
+          temp[4].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CE2")
-	{
-	  temp[5].push_back(atom[i]);
-	}
+        {
+          temp[5].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it 
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
     }
   
   // Error check.  If we don't have at least one of each
@@ -147,58 +147,58 @@ void AminoAcid::centerPHEorTYR()
     {
       skip = true;
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
-	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
       return;
     }
 
   // Allocate size for all of the possible centers
   center.resize(temp[0].size() * temp[1].size() * temp[2].size() *
-		temp[3].size() * temp[4].size() * temp[5].size());
+                temp[3].size() * temp[4].size() * temp[5].size());
 
   // And go through all combinations of the alternate locations
   unsigned int index = 0;
   for(unsigned int i = 0; i < temp[0].size(); i++) // go through all the CG
     {
       for(unsigned int j = 0; j < temp[1].size(); j++) // go through all the CZ
-	{
-	  for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the CD1
-	    {
-	      for(unsigned int l = 0; l < temp[3].size(); l++) // go through all the CD2
-		{
-		  for(unsigned int m = 0; m < temp[4].size(); m++) // go through all the CE1
-		    {
-		      for(unsigned int n = 0; n < temp[5].size(); n++, index++) // go through all the CE2
-			{
-			  center[index].plane_info.resize(3);
-			  center[index].plane_info[ CG_PLANE_COORD_PTT] = &(temp[0][i]->coord);
-			  center[index].plane_info[CD1_PLANE_COORD_PTT] = &(temp[2][k]->coord);
-			  center[index].plane_info[CD2_PLANE_COORD_PTT] = &(temp[3][l]->coord);
-			  // This is just an average of the all the coordinates
-			  center[index] = ( temp[0][i]->coord +
-					    temp[1][j]->coord +
-					    temp[2][k]->coord +
-					    temp[3][l]->coord +
-					    temp[4][m]->coord +
-					    temp[5][n]->coord )/(6);
+        {
+          for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the CD1
+            {
+              for(unsigned int l = 0; l < temp[3].size(); l++) // go through all the CD2
+                {
+                  for(unsigned int m = 0; m < temp[4].size(); m++) // go through all the CE1
+                    {
+                      for(unsigned int n = 0; n < temp[5].size(); n++, index++) // go through all the CE2
+                        {
+                          center[index].plane_info.resize(3);
+                          center[index].plane_info[ CG_PLANE_COORD_PTT] = &(temp[0][i]->coord);
+                          center[index].plane_info[CD1_PLANE_COORD_PTT] = &(temp[2][k]->coord);
+                          center[index].plane_info[CD2_PLANE_COORD_PTT] = &(temp[3][l]->coord);
+                          // This is just an average of the all the coordinates
+                          center[index] = ( temp[0][i]->coord +
+                                            temp[1][j]->coord +
+                                            temp[2][k]->coord +
+                                            temp[3][l]->coord +
+                                            temp[4][m]->coord +
+                                            temp[5][n]->coord )/(6);
 
-			  // And this is just so we know what combination of
-			  // alternate locations (may be able to take out later)
-			  string t;
-			  t.insert(t.end(),1,temp[0][i]->altLoc);
-			  t.insert(t.end(),1,temp[1][j]->altLoc);
-			  t.insert(t.end(),1,temp[2][k]->altLoc);
-			  t.insert(t.end(),1,temp[3][l]->altLoc);
-			  t.insert(t.end(),1,temp[4][m]->altLoc);
-			  t.insert(t.end(),1,temp[5][n]->altLoc);
-			  center[index].altLoc = t;
+                          // And this is just so we know what combination of
+                          // alternate locations (may be able to take out later)
+                          string t;
+                          t.insert(t.end(),1,temp[0][i]->altLoc);
+                          t.insert(t.end(),1,temp[1][j]->altLoc);
+                          t.insert(t.end(),1,temp[2][k]->altLoc);
+                          t.insert(t.end(),1,temp[3][l]->altLoc);
+                          t.insert(t.end(),1,temp[4][m]->altLoc);
+                          t.insert(t.end(),1,temp[5][n]->altLoc);
+                          center[index].altLoc = t;
 #ifdef DEBUG
-			  cout << "CHECK: " << residue << atom[0]->resSeq << " : " << center[index] << endl;
+                          cout << "CHECK: " << residue << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-			}
-		    }
-		}
-	    }
-	}
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -223,50 +223,50 @@ void AminoAcid::centerTRP()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->altLoc != ' ' )
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if(atom[i]->name == " CG ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CH2")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CD1")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CD2")
-	{
-	  temp[3].push_back(atom[i]);
-	}
+        {
+          temp[3].push_back(atom[i]);
+        }
       else if(atom[i]->name == " NE1")
-	{
-	  temp[4].push_back(atom[i]);
-	}
+        {
+          temp[4].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CE2")
-	{
-	  temp[5].push_back(atom[i]);
-	}
+        {
+          temp[5].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CE3")
-	{
-	  temp[6].push_back(atom[i]);
-	}
+        {
+          temp[6].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CZ2")
-	{
-	  temp[7].push_back(atom[i]);
-	}
+        {
+          temp[7].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CZ3")
-	{
-	  temp[8].push_back(atom[i]);
-	}
+        {
+          temp[8].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it 
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
     }
 
   // Error check.  If we don't have at least one of each
@@ -280,12 +280,12 @@ void AminoAcid::centerTRP()
     {
       skip = true;
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
-	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
       return;
     }
   // Allocate size for all of the possible centers
   center.resize( temp[0].size() * temp[1].size() * temp[2].size() * temp[3].size()*
-		 temp[4].size() * temp[5].size() * temp[6].size() * temp[7].size() * temp[8].size());
+                 temp[4].size() * temp[5].size() * temp[6].size() * temp[7].size() * temp[8].size());
 
   // And go through all combinations of the alternate locations
   // (Sorry that it is really freaking ugly)
@@ -293,62 +293,62 @@ void AminoAcid::centerTRP()
   for(unsigned int i = 0; i < temp[0].size(); i++) // go through all the CG
     {
       for(unsigned int j = 0; j < temp[1].size(); j++) // go through all the CH2
-	{
-	  for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the CD1
-	    {
-	      for(unsigned int l = 0; l < temp[3].size(); l++) // go through all the CD2
-		{
-		  for(unsigned int m = 0; m < temp[4].size(); m++) // go through all the NE1
-		    {
-		      for(unsigned int n = 0; n < temp[5].size(); n++) // go through all the CE2
-			{
-			  for(unsigned int o = 0; o < temp[6].size(); o++) // go through all the CE3
-			    {
-			      for(unsigned int p = 0; p < temp[7].size(); p++) // go through all the CZ2
-				{
-				  for(unsigned int q = 0; q < temp[8].size(); q++, index++) // go through all the CZ2
-				    {
-				      center[index].plane_info.resize(3);
-				      center[index].plane_info[CG_PLANE_COORD_PTT]  = &temp[0][i]->coord;
-				      center[index].plane_info[CD1_PLANE_COORD_PTT] = &temp[2][k]->coord;
-				      center[index].plane_info[CD2_PLANE_COORD_PTT] = &temp[3][l]->coord;
+        {
+          for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the CD1
+            {
+              for(unsigned int l = 0; l < temp[3].size(); l++) // go through all the CD2
+                {
+                  for(unsigned int m = 0; m < temp[4].size(); m++) // go through all the NE1
+                    {
+                      for(unsigned int n = 0; n < temp[5].size(); n++) // go through all the CE2
+                        {
+                          for(unsigned int o = 0; o < temp[6].size(); o++) // go through all the CE3
+                            {
+                              for(unsigned int p = 0; p < temp[7].size(); p++) // go through all the CZ2
+                                {
+                                  for(unsigned int q = 0; q < temp[8].size(); q++, index++) // go through all the CZ2
+                                    {
+                                      center[index].plane_info.resize(3);
+                                      center[index].plane_info[CG_PLANE_COORD_PTT]  = &temp[0][i]->coord;
+                                      center[index].plane_info[CD1_PLANE_COORD_PTT] = &temp[2][k]->coord;
+                                      center[index].plane_info[CD2_PLANE_COORD_PTT] = &temp[3][l]->coord;
 
-				      // This is a weighted average of the atoms weighted
-				      // by their mass
-				      center[index] = ( temp[0][i]->coord * MASS_C +
-							temp[1][j]->coord * MASS_C +
-							temp[2][k]->coord * MASS_C +
-							temp[3][l]->coord * MASS_C +
-							temp[4][m]->coord * MASS_N +
-							temp[5][n]->coord * MASS_C +
-							temp[6][o]->coord * MASS_C +
-							temp[7][p]->coord * MASS_C +
-							temp[8][q]->coord * MASS_C )/(MASS_C*8+MASS_N);
+                                      // This is a weighted average of the atoms weighted
+                                      // by their mass
+                                      center[index] = ( temp[0][i]->coord * MASS_C +
+                                                        temp[1][j]->coord * MASS_C +
+                                                        temp[2][k]->coord * MASS_C +
+                                                        temp[3][l]->coord * MASS_C +
+                                                        temp[4][m]->coord * MASS_N +
+                                                        temp[5][n]->coord * MASS_C +
+                                                        temp[6][o]->coord * MASS_C +
+                                                        temp[7][p]->coord * MASS_C +
+                                                        temp[8][q]->coord * MASS_C )/(MASS_C*8+MASS_N);
 
-				      // And this is just so we know what combination of
-				      // alternate locations (may be able to take out later)
-				      string t;
-				      t.insert(t.end(),1,temp[0][i]->altLoc);
-				      t.insert(t.end(),1,temp[1][j]->altLoc);
-				      t.insert(t.end(),1,temp[2][k]->altLoc);
-				      t.insert(t.end(),1,temp[3][l]->altLoc);
-				      t.insert(t.end(),1,temp[4][m]->altLoc);
-				      t.insert(t.end(),1,temp[5][n]->altLoc);
-				      t.insert(t.end(),1,temp[6][o]->altLoc);
-				      t.insert(t.end(),1,temp[7][p]->altLoc);
-				      t.insert(t.end(),1,temp[8][q]->altLoc);
-				      center[index].altLoc = t;
+                                      // And this is just so we know what combination of
+                                      // alternate locations (may be able to take out later)
+                                      string t;
+                                      t.insert(t.end(),1,temp[0][i]->altLoc);
+                                      t.insert(t.end(),1,temp[1][j]->altLoc);
+                                      t.insert(t.end(),1,temp[2][k]->altLoc);
+                                      t.insert(t.end(),1,temp[3][l]->altLoc);
+                                      t.insert(t.end(),1,temp[4][m]->altLoc);
+                                      t.insert(t.end(),1,temp[5][n]->altLoc);
+                                      t.insert(t.end(),1,temp[6][o]->altLoc);
+                                      t.insert(t.end(),1,temp[7][p]->altLoc);
+                                      t.insert(t.end(),1,temp[8][q]->altLoc);
+                                      center[index].altLoc = t;
 #ifdef DEBUG
-				      cout << "CHECK: TRP" << atom[0]->resSeq << " : " << center[index] << endl;
+                                      cout << "CHECK: TRP" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	    }
-	}
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -375,30 +375,30 @@ void AminoAcid::centerASP()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->altLoc != ' ')
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if(atom[i]->name == " CG ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if(atom[i]->name == " H  ")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OD1")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OD2")
-	{
-	  temp[3].push_back(atom[i]);
-	}
+        {
+          temp[3].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it 
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
     }
 
   // Error check.  If we don't have at least one of each
@@ -409,7 +409,7 @@ void AminoAcid::centerASP()
     {
       skip = true;
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
-  	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
       return;
     }
 
@@ -421,36 +421,36 @@ void AminoAcid::centerASP()
   for(unsigned int i = 0; i < temp[0].size(); i++) // go through all the CG
     {
       for(unsigned int j = 0; j < temp[1].size(); j++) // go through all the CB
-	{
-	  for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the OD1
-	    {
-	      for(unsigned int l = 0; l < temp[3].size(); l++, index++) // go through all the OD2
-		{
-		  center[index].plane_info.resize(3);
-		  center[index].plane_info[C__PLANE_COORD_AG]  = &temp[0][i]->coord;
-		  center[index].plane_info[O_1_PLANE_COORD_AG] = &temp[2][k]->coord;
-		  center[index].plane_info[O_2_PLANE_COORD_AG] = &temp[3][l]->coord;
+        {
+          for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the OD1
+            {
+              for(unsigned int l = 0; l < temp[3].size(); l++, index++) // go through all the OD2
+                {
+                  center[index].plane_info.resize(3);
+                  center[index].plane_info[C__PLANE_COORD_AG]  = &temp[0][i]->coord;
+                  center[index].plane_info[O_1_PLANE_COORD_AG] = &temp[2][k]->coord;
+                  center[index].plane_info[O_2_PLANE_COORD_AG] = &temp[3][l]->coord;
 
-		  // This is just an average of the all the coordinates
-		  center[index] = ( temp[0][i]->coord * CHARGE_C +
-				    temp[1][j]->coord * CHARGE_H + // treating CB as H in formic acid
-				    temp[2][k]->coord * CHARGE_O +
-				    temp[3][l]->coord * CHARGE_O ) * -1;
-		  
-		  // And this is just so we know what combination of
-		  // alternate locations (may be able to take out later)
-		  string t;
-		  t.insert(t.end(),1,temp[0][i]->altLoc);
-		  t.insert(t.end(),1,temp[1][j]->altLoc);
-		  t.insert(t.end(),1,temp[2][k]->altLoc);
-		  t.insert(t.end(),1,temp[3][l]->altLoc);
-		  center[index].altLoc = t;
+                  // This is just an average of the all the coordinates
+                  center[index] = ( temp[0][i]->coord * CHARGE_C +
+                                    temp[1][j]->coord * CHARGE_H + // treating CB as H in formic acid
+                                    temp[2][k]->coord * CHARGE_O +
+                                    temp[3][l]->coord * CHARGE_O ) * -1;
+                  
+                  // And this is just so we know what combination of
+                  // alternate locations (may be able to take out later)
+                  string t;
+                  t.insert(t.end(),1,temp[0][i]->altLoc);
+                  t.insert(t.end(),1,temp[1][j]->altLoc);
+                  t.insert(t.end(),1,temp[2][k]->altLoc);
+                  t.insert(t.end(),1,temp[3][l]->altLoc);
+                  center[index].altLoc = t;
 #ifdef DEBUG
-		  cout << "CHECK: ASP" << atom[0]->resSeq << " : " << center[index] << endl;
+                  cout << "CHECK: ASP" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-		}
-	    }
-	}
+                }
+            }
+        }
     }
 }
 
@@ -477,30 +477,30 @@ void AminoAcid::centerGLU()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->altLoc != ' ')
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if(atom[i]->name == " H  ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if(atom[i]->name == " CD ")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OE1")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OE2")
-	{
-	  temp[3].push_back(atom[i]);
-	}
+        {
+          temp[3].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it 
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
     }
 
   // Error check.  If we don't have at least one of each
@@ -511,7 +511,7 @@ void AminoAcid::centerGLU()
     {
       skip = true;
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
-  	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
       return;
     }
 
@@ -523,38 +523,38 @@ void AminoAcid::centerGLU()
   for(unsigned int i = 0; i < temp[0].size(); i++) // go through all the CG
     {
       for(unsigned int j = 0; j < temp[1].size(); j++) // go through all the CD
-	{
-	  for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the OE1
-	    {
-	      for(unsigned int l = 0; l < temp[3].size(); l++, index++) // go through all the OE2
-		{
+        {
+          for(unsigned int k = 0; k < temp[2].size(); k++) // go through all the OE1
+            {
+              for(unsigned int l = 0; l < temp[3].size(); l++, index++) // go through all the OE2
+                {
 
-		  center[index].plane_info.resize(3);
-		  center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[1][j]->coord);
-		  center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[2][k]->coord);
-		  center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[3][l]->coord);
-		  
-		  // This is a weighted average weighted by the charges.
-		  // Since the charges sum to -1, we just need to negate the signs
-		  center[index] = ( temp[0][i]->coord * CHARGE_H + // CG treated as H in formic acid
-				    temp[1][j]->coord * CHARGE_C +
-				    temp[2][k]->coord * CHARGE_O +
-				    temp[3][l]->coord * CHARGE_O ) * -1;
-		  
-		  // And this is just so we know what combination of
-		  // alternate locations (may be able to take out later)
-		  string t;
-		  t.insert(t.end(),1,temp[0][i]->altLoc);
-		  t.insert(t.end(),1,temp[1][j]->altLoc);
-		  t.insert(t.end(),1,temp[2][k]->altLoc);
-		  t.insert(t.end(),1,temp[3][l]->altLoc);
-		  center[index].altLoc = t;
+                  center[index].plane_info.resize(3);
+                  center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[1][j]->coord);
+                  center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[2][k]->coord);
+                  center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[3][l]->coord);
+                  
+                  // This is a weighted average weighted by the charges.
+                  // Since the charges sum to -1, we just need to negate the signs
+                  center[index] = ( temp[0][i]->coord * CHARGE_H + // CG treated as H in formic acid
+                                    temp[1][j]->coord * CHARGE_C +
+                                    temp[2][k]->coord * CHARGE_O +
+                                    temp[3][l]->coord * CHARGE_O ) * -1;
+                  
+                  // And this is just so we know what combination of
+                  // alternate locations (may be able to take out later)
+                  string t;
+                  t.insert(t.end(),1,temp[0][i]->altLoc);
+                  t.insert(t.end(),1,temp[1][j]->altLoc);
+                  t.insert(t.end(),1,temp[2][k]->altLoc);
+                  t.insert(t.end(),1,temp[3][l]->altLoc);
+                  center[index].altLoc = t;
 #ifdef DEBUG
-		  cout << "CHECK: GLU" << atom[0]->resSeq << " : " << center[index] << endl;
+                  cout << "CHECK: GLU" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-		}
-	    }
-	}
+                }
+            }
+        }
     }
 }
 
@@ -580,26 +580,26 @@ void AminoAcid::centerASP_oxygen()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->altLoc != ' ')
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if(atom[i]->name == " CG ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OD1")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OD2")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it 
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
     }
 
   // Error check.  If we don't have at least one of each
@@ -610,7 +610,7 @@ void AminoAcid::centerASP_oxygen()
     {
       skip = true;
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
-	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
       return;
     }
   unsigned int offset = temp[0].size() * temp[1].size() * temp[2].size();
@@ -622,35 +622,35 @@ void AminoAcid::centerASP_oxygen()
   for(unsigned int k = 0; k < temp[1].size(); k++) // go through all the OD1
     {      
       for(unsigned int j = 0; j < temp[0].size(); j++) // go through all the CD
-	{
-	  for(unsigned int l = 0; l < temp[2].size(); l++, index++) // go through all the OD2
-	    {
-	      
-	      center[index].plane_info.resize(3);
-	      center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
-	      center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
-	      center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
-	      center[index + offset].plane_info.resize(3);
-	      center[index + offset].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
-	      center[index + offset].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
-	      center[index + offset].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
-		  
-	      center[index] = temp[1][k]->coord;
-	      center[index + offset] = temp[2][l]->coord;
-		  
-	      // And this is just so we know what combination of
-	      // alternate locations (may be able to take out later)
-	      string t;
-	      t.insert(t.end(),1,temp[0][j]->altLoc);
-	      t.insert(t.end(),1,temp[1][k]->altLoc);
-	      t.insert(t.end(),1,temp[2][l]->altLoc);
-	      center[index].altLoc = t;
-	      center[index + offset].altLoc = t;
+        {
+          for(unsigned int l = 0; l < temp[2].size(); l++, index++) // go through all the OD2
+            {
+              
+              center[index].plane_info.resize(3);
+              center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
+              center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
+              center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+              center[index + offset].plane_info.resize(3);
+              center[index + offset].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
+              center[index + offset].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
+              center[index + offset].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+                  
+              center[index] = temp[1][k]->coord;
+              center[index + offset] = temp[2][l]->coord;
+                  
+              // And this is just so we know what combination of
+              // alternate locations (may be able to take out later)
+              string t;
+              t.insert(t.end(),1,temp[0][j]->altLoc);
+              t.insert(t.end(),1,temp[1][k]->altLoc);
+              t.insert(t.end(),1,temp[2][l]->altLoc);
+              center[index].altLoc = t;
+              center[index + offset].altLoc = t;
 #ifdef DEBUG
-	      cout << "CHECK: ASP" << atom[0]->resSeq << " : " << center[index] << endl;
+              cout << "CHECK: ASP" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-	    }
-	}
+            }
+        }
     }
 }
 
@@ -676,26 +676,26 @@ void AminoAcid::centerGLU_oxygen()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->altLoc != ' ')
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if(atom[i]->name == " CD ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OE1")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if(atom[i]->name == " OE2")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it 
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
     }
 
   // Error check.  If we don't have at least one of each
@@ -706,7 +706,7 @@ void AminoAcid::centerGLU_oxygen()
     {
       skip = true;
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
-	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
       return;
     }
   unsigned int offset = temp[0].size() * temp[1].size() * temp[2].size();
@@ -718,35 +718,35 @@ void AminoAcid::centerGLU_oxygen()
   for(unsigned int k = 0; k < temp[1].size(); k++) // go through all the OE1
     {
       for(unsigned int j = 0; j < temp[0].size(); j++) // go through all the CD
-	{
-	  for(unsigned int l = 0; l < temp[2].size(); l++, index++) // go through all the OE2
-	    {
-	      
-	      center[index].plane_info.resize(3);
-	      center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
-	      center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
-	      center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
-	      center[index + offset].plane_info.resize(3);
-	      center[index + offset].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
-	      center[index + offset].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
-	      center[index + offset].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
-		  
-	      center[index] = temp[1][k]->coord;
-	      center[index + offset] = temp[2][l]->coord;
-		  
-	      // And this is just so we know what combination of
-	      // alternate locations (may be able to take out later)
-	      string t;
-	      t.insert(t.end(),1,temp[0][j]->altLoc);
-	      t.insert(t.end(),1,temp[1][k]->altLoc);
-	      t.insert(t.end(),1,temp[2][l]->altLoc);
-	      center[index].altLoc = t;
-	      center[index + offset].altLoc = t;
+        {
+          for(unsigned int l = 0; l < temp[2].size(); l++, index++) // go through all the OE2
+            {
+              
+              center[index].plane_info.resize(3);
+              center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
+              center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
+              center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+              center[index + offset].plane_info.resize(3);
+              center[index + offset].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
+              center[index + offset].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
+              center[index + offset].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+                  
+              center[index] = temp[1][k]->coord;
+              center[index + offset] = temp[2][l]->coord;
+                  
+              // And this is just so we know what combination of
+              // alternate locations (may be able to take out later)
+              string t;
+              t.insert(t.end(),1,temp[0][j]->altLoc);
+              t.insert(t.end(),1,temp[1][k]->altLoc);
+              t.insert(t.end(),1,temp[2][l]->altLoc);
+              center[index].altLoc = t;
+              center[index + offset].altLoc = t;
 #ifdef DEBUG
-	      cout << "CHECK: GLU" << atom[0]->resSeq << " : " << center[index] << endl;
+              cout << "CHECK: GLU" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-	    }
-	}
+            }
+        }
     }
 }
 
@@ -770,19 +770,19 @@ void AminoAcid::centerPHEorTYR_simplified()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->name == " CE2")
-	{
-	  center[0] += atom[i]->coord;
-	  center[0].plane_info[CE2_PLANE_COORD_PTT] = &atom[i]->coord;
-	}
+        {
+          center[0] += atom[i]->coord;
+          center[0].plane_info[CE2_PLANE_COORD_PTT] = &atom[i]->coord;
+        }
       else if(atom[i]->name == " CD1")
-	{
-	  center[0] += atom[i]->coord;
-	  center[0].plane_info[CD1_PLANE_COORD_PTT] = &atom[i]->coord;
-	}
+        {
+          center[0] += atom[i]->coord;
+          center[0].plane_info[CD1_PLANE_COORD_PTT] = &atom[i]->coord;
+        }
       else if(atom[i]->name == " CG ")
-	{
-	  center[0].plane_info[CG_PLANE_COORD_PTT] = &atom[i]->coord;
-	}
+        {
+          center[0].plane_info[CG_PLANE_COORD_PTT] = &atom[i]->coord;
+        }
     }
   center[0] /= 2;
 }
@@ -794,14 +794,14 @@ void AminoAcid::centerASP_charge()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->name == " CG ")
-	{
-	  center[0] = atom[i]->coord;
-	  tempCenter += atom[i]->coord;
-	}
+        {
+          center[0] = atom[i]->coord;
+          tempCenter += atom[i]->coord;
+        }
       else if(atom[i]->name == " H  ")
-	{
-	  tempCenter -= atom[i]->coord;
-	}
+        {
+          tempCenter -= atom[i]->coord;
+        }
     }
   center[0] += (tempCenter * HYDROGEN_BOND_DISTANCE) / tempCenter.norm();
 }
@@ -813,14 +813,14 @@ void AminoAcid::centerGLU_charge()
   for(unsigned int i =0; i< atom.size(); i++)
     {
       if(atom[i]->name == " CD ")
-	{
-	  center[0] = atom[i]->coord;
-	  tempCenter += atom[i]->coord;
-	}
+        {
+          center[0] = atom[i]->coord;
+          tempCenter += atom[i]->coord;
+        }
       else if(atom[i]->name == " H  ")
-	{
-	  tempCenter -= atom[i]->coord;
-	}
+        {
+          tempCenter -= atom[i]->coord;
+        }
     }
   center[0] += (tempCenter * HYDROGEN_BOND_DISTANCE) / tempCenter.norm();
 }
@@ -832,60 +832,65 @@ void AminoAcid::calculateCenter(bool centerOfCharge)
     {
       // TRP
       if ( residue == "TRP" )
-	{
-	  centerTRP();
-	}
+        {
+          centerTRP();
+        }
       // PHE or TYR
       else if ( residue == "PHE" || residue == "TYR" )
-	{
-	  centerPHEorTYR();
-	}
+        {
+          centerPHEorTYR();
+        }
       // ASP
       else if (residue == "ASP")
-	{
-	  centerASP_oxygen();
-	}
+        {
+          centerASP_oxygen();
+        }
       // GLU
       else if (residue == "GLU")
-	{
-	  centerGLU_oxygen();
-	}
+        {
+          centerGLU_oxygen();
+        }
+      else if (residue == "PO4")
+        {
+          //centerPO4
+        }
       // This is for all of other amino acids out there that we 
       // don't support
       else
-	{
-	  cerr << red << "ERROR" << reset << ": " << residue << " is not yet supported." << endl;
-	}
+        {
+          //cerr << red << "ERROR" << reset << ": " << residue << " is not yet supported." << endl;
+          skip = true;
+        }
     }
   // Now we are going to calculate the center of charges for the formate
   else
     {
       // PHE or TYR
       if ( residue == "PHE" || residue == "TYR" )
-  	{
-  	  // So, this does a simplified center of mass calculation that
-  	  // Dr. Hinde used.  See function notes above for details.
-  	  centerPHEorTYR_simplified();
-  	}
+        {
+          // So, this does a simplified center of mass calculation that
+          // Dr. Hinde used.  See function notes above for details.
+          centerPHEorTYR_simplified();
+        }
       // ASP
       else if (residue == "ASP")
-  	{
-  	  centerASP_charge();
-  	}
+        {
+          centerASP_charge();
+        }
        // GLU
       else if (residue == "GLU")
-  	{
-  	  centerGLU_charge();
-  	}
+        {
+          centerGLU_charge();
+        }
     }
 }
 
 void AminoAcid::calculateAnglesPreHydrogens(AminoAcid aa2,
-					    int index1,
-					    int index2,
-					    float* angle,
-					    float* angle1,
-					    float* angleP)
+                                            int index1,
+                                            int index2,
+                                            float* angle,
+                                            float* angle1,
+                                            float* angleP)
 {
   AminoAcid aa1 = *this;
   Coordinates planeP;
@@ -921,13 +926,13 @@ void AminoAcid::calculateAnglesPreHydrogens(AminoAcid aa2,
 }
 
 bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
-							 Coordinates closestOxygen,
-							 float* dist,
-							 float* distOxy,
-							 float* distOxy2,
-							 float* angle,
-							 float* angleOxy,
-							 float* angleOxy2)
+                                                         Coordinates closestOxygen,
+                                                         float* dist,
+                                                         float* distOxy,
+                                                         float* distOxy2,
+                                                         float* angle,
+                                                         float* angleOxy,
+                                                         float* angleOxy2)
 {
   AminoAcid aa1 = *this;
   
@@ -972,15 +977,15 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
     {
       // Only look at the oxygen atoms
       if(aa2.atom[i]->element == "O")
-	{
-	  // Make sure this oxygen is different than the closest one
-	  if(aa2.atom[i]->coord.x != closestOxygen.x ||
-	     aa2.atom[i]->coord.y != closestOxygen.y ||
-	     aa2.atom[i]->coord.z != closestOxygen.z)
-	    {
-	      otherOxygen = aa2.atom[i]->coord;
-	    }
-	}
+        {
+          // Make sure this oxygen is different than the closest one
+          if(aa2.atom[i]->coord.x != closestOxygen.x ||
+             aa2.atom[i]->coord.y != closestOxygen.y ||
+             aa2.atom[i]->coord.z != closestOxygen.z)
+            {
+              otherOxygen = aa2.atom[i]->coord;
+            }
+        }
     }
 
   // Vector between benzene center of mass and closest oxygen
@@ -1037,14 +1042,14 @@ void AminoAcid::printPHEorTYR(FILE* output)
   for(int i=0; i < this->atom.size(); i++)
     {
       if(atom[i]->name == " CD1" || 
-	 atom[i]->name == " CD2" || 
-	 atom[i]->name == " CE1" || 
-	 atom[i]->name == " CE2" || 
-	 atom[i]->name == " CZ " ||
-	 atom[i]->name == " CG ")
-	{
-	  this->atom[i]->print(output);
-	}
+         atom[i]->name == " CD2" || 
+         atom[i]->name == " CE1" || 
+         atom[i]->name == " CE2" || 
+         atom[i]->name == " CZ " ||
+         atom[i]->name == " CG ")
+        {
+          this->atom[i]->print(output);
+        }
     }
 }
 
@@ -1053,11 +1058,11 @@ void AminoAcid::printASP(FILE* output)
   for(int i=0; i < this->atom.size(); i++)
     {
       if(atom[i]->name == " OD1" || 
-	 atom[i]->name == " OD2" || 
-	 atom[i]->name == " CG " )
-	{
-	  this->atom[i]->print(output);
-	}
+         atom[i]->name == " OD2" || 
+         atom[i]->name == " CG " )
+        {
+          this->atom[i]->print(output);
+        }
     }
 }
 
@@ -1066,11 +1071,11 @@ void AminoAcid::printGLU(FILE* output)
   for(int i=0; i < this->atom.size(); i++)
     {
       if(atom[i]->name == " OE1" || 
-	 atom[i]->name == " OE2" || 
-	 atom[i]->name == " CD " )
-	{
-	  this->atom[i]->print(output);
-	}
+         atom[i]->name == " OE2" || 
+         atom[i]->name == " CD " )
+        {
+          this->atom[i]->print(output);
+        }
     }
 }
 

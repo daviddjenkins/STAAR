@@ -55,13 +55,13 @@ public:
   // Default constructor to reset everything
   Atom();
   // Constructor that will parse an ATOM or HETATM line
-  Atom(string line);
+  Atom(string line, int num);
   // Constructor that will parse an ATOM or HETATM line
-  Atom(char* line);
+  Atom(char* line, int num );
   // Destructor to reset everything
   ~Atom();
   // Parses an ATOM or HETATM line
-  void parseAtom(string line);
+  void parseAtom(string line, int num);
   // Prints out all the values space delimited
   void print();
   // Prints out atom in pdb format to the given FILE*

@@ -51,8 +51,8 @@
 
 static char INPheader[] = \
   " $CONTRL SCFTYP=RHF  RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=60 $END\n" \
-  " $BASIS GBASIS=TZV $END\n"						\
-  " $GUESS GUESS=HUCKEL $END\n"						\
+  " $BASIS GBASIS=TZV $END\n"                                           \
+  " $GUESS GUESS=HUCKEL $END\n"                                         \
   " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END";
 
 
@@ -106,7 +106,7 @@ public:
   vector<Chain>         chains;         // Variable to hold the chain information
   vector<Atom>          atoms;          // Vector hold all the atom lines
   vector<Atom>          hetatms;        // Vector holding all the hetatm lines
-  vector<Atom*>         ligands;        // Vector holding all the ligand lines
+  vector<Residue*>      ligands;        // Vector holding all the ligand lines
   vector<Seqres>        seqres;         // Vector holding all the seqres lines
   char*                 filename;       // Holds the filename, if needed
   OpenBabel::OBConversion          conv;// Holds OpenBabel reading of important
