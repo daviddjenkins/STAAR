@@ -78,6 +78,10 @@ bool Seqres::fail()
 // Parses the SEQRES line
 int Seqres::parseLine(string line)
 {
+  if(this->line[line.length()-1] == '\r')
+    {
+      line.erase(line.length()-1,1);
+    }
 
   // Error check to ensure the file is formatted correctly
   if(line.length() != 80)
