@@ -80,8 +80,8 @@ void printHelp()
   cerr << "                      " << " residues are set as follows (include quotations):" << endl;
   cerr << "                      " << " \"PHE,TYR,TRP;GLU,ASP\"" << endl;
   cerr << "                      " << " at least 1, but as many as you want" << endl;
-  cerr << "-g or --gamess        " << "Output folder of the GAMESS files\n" << endl;
-  cerr << "-c or --center        " << "Specifies whether to calculate center of charge" << endl;
+  cerr << "-g or --gamess        " << "Output folder of the GAMESS files" << endl;
+  //cerr << "-c or --center        " << "Specifies whether to calculate center of charge" << endl;
   cerr << "-t or --threshold     " << "Set the distance threshold between amino acids" << endl;
   cerr << "-s or --samechain     " << "Look for interactions in same chain only" << endl;
   cerr << "-l or --ligands       " << "Look for interactions with ligands" << endl;
@@ -103,11 +103,11 @@ void Options::parseCmdline( int argc, char **argv )
   // Set the options that are possible with this program
   static struct option long_options[] = 
     {
-      {"help",		required_argument, 0, 'h'},
-      {"pdbdir",	required_argument, 0, 'p'},
-      {"out",		required_argument, 0, 'o'}, 
-      {"center",	no_argument,       0, 'c'},
-      {"threshold",	required_argument, 0, 't'},
+      {"help",          required_argument, 0, 'h'},
+      {"pdbdir",        required_argument, 0, 'p'},
+      {"out",           required_argument, 0, 'o'}, 
+      {"center",        no_argument,       0, 'c'},
+      {"threshold",     required_argument, 0, 't'},
       {"samechain",     no_argument,       0, 's'},
       {"residues",      required_argument, 0, 'r'},
       {"ligands",       required_argument, 0, 'l'},
@@ -122,99 +122,99 @@ void Options::parseCmdline( int argc, char **argv )
     switch(c)
       {
       case 'h':
-	// the user is asking for help here
+        // the user is asking for help here
         printHelp();
-	exit(1);
+        exit(1);
         break;
 
       case 'p':
-	// the user is specifying the PDB file/directory
+        // the user is specifying the PDB file/directory
         this->pdbfile = optarg;
         break;
 
       case 'o':
-	// the user is wanting to set the output file, but we need to make
-	// sure that is ia a file and not a directory
-	if( !isDirectory( optarg ) )
-	  {
-	    this->outputfile = optarg;
-	  }
-	else
-	  {
-	    cerr << red << "Error" << reset << ": Output file must be a file, not a directory" << endl;
-	    printHelp();
-	    exit(1);
-	  }
+        // the user is wanting to set the output file, but we need to make
+        // sure that is ia a file and not a directory
+        if( !isDirectory( optarg ) )
+          {
+            this->outputfile = optarg;
+          }
+        else
+          {
+            cerr << red << "Error" << reset << ": Output file must be a file, not a directory" << endl;
+            printHelp();
+            exit(1);
+          }
         break;
 
       case 'c':
-	// user wants to do the center of charge calculations, but really
-	// there is no option at this point because we need to fix the 
-	// setting of the plane variables
+        // user wants to do the center of charge calculations, but really
+        // there is no option at this point because we need to fix the 
+        // setting of the plane variables
         this->center = true;
         break;
 
       case 't':
-	// user wants to set the threshold value but we need to make
-	// sure that an actual number was inputted and not just a string
-	if ( sscanf(optarg, "%f", &(this->threshold)) != 1 )
-	  {
-	    cerr << red << "Error" << reset << ": Must insert a valid number for the threshold" << endl;
-	    printHelp();
-	    exit(1);
-	  }
+        // user wants to set the threshold value but we need to make
+        // sure that an actual number was inputted and not just a string
+        if ( sscanf(optarg, "%f", &(this->threshold)) != 1 )
+          {
+            cerr << red << "Error" << reset << ": Must insert a valid number for the threshold" << endl;
+            printHelp();
+            exit(1);
+          }
         break;
 
       case 's':
-	// user wants to look for interactions within the same chains only
-	this->sameChain = true;
+        // user wants to look for interactions within the same chains only
+        this->sameChain = true;
         break;
 
       case 'r':
-	{
-	  // Get the two lists of residues
-	  vector<string> temp = split( (string)optarg, ';' );
-	  if(temp.size() != 2)
-	    {
-	      cerr << red << "Error" << reset << ": Residue string must have 1 semicolon. No more, no less." << endl;
-	      printHelp();
-	      exit(1);
-	    }
-	  // Get the first list of residues
-	  this->residue1 = split( temp[0], ',' );
-	  // Get the second list of residues
-	  this->residue2 = split( temp[1], ',' );
-	}
-	break;
+        {
+          // Get the two lists of residues
+          vector<string> temp = split( (string)optarg, ';' );
+          if(temp.size() != 2)
+            {
+              cerr << red << "Error" << reset << ": Residue string must have 1 semicolon. No more, no less." << endl;
+              printHelp();
+              exit(1);
+            }
+          // Get the first list of residues
+          this->residue1 = split( temp[0], ',' );
+          // Get the second list of residues
+          this->residue2 = split( temp[1], ',' );
+        }
+        break;
 
       case 'l':
-	{
-	  // Get the list of ligands
-	  this->ligands = split( (string)optarg, ',' );
-	  this->numLigands = this->ligands.size();
-	}
-	break;
+        {
+          // Get the list of ligands
+          this->ligands = split( (string)optarg, ',' );
+          this->numLigands = this->ligands.size();
+        }
+        break;
 
       case 'g':
-	{
-	  if( isDirectory( optarg ) )
-	    {
-	      this->gamessfolder = optarg;
-	      outputGamessINP = true;
-	    }
-	  else
-	    {
-	      cerr << red << "Error" << reset << ": Ensure GAMESS output directory exists and is a directory" << endl;
-	      printHelp();
-	      exit(1);
-	    }
-	  break;
-	}
+        {
+          if( isDirectory( optarg ) )
+            {
+              this->gamessfolder = optarg;
+              outputGamessINP = true;
+            }
+          else
+            {
+              cerr << red << "Error" << reset << ": Ensure GAMESS output directory exists and is a directory" << endl;
+              printHelp();
+              exit(1);
+            }
+          break;
+        }
 
       default:
-	printHelp();
-	exit(1);
-	break;
+        printHelp();
+        exit(1);
+        break;
       }
     }
 
