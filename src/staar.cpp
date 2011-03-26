@@ -56,9 +56,12 @@
 #define MAX_STR_LENGTH 1024
 
 // Parses through a single PDB file checking for interactions
-bool processSinglePDBFile(char* filename,
+bool processSinglePDBFile(const char* filename,
                           Options& opts,
                           ofstream& output_file);
+
+// Read PDB names from a list and parse them from the specified directory
+bool processPDBList(Options& opts);
 
 // Traverses through a directory of PDB files processing each one
 bool processPDBDirectory(Options& opts);
@@ -92,8 +95,9 @@ double findClosestDistance(AminoAcid& aa1,
 void findBestInteraction( AminoAcid& aa1,
                           AminoAcid& aa2,
                           float threshold,
-                          string filename,
+                          PDB& PDBfile,
                           char* gamessfolder,
+                          bool ligand,
                           ofstream& output_file);
 
 // Writes the INP files
@@ -120,9 +124,15 @@ int main(int argc, char* argv[]){
     }
 
   // Lets check to see what kind of input we received for the
-  // PDB file.  If a directory, parse all files in the directory.
-  // Otherwise just parse the single file
-  if( isDirectory(opts.pdbfile) )
+  // PDB file.  If we have a list file of PDBs, just go through
+  // list with the specified directory. If a directory, parse 
+  // all files in the directory. Otherwise just parse the single 
+  // file
+  if( opts.pdblist )
+    {
+      return_value = processPDBList(opts);
+    }
+  else if( isDirectory(opts.pdbfile) )
     {
       // go through each file in the directory
       return_value = processPDBDirectory(opts);
@@ -130,6 +140,11 @@ int main(int argc, char* argv[]){
   else
     {
       ofstream output_file(opts.outputfile);
+      if(!output_file)
+        {
+          cerr << red << "Error" << reset << ": Failed to open output file," << opts.outputfile << endl;
+          return 1;
+        }
       write_output_head(output_file);
       return_value = processSinglePDBFile(opts.pdbfile, opts, output_file);
       output_file.close();
@@ -139,7 +154,7 @@ int main(int argc, char* argv[]){
   return !return_value;
 }
 
-bool processSinglePDBFile(char* filename,
+bool processSinglePDBFile(const char* filename,
                           Options& opts,
                           ofstream& output_file)
 {
@@ -151,12 +166,16 @@ bool processSinglePDBFile(char* filename,
   // with a few exceptions
   PDB PDBfile(filename);
 
-  if(PDBfile.fail())
+  if( PDBfile.fail() )
     {
-      cerr << red << "Error" << reset << ": Parsing PDB file, " << opts.pdbfile << ", failed!" << endl;
+      cerr << red << "Error" << reset << ": Parsing PDB file failed!" << endl;
       return false;
     }
-
+  PDBfile.setResiduesToFind(&opts.residue1, &opts.residue2);
+  if(opts.numLigands)
+    {
+      PDBfile.setLigandsToFind(&opts.ligands);
+    }
   PDBfile.populateChains(false);
 
   if( opts.numLigands )
@@ -200,6 +219,8 @@ bool processSinglePDBFile(char* filename,
                 }
             }
         }
+      
+      // Go through the ligands, if there are any
       for(unsigned int j = 0; j<PDBfile.ligands.size(); j++)
         {
           for(int ii=0; ii<numRes1; ii++)
@@ -217,6 +238,42 @@ bool processSinglePDBFile(char* filename,
   return true;
 }
 
+bool processPDBList(Options& opts)
+{
+  ifstream listfp(opts.pdblist);
+  if( !listfp )
+    {
+      cerr << red << "Error" << reset << ": Failed to open list file, " << opts.pdblist << endl;
+      perror("\t");
+      return false;
+    }
+
+  ofstream output_file(opts.outputfile);
+  if( !output_file )
+    {
+      cerr << red << "Error" << reset << ": Failed to open output file" << endl;
+      perror("\t");
+    }
+  write_output_head(output_file);
+
+  string line;
+
+  while(getline(listfp, line))
+    {
+      string filename(opts.pdbfile);
+      filename += "/" + line + opts.extension;
+      cout << purple << line << opts.extension << endl;
+      if(!processSinglePDBFile(filename.c_str(), opts, output_file))
+        {
+          return false;
+        }
+    }
+  cout << endl;
+  output_file.close();
+  listfp.close();
+  return true;
+}
+
 bool processPDBDirectory(Options& opts)
 {
   DIR* directory;
@@ -224,11 +281,12 @@ bool processPDBDirectory(Options& opts)
   int numberOfFiles;
   int count=0;
   ofstream output_file(opts.outputfile);
+  if( !output_file )
+    {
+      cerr << red << "Error" << reset << ": Failed to open output file" << endl;
+      perror("\t");
+    }
   write_output_head(output_file);
-
-  // Count the number of files in the given PDB directory
-  //     Used for checkpointing only
-  numberOfFiles = countFilesInDirectory(opts.pdbfile);
 
   // Open the directory for traversal
   if( (directory = opendir( opts.pdbfile )) )
@@ -240,7 +298,7 @@ bool processPDBDirectory(Options& opts)
             {
               count++;
               // Checkpoint
-              cout << purple << "File " << count << "/" << numberOfFiles << " : " << filename->d_name << endl;
+              cout << purple << filename->d_name << endl;
 
               //create the full path to the file
               char fullFilePath [MAX_STR_LENGTH];
@@ -302,8 +360,9 @@ void searchChainInformation(PDB & PDBfile,
                   findBestInteraction( c1->aa[i],
                                        c2->aa[j],
                                        opts.threshold,
-                                       PDBfile.filename,
+                                       PDBfile,
                                        opts.gamessfolder,
+                                       false,
                                        output_file);
                 }
             }
@@ -329,8 +388,9 @@ void searchLigandsInformation(PDB & PDBfile,
           findBestInteraction(c1->aa[i],
                               ligand,
                               opts.threshold,
-                              PDBfile.filename,
+                              PDBfile,
                               opts.gamessfolder,
+                              true,
                               output_file);
         }
     }
@@ -369,8 +429,9 @@ double findClosestDistance(AminoAcid& aa1,
 void findBestInteraction( AminoAcid& aa1,
                           AminoAcid& aa2,
                           float threshold,
-                          string input_filename,
+                          PDB & PDBfile,
                           char* gamessfolder,
+                          bool ligand,
                           ofstream& output_file)
 {
   float closestDist = FLT_MAX;
@@ -411,112 +472,73 @@ void findBestInteraction( AminoAcid& aa1,
         code2 = 'M';
 
       PDB pairWithHydrogen;
+      pairWithHydrogen.setResiduesToFind(PDBfile.residue1, PDBfile.residue2);
+      pairWithHydrogen.setLigandsToFind(PDBfile.ligandsToFind);
       pairWithHydrogen.addHydrogensToPair(aa1,aa2);
 
-      // The following is just to put the benzene in aa1h
-      // and the formate in aa2h just so that I can keep
-      // this straight in my head.  This may not be necessary
-      // but it helps me when I am looking through the code.
+      // Separate the pair into 2 variables
+      pairWithHydrogen.getPair(aa1.atom[0]->resSeq,
+                               aa2.atom[0]->resSeq,
+                               &aa1h,
+                               &aa2h,
+                               ligand);
 
-      // If these residues were in different chains
-      if( pairWithHydrogen.chains.size() != 1 )
+      // calculate the angles of this interaction
+      aa1.calculateAnglesPreHydrogens(aa2,
+                                      closestDist_index1,
+                                      closestDist_index2,
+                                      &angle,
+                                      &angle1,
+                                      &angleP);
+
+      float dist;
+      float distOxy;
+      float distOxy2;
+      aa1h.calculateDistancesAndAnglesPostHydrogens(aa2h,
+                                                    aa2.center[closestDist_index2],
+                                                    &dist,
+                                                    &distOxy,
+                                                    &distOxy2,
+                                                    &angleh,
+                                                    &angleOxy,
+                                                    &angleOxy2);
+
+      // Here, we are outputting the
+      if( gamessfolder )
         {
-          // If the benzene was naturally first,
-          // it is in the first chain while the formate
-          // is in the second chain
-          if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
-            {
-              aa1h = pairWithHydrogen.chains[0].aa[0];
-              aa2h = pairWithHydrogen.chains[1].aa[0];
-            }
-          // otherwise they are in the opposite order
-          else
-            {
-              aa1h = pairWithHydrogen.chains[1].aa[0];
-              aa2h = pairWithHydrogen.chains[0].aa[0];
-            }
+          numOutputted++;
+          sprintf(output_filename, "%s/gamessinp-%d.inp", gamessfolder, numOutputted);
+          outputINPfile(PDBfile.filename, output_filename, aa1h, aa2h);
         }
-      // If these residues were in the same chain
       else
         {
-          // If the benzene was naturally first,
-          // it is in the first chain while the formate
-          // is in the second chain
-          if(aa1.atom[0]->resSeq < aa2.atom[0]->resSeq)
-            {
-              aa1h = pairWithHydrogen.chains[0].aa[0];
-              aa2h = pairWithHydrogen.chains[0].aa[1];
-            }
-          // otherwise they are in the opposite order
-          else
-            {
-              aa1h = pairWithHydrogen.chains[0].aa[1];
-              aa2h = pairWithHydrogen.chains[0].aa[0];
-            }
+          sprintf(output_filename, "N/A");
         }
 
-      // Now we are looking at the distances between the AA's
-      // and center of charges of the GLU and ASP
-
-      if( closestDist != FLT_MAX )
-        {
-          // calculate the angles of this interaction
-          aa1.calculateAnglesPreHydrogens(aa2,
-                                          closestDist_index1,
-                                          closestDist_index2,
-                                          &angle,
-                                          &angle1,
-                                          &angleP);
-
-          float dist;
-          float distOxy;
-          float distOxy2;
-          aa1h.calculateDistancesAndAnglesPostHydrogens(aa2h,
-                                                        aa2.center[closestDist_index2],
-                                                        &dist,
-                                                        &distOxy,
-                                                        &distOxy2,
-                                                        &angleh,
-                                                        &angleOxy,
-                                                        &angleOxy2);
-
-          // Here, we are outputting the
-          if( gamessfolder )
-            {
-              numOutputted++;
-              sprintf(output_filename, "%s/gamessinp-%d.inp", gamessfolder, numOutputted);
-              outputINPfile(input_filename, output_filename, aa1h, aa2h);
-            }
-          else
-            {
-              sprintf(output_filename, "N/A");
-            }
-
-          // and we finally output some results!
-          output_file << aa1.residue                        << "\t"
-                      << aa2.residue                        << "\t"
-                      << closestDist                        << "\t"
-                      << angle                              << "\t"
-                      << angleP                             << "\t"
-                      << angle1                             << "\t"
-                      << aa1.atom[0]->resSeq                << "\t"
-                      << aa2.atom[0]->resSeq                << "\t"
-                      << code1 << code2                     << "\t"
-                      << input_filename                     << "\t"
-                      << output_filename                    << "\t"
-                      << aa1.atom[0]->chainID               << "\t"
-                      << aa2.atom[0]->chainID               << "\t"
-                      << aa1.center[closestDist_index1]     << "\t"
-                      << aa2.center[closestDist_index2]     << "\t"
-                      << aa1h.center[0]                     << "\t"
-                      << aa2h.center[0]                     << "\t"
-                      << dist                               << "\t"
-                      << distOxy                            << "\t"
-                      << distOxy2                           << "\t "
-                      << angleh                             << "\t"
-                      << angleOxy                           << "\t "
-                      << angleOxy2                          << "\t" << endl;
-        }
+      // and we finally output some results!
+      output_file << aa1.residue                        << "\t"
+                  << aa2.residue                        << "\t"
+                  << closestDist                        << "\t"
+                  << angle                              << "\t"
+                  << angleP                             << "\t"
+                  << angle1                             << "\t"
+                  << aa1.atom[0]->resSeq                << "\t"
+                  << aa2.atom[0]->resSeq                << "\t"
+                  << code1 << code2                     << "\t"
+                  << PDBfile.filename                   << "\t"
+                  << output_filename                    << "\t"
+                  << aa1.atom[0]->chainID               << "\t"
+                  << aa2.atom[0]->chainID               << "\t"
+                  << aa1.center[closestDist_index1]     << "\t"
+                  << aa2.center[closestDist_index2]     << "\t"
+                  << aa1h.center[0]                     << "\t"
+                  << aa2h.center[0]                     << "\t"
+                  << dist                               << "\t"
+                  << distOxy                            << "\t"
+                  << distOxy2                           << "\t "
+                  << angleh                             << "\t"
+                  << angleOxy                           << "\t "
+                  << angleOxy2                          << "\t" << endl;
     }
 }
 
@@ -559,6 +581,10 @@ void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, Amino
       else if( aa2h.atom[i]->element == " O")
         {
           inpout << "O      8.0     ";
+        }
+      else if( aa2h.atom[i]->element == " P")
+        {
+          inpout << "P     15.0     ";
         }
       inpout << aa2h.atom[i]->coord << endl;
     }

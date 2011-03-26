@@ -120,16 +120,17 @@ vector<string> split(const string &s, char delim)
 void printHeader(ostream & os)
 {
   // This is just the STAAR logo
-  os << brown << " #####    #######      #         #      ######  " << endl;
-  os << brown << "#     #      #        # #       # #     #     # " << endl;
-  os << brown << "#            #       #   #     #   #    #     # " << endl;
-  os << brown << " #####       #      #     #   #     #   ######  " << endl;
-  os << brown << "      #      #      #######   #######   #   #   " << endl;
-  os << brown << "#     #      #      #     #   #     #   #    #  " << endl;
-  os << brown << " #####       #      #     #   #     #   #     # " << endl;
-  os << brown << " STAAR: \e[33mST\e[matistical \e[33mA\e[mnalysis of "
-     <<"\e[33mA\e[mromatic \e[33mR\e[mings " << endl;
-  os << endl;
+  os << brown << " #####    #######      #         #      ######  " << endl
+     << brown << "#     #      #        # #       # #     #     # " << endl
+     << brown << "#            #       #   #     #   #    #     # " << endl
+     << brown << " #####       #      #     #   #     #   ######  " << endl
+     << brown << "      #      #      #######   #######   #   #   " << endl
+     << brown << "#     #      #      #     #   #     #   #    #  " << endl
+     << brown << " #####       #      #     #   #     #   #     # " << endl
+     << brown << " STAAR" << reset << ": " << brown << "ST" << reset << "atistical "
+     << brown << "A" << reset << "nalysis of " << brown << "A" << reset << "romatic "
+     << brown << "R" << reset << "ings " << endl << endl;
+
   // This is just some other basic info
   os << "Version 2.0" << endl;
   os << "University of Tennessee (C) 2011" << endl;

@@ -40,7 +40,9 @@
 #include <cstdlib>
 #include <iostream>
 
+#ifndef DISABLE_COUTCOLORS
 #define endl reset<<endl
+#endif
 
 std::ostream& reset(std::ostream &os);
 std::ostream& red(std::ostream &os);

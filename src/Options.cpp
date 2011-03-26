@@ -48,6 +48,8 @@ Options::Options()
   sameChain = false;
   gamessfolder = NULL;
   outputGamessINP = false;
+  pdblist = NULL;
+  extension = ".pdb.gz";
   threshold = 7.0;
   numLigands = 0;
 }
@@ -64,6 +66,8 @@ Options::Options( int argc, char **argv )
   numLigands = 0;
   gamessfolder = NULL;
   outputGamessINP = false;
+  pdblist = NULL;
+  extension = ".pdb.gz";
   parseCmdline( argc, argv );
 }
 
@@ -76,17 +80,20 @@ void printHelp()
   cerr << "-h or --help          " << "Displays this message" << endl;
   cerr << "-p or --pdbdir        " << "Specifies the folder for PDB files" << endl;
   cerr << "-o or --out           " << "Specifies the output file" << endl;
+  cerr << "-L or --pdblist       " << "File containing a list of PDBs to use. -p must be a directory." << endl;
+  cerr << "-e or --ext           " << "Specifies extension of files in -L PDB list" << endl;
+  cerr << "                      " << " by default, it is .pdb.gz but can also be .pdb" << endl;
+  cerr << "                      " << " must have beginning dot" << endl;
   cerr << "-r or --residues      " << "Set the residues that we are going to analyze" << endl;
   cerr << "                      " << " residues are set as follows (include quotations):" << endl;
-  cerr << "                      " << " \"PHE,TYR,TRP;GLU,ASP\"" << endl;
+  cerr << "                      " << " \"PHE;GLU,ASP\"" << endl;
   cerr << "                      " << " at least 1, but as many as you want" << endl;
   cerr << "-g or --gamess        " << "Output folder of the GAMESS files" << endl;
-  //cerr << "-c or --center        " << "Specifies whether to calculate center of charge" << endl;
   cerr << "-t or --threshold     " << "Set the distance threshold between amino acids" << endl;
   cerr << "-s or --samechain     " << "Look for interactions in same chain only" << endl;
   cerr << "-l or --ligands       " << "Look for interactions with ligands" << endl;
   cerr << "                      " << " add in the residue name looking for in HETATM:" << endl;
-  cerr << "                      " << " \"2HP,WO2\"" << endl;
+  cerr << "                      " << " \"PO4,2HP,PI,2PO,PO3\"" << endl;
 }
 
 // Return true of cmd line parsing failed, false otherwise
@@ -106,7 +113,8 @@ void Options::parseCmdline( int argc, char **argv )
       {"help",          required_argument, 0, 'h'},
       {"pdbdir",        required_argument, 0, 'p'},
       {"out",           required_argument, 0, 'o'}, 
-      {"center",        no_argument,       0, 'c'},
+      {"pdblist",       required_argument, 0, 'L'},
+      {"ext",           required_argument, 0, 'e'},
       {"threshold",     required_argument, 0, 't'},
       {"samechain",     no_argument,       0, 's'},
       {"residues",      required_argument, 0, 'r'},
@@ -115,9 +123,9 @@ void Options::parseCmdline( int argc, char **argv )
       {0, 0, 0, 0}
     };
   int option_index;
-
+  bool indir = false;
   // Go through the options and set them to variables
-  while( !( ( c = getopt_long(argc, argv, "hp:o:ct:sr:l:g:", long_options, &option_index) ) < 0 ) )
+  while( !( ( c = getopt_long(argc, argv, "hp:o:L:e:t:sr:l:g:", long_options, &option_index) ) < 0 ) )
     {
     switch(c)
       {
@@ -135,7 +143,7 @@ void Options::parseCmdline( int argc, char **argv )
       case 'o':
         // the user is wanting to set the output file, but we need to make
         // sure that is ia a file and not a directory
-        if( !isDirectory( optarg ) )
+        if( !isDirectory(optarg) )
           {
             this->outputfile = optarg;
           }
@@ -147,11 +155,12 @@ void Options::parseCmdline( int argc, char **argv )
           }
         break;
 
-      case 'c':
-        // user wants to do the center of charge calculations, but really
-        // there is no option at this point because we need to fix the 
-        // setting of the plane variables
-        this->center = true;
+      case 'L':
+        pdblist = optarg;
+        break;
+
+      case 'e':
+        extension = optarg;
         break;
 
       case 't':
@@ -192,6 +201,17 @@ void Options::parseCmdline( int argc, char **argv )
           // Get the list of ligands
           this->ligands = split( (string)optarg, ',' );
           this->numLigands = this->ligands.size();
+
+          // This is prepend spaces to the names with less than 3 chars
+          // since it appears that the names in the PDB are right 
+          // justified
+          for(unsigned int i=0; i < this->numLigands; i++)
+            {
+              if(this->ligands[i].length() == 2)
+                this->ligands[i] = " " + this->ligands[i];
+              if(this->ligands[i].length() == 1)
+                this->ligands[i] = "  " + this->ligands[i];
+            }
         }
         break;
 
@@ -220,23 +240,35 @@ void Options::parseCmdline( int argc, char **argv )
 
   // Error check to make sure there wasn't extra crap on the command line
   // and all necessary arguments were set
-  if( optind < argc ){
-    cerr << red << "Error" << reset << ": There are some extra commands inputted. Please cleanup the command line!" << endl;
-    // print some help info
-    printHelp();
-    failure=true;
-  }else if( !pdbfile ){
-    cerr << red << "Error" << reset << ": Must specify the PDB list file with -p or --pdblist" <<  endl;
-    printHelp();
-    failure=true;
-  }else if( !outputfile ){
-    cerr << red << "Error" << reset << ": Must specify the op file with -o or --op" <<  endl;
-    printHelp();
-    failure=true;
-  }else if( !gamessfolder ){
-    outputGamessINP = false;
-  }
-
+  if( optind < argc )
+    {
+      cerr << red << "Error" << reset << ": There are some extra commands inputted. Please cleanup the command line!" << endl;
+      // print some help info
+      printHelp();
+      failure=true;
+    }
+  else if( !pdbfile )
+    {
+      cerr << red << "Error" << reset << ": Must specify the PDB list file with -p or --pdblist" <<  endl;
+      printHelp();
+      failure=true;
+    }
+  else if( !outputfile )
+    {
+      cerr << red << "Error" << reset << ": Must specify the op file with -o or --op" <<  endl;
+      printHelp();
+      failure=true;
+    }
+  else if( pdblist && !isDirectory(pdbfile) )
+    {
+      cerr << red << "Error" << reset << ": -p or --pdbdir must point to a directory!" << endl;
+      printHelp();
+      failure=true;
+    }
+  else if( !gamessfolder )
+    {
+      outputGamessINP = false;
+    }
 }
 
 

@@ -77,6 +77,16 @@ private:
   void centerPHEorTYR();
   void centerTRP();
 
+  // Calculates the center of mass for the PO4, 2HP, and PI ligands
+  void centerPO4or2HPorPI();
+  // and the center of charge of PO4, 2HP, and PI ligands
+  void centerPO4or2HPorPI_charge();
+
+  // Calculates the center of mass for the 2PO and PO3 ligands
+  void center2POorPO3();
+  // and the center of charge of 2PO and PO3 ligands
+  void center2POorPO3_charge();
+
   // DO NOT USE THESE!!!! If you use this, puppies will be harmed!
   // This is only here for legacy reasons because this is what the old
   // STAAR code used.  It is wrong.
@@ -107,19 +117,19 @@ public:
   void calculateCenter(bool center);
 
   void calculateAnglesPreHydrogens(AminoAcid aa2,
-				   int index1,
-				   int index2,
-				   float* angle,
-				   float* angle1,
-				   float* angleP);
+                                   int index1,
+                                   int index2,
+                                   float* angle,
+                                   float* angle1,
+                                   float* angleP);
   bool calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
-						Coordinates closestOxygen,
-						float* dist,
-						float* distOxy,
-						float* distOxy2,
-						float* angle,
-						float* angle1,
-						float* angleP);
+                                                Coordinates closestOxygen,
+                                                float* dist,
+                                                float* distOxy,
+                                                float* distOxy2,
+                                                float* angle,
+                                                float* angle1,
+                                                float* angleP);
 
   // Prints out only the atoms that we need to create benzene or formate
   void printNeededAtoms(FILE* output);

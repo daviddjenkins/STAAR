@@ -13,7 +13,11 @@ Other files to read in the top-level source directory:
 
 STAAR uses the gzstream library for the decompression of PDB files that
 are compressed.  The library source code can be found in its entirety
-in the gzstream folder.  The gzstream library is freely available under
+in the gzstream folder.  I did have to make a change to the code 
+because the istream '!' operator was not working correctly to check
+for a valid open. What I did was to add a failure flag to one of the 
+classes and a get function named fail().  It returns true if the file
+could not be opened. The gzstream library is freely available under
 the LGPLv2.1 library that can be seen in gzstream/COPYING.lib.  For 
 more information on the gzstream library, please visit their page at:
     http://www.cs.unc.edu/Research/compgeom/gzstream/

@@ -42,7 +42,6 @@
 #include <sys/stat.h>
 #include <openbabel/obconversion.h>
 #include <openbabel/mol.h>
-#include "Options.hpp"
 #include "AminoAcid.hpp"
 #include "Atom.hpp"
 #include "Seqres.hpp"
@@ -55,7 +54,7 @@ static char INPheader[] = \
   " $GUESS GUESS=HUCKEL $END\n"                                         \
   " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END";
 
-
+#define PH_LEVEL 7.4
 
 class PDB
 {
@@ -76,7 +75,7 @@ public:
 
   // Constructor that parses the file pointed to by 
   // supplied filename
-  PDB(char* fn);
+  PDB(const char* fn);
 
   // Constructor that parses the supplied file
   PDB(istream& file);
@@ -88,7 +87,7 @@ public:
   bool fail();
   
   // Parses the file and stores the data
-  void parsePDB(char* fn);
+  void parsePDB(const char* fn);
   void parsePDB(istream& file);
 
   // Calls Babel to add the hydrogens and inputs them into the PDB
@@ -99,19 +98,33 @@ public:
 
   // Organizes ligands into an array
   void findLigands(vector<string> ligandsToFind);
+  
+  void getPair(unsigned int& resSeq1, 
+               unsigned int& resSeq2, 
+               Residue* r1, 
+               Residue* r2, 
+               bool ligand);
 
+  void setResiduesToFind(vector<string>* r1,
+                         vector<string>* r2);
+
+  void setLigandsToFind(vector<string>* l);
   // Puts the atoms in order by their sequence number
   void sortAtoms();
 
-  vector<Chain>         chains;         // Variable to hold the chain information
-  vector<Atom>          atoms;          // Vector hold all the atom lines
-  vector<Atom>          hetatms;        // Vector holding all the hetatm lines
-  vector<Residue*>      ligands;        // Vector holding all the ligand lines
-  vector<Seqres>        seqres;         // Vector holding all the seqres lines
-  char*                 filename;       // Holds the filename, if needed
-  OpenBabel::OBConversion          conv;// Holds OpenBabel reading of important
-                                        //  residue pairs adding H. Will also 
-                                        //  be used to output to GAMESS format
+  vector<string>* ligandsToFind;
+  vector<string>* residue1;
+  vector<string>* residue2;
+
+  vector<Chain>           chains;         // Variable to hold the chain information
+  vector<Atom>            atoms;          // Vector hold all the atom lines
+  vector<Atom>            hetatms;        // Vector holding all the hetatm lines
+  vector<Residue*>        ligands;        // Vector holding all the ligand lines
+  vector<Seqres>          seqres;         // Vector holding all the seqres lines
+  const char*             filename;       // Holds the filename, if needed
+  OpenBabel::OBConversion conv;           // Holds OpenBabel reading of important
+                                          //  residue pairs adding H. Will also 
+                                          //  be used to output to GAMESS format
   friend ostream& operator<<(ostream& output, const PDB& p);
 };
   

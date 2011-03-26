@@ -7,8 +7,8 @@ LINK := $(CPP)
 MODULES := src include
 
 CFLAGS := -O3
-CPPFLAGS := -O3
-LFLAGS := -O3
+CPPFLAGS := -O3 -DDISABLE_COUTCOLORS
+LFLAGS := -O3 -DDISABLE_COUTCOLORS
 LIBS := -lm -lz -lgzstream -lopenbabel -Llib -L$(BABEL_LIBDIR)
 
 BABEL_INCDIR := /data/AQ/openbabel-2.3.0/build/include/ /data/AQ/openbabel-2.3.0/include/

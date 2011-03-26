@@ -41,100 +41,109 @@ static int _COLOR_FORMAT_FLAG;
 
 ostream& reset(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     {
       os << "\e[m";
       _COLOR_FORMAT_FLAG = 0;
     }
-
+#endif
   return os;
 }
 
 ostream& black(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[30m";
-
+#endif
   return os;
 }
 
 ostream& red(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[31m";
-
+#endif
   return os;
 }
 
 ostream& green(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[32m";
-
+#endif
   return os;
 }
 
 ostream& brown(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[33m";
-
+#endif
   return os;
 }
 
 ostream& blue(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[34m";
-
+#endif
   return os;
 }
 
 ostream& purple(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[35m";
-
+#endif
   return os;
 }
 
 ostream& cyan(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[36m";
-
+#endif
   return os;
 }
 
 ostream& gray(ostream &os)
 {
+#ifndef DISABLE_COUTCOLORS
   if(_COLOR_FORMAT_FLAG==1)
     os << "\e[m";
 
   _COLOR_FORMAT_FLAG=1;
   os << "\e[37m";
-
+#endif
   return os;
 }
 

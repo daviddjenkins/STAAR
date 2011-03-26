@@ -825,6 +825,358 @@ void AminoAcid::centerGLU_charge()
   center[0] += (tempCenter * HYDROGEN_BOND_DISTANCE) / tempCenter.norm();
 }
 
+
+// Calculate the centers for PO4, 2HP, PI
+// these AA need the following atoms:
+//   P, O1, O2, O3, and O4
+void AminoAcid::centerPO4or2HPorPI()
+{
+  // This makes a vector of a vector of ATOM* 
+  // since we are looking for 5 atoms, the size of the outer vector
+  // is 5 while the size of the inner vectors are dependent on the 
+  // number of alternate locations for each one. Indexes are:
+  // P = 0 ; O1 = 1 ; O2 = 2 ; O3 = 3 ; O4 = 4
+  vector< vector <Atom*> > temp;
+  temp.resize(5);
+
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int i =0; i< atom.size(); i++)
+    {
+      if(atom[i]->altLoc != ' ')
+        {
+          altLoc = true;
+        }
+      if(atom[i]->name == " P  ")
+        {
+          temp[0].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O1 ")
+        {
+          temp[1].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O2 ")
+        {
+          temp[2].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O3 ")
+        {
+          temp[3].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O4 ")
+        {
+          temp[4].push_back(atom[i]);
+        }
+      else
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
+    }
+
+  // Error check.  If we don't have at least one of each
+  // of the atoms, we throw a warning, set an ignore flag
+  // for future reference, and leave the function
+  if(temp[0].size() == 0 || temp[1].size() == 0 ||
+     temp[2].size() == 0 || temp[3].size() == 0 ||
+     temp[4].size() == 0 )
+    {
+      skip = true;
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
+           << atom[0]->resSeq << endl;
+      return;
+    }
+
+  // Allocate size for all of the possible centers
+  center.resize( temp[0].size() * temp[1].size() * temp[2].size() * temp[3].size() * temp[4].size() );
+
+  // And go through all combinations of the alternate locations
+  unsigned int index = 0;
+  float totalmass = MASS_P + MASS_O * 4;
+  for(unsigned int j = 0; j < temp[0].size(); j++) // go through all the P
+    {
+      for(unsigned int k = 0; k < temp[1].size(); k++) // go through all the O1
+        {
+          for(unsigned int l = 0; l < temp[2].size(); l++) // go through all the O2
+            {
+              for(unsigned int m = 0; m < temp[3].size(); m++) // go through all the O3
+                {
+                  for(unsigned int n = 0; n < temp[4].size(); n++, index++) // go through all the O4
+                    {
+                      center[index] = temp[0][j]->coord * MASS_P +
+                        ( temp[1][k]->coord + temp[2][l]->coord +
+                          temp[3][m]->coord + temp[4][n]->coord ) * MASS_O;
+
+                      center[index] /= totalmass;
+
+                      center[index].plane_info.resize(3);
+                      center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
+                      center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
+                      center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+
+#ifdef DEBUG
+                      cout << "CHECK: " << residue  << " " << atom[0]->resSeq << " : " << center[index] << endl;
+#endif
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AminoAcid::centerPO4or2HPorPI_charge()
+{
+  // This makes a vector of a vector of ATOM* 
+  // since we are looking for 6 atoms, the size of the outer vector
+  // is 3 while the size of the inner vectors are dependent on the 
+  // number of alternate locations for each one. Indexes are:
+  // P = 0 ; O1 = 1 ; O2 = 2 ; O3 = 3 ; O4 = 4
+  Atom* P = NULL;
+  vector< Atom* > O;
+  vector< Atom* > H;
+
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int i =0; i< atom.size(); i++)
+    {
+      if(atom[i]->altLoc != ' ')
+        {
+          altLoc = true;
+        }
+      if(atom[i]->name == " P  ")
+        {
+          P = atom[i];
+        }
+      else if(atom[i]->name == " O1 ")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O2 ")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O3 ")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O4 ")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " H  ")
+        {
+          H.push_back(atom[i]);
+        }
+      else
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
+    }
+
+  // Error check to see if we have 1 P, 4 O, and at least 1 H
+  if(P == NULL || O.size() != 4 || H.size() == 0 )
+    {
+      skip = true;
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
+           << atom[0]->resSeq << endl;
+      return;
+    }
+
+  center.resize( 1 );
+  // Here is an estimate of the center by doing a charge weighted average
+  // This could be wrong, but it is just something to put in here for the
+  // time being until I talk with Dr. Hinde.
+  center[0] = P->coord * CHARGE_P;
+  Coordinates temp(0.0, 0.0, 0.0);
+  temp  = O[0]->coord;
+  temp += O[1]->coord;
+  temp += O[2]->coord;
+  temp += O[3]->coord;
+  center[0] += temp*CHARGE_O;
+  temp.set(0.0,0.0,0.0);
+  for(unsigned int i=0; i<H.size(); i++)
+    {
+      temp += H[i]->coord;
+    }
+  center[0] += temp * CHARGE_H;
+
+  // And since the formal charge of PO4 is -3, divide by it
+  if(residue == "PO4")
+    center[0] /= -3;
+  else if(residue == "2HP")
+    center[0] *= -1;
+  else if(residue == " PI")
+    {
+      center[0] /= -2;
+    }
+}
+
+// Calculate the centers for 2PO and PO3
+// these AA need the following atoms:
+//   P, O1(P), O2(P), O3(P)
+void AminoAcid::center2POorPO3()
+{
+  // This makes a vector of a vector of ATOM* 
+  // since we are looking for 5 atoms, the size of the outer vector
+  // is 5 while the size of the inner vectors are dependent on the 
+  // number of alternate locations for each one. Indexes are:
+  // P = 0 ; O1(P) = 1 ; O2(P) = 2 ; O3(P) = 3 
+  vector< vector <Atom*> > temp;
+  temp.resize(4);
+
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int i =0; i< atom.size(); i++)
+    {
+      if(atom[i]->altLoc != ' ')
+        {
+          altLoc = true;
+        }
+      if(atom[i]->name == " P  ")
+        {
+          temp[0].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O1 " || atom[i]->name == " O1P")
+        {
+          temp[1].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O2 " || atom[i]->name == " O2P")
+        {
+          temp[2].push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O3 " || atom[i]->name == " O3P")
+        {
+          temp[3].push_back(atom[i]);
+        }
+      else
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
+    }
+
+  // Error check.  If we don't have at least one of each
+  // of the atoms, we throw a warning, set an ignore flag
+  // for future reference, and leave the function
+  if(temp[0].size() == 0 || temp[1].size() == 0 ||
+     temp[2].size() == 0 || temp[3].size() == 0 )
+    {
+      skip = true;
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
+           << atom[0]->resSeq << endl;
+      return;
+    }
+
+  // Allocate size for all of the possible centers
+  center.resize( temp[0].size() * temp[1].size() * temp[2].size() * temp[3].size() );
+
+  // And go through all combinations of the alternate locations
+  unsigned int index = 0;
+  float totalmass = MASS_P + MASS_O * 4;
+  for(unsigned int j = 0; j < temp[0].size(); j++) // go through all the P
+    {
+      for(unsigned int k = 0; k < temp[1].size(); k++) // go through all the O1
+        {
+          for(unsigned int l = 0; l < temp[2].size(); l++) // go through all the O2
+            {
+              for(unsigned int m = 0; m < temp[3].size(); m++) // go through all the O3
+                {
+                  center[index] = temp[0][j]->coord * MASS_P +
+                    ( temp[1][k]->coord + temp[2][l]->coord +
+                      temp[3][m]->coord  ) * MASS_O;
+
+                  center[index] /= totalmass;
+
+                  center[index].plane_info.resize(3);
+                  center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
+                  center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
+                  center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+
+#ifdef DEBUG
+                  cout << "CHECK: " << residue  << " " << atom[0]->resSeq << " : " << center[index] << endl;
+#endif
+                }
+            }
+        }
+    }
+}
+
+void AminoAcid::center2POorPO3_charge()
+{
+  // This makes a vector of a vector of ATOM* 
+  // since we are looking for 6 atoms, the size of the outer vector
+  // is 3 while the size of the inner vectors are dependent on the 
+  // number of alternate locations for each one. Indexes are:
+  // P = 0 ; O1 = 1 ; O2 = 2 ; O3 = 3 ; O4 = 4
+  Atom* P = NULL;
+  vector< Atom* > O;
+  vector< Atom* > H;
+
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int i =0; i< atom.size(); i++)
+    {
+      if(atom[i]->altLoc != ' ')
+        {
+          altLoc = true;
+        }
+      if(atom[i]->name == " P  ")
+        {
+          P = atom[i];
+        }
+      else if(atom[i]->name == " O3 " || atom[i]->name == " O3P")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O3 " || atom[i]->name == " O3P")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " O3 " || atom[i]->name == " O3P")
+        {
+          O.push_back(atom[i]);
+        }
+      else if(atom[i]->name == " H  ")
+        {
+          H.push_back(atom[i]);
+        }
+      else
+        {
+          // This means that this atom is not useful so we flag it 
+          atom[i]->skip = true;
+        }
+    }
+
+  // Error check to see if we have 1 P, 4 O, and at least 1 H
+  if(P == NULL || O.size() != 3 || H.size() == 0 )
+    {
+      skip = true;
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
+           << atom[0]->resSeq << endl;
+      return;
+    }
+
+  center.resize( 1 );
+  // Here is an estimate of the center by doing a charge weighted average
+  // This could be wrong, but it is just something to put in here for the
+  // time being until I talk with Dr. Hinde.
+  center[0] = P->coord * CHARGE_P;
+  Coordinates temp(0.0, 0.0, 0.0);
+  temp  = O[0]->coord;
+  temp += O[1]->coord;
+  temp += O[2]->coord;
+  center[0] += temp*CHARGE_O;
+  temp.set(0.0,0.0,0.0);
+  for(unsigned int i=0; i<H.size(); i++)
+    {
+      temp += H[i]->coord;
+    }
+  center[0] += temp * CHARGE_H;
+
+  // And since the formal charge of PO4 is -3, divide by it
+  if(residue == "2PO")
+    center[0] /= -2;
+  else if(residue == "PO3")
+    center[0] /= -3;
+}
+
 // Calculates the center of the amino acid
 void AminoAcid::calculateCenter(bool centerOfCharge)
 {
@@ -850,9 +1202,13 @@ void AminoAcid::calculateCenter(bool centerOfCharge)
         {
           centerGLU_oxygen();
         }
-      else if (residue == "PO4")
+      else if (residue == "PO4" || residue == "2HP" || residue == " PI")
         {
-          //centerPO4
+          centerPO4or2HPorPI();
+        }
+      else if (residue == "2PO" || residue == "PO3")
+        {
+          center2POorPO3();
         }
       // This is for all of other amino acids out there that we 
       // don't support
@@ -881,6 +1237,14 @@ void AminoAcid::calculateCenter(bool centerOfCharge)
       else if (residue == "GLU")
         {
           centerGLU_charge();
+        }
+      else if (residue == "PO4" || residue == "2HP" || residue == " PI")
+        {
+          centerPO4or2HPorPI_charge();
+        }
+      else if (residue == "2PO" || residue == "PO3")
+        {
+          center2POorPO3();
         }
     }
 }

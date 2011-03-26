@@ -43,6 +43,7 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <iterator>
 #include "PDB.hpp"
 #include "Utils.hpp"
 #include "../gzstream/gzstream.h"
@@ -59,12 +60,18 @@ PDB::PDB()
   atoms.clear();
   hetatms.clear();
   seqres.clear();
+  ligandsToFind = NULL;
+  residue1 = NULL;
+  residue2 = NULL;
 }
 
 // Constructor to parse the inputted PDB file
-PDB::PDB(char* fn)
+PDB::PDB(const char* fn)
 {
   failure = false;
+  ligandsToFind = NULL;
+  residue1 = NULL;
+  residue2 = NULL;
   parsePDB(fn);
 }
 
@@ -72,6 +79,9 @@ PDB::PDB(char* fn)
 PDB::PDB(istream& file)
 {
   failure = false;
+  ligandsToFind = NULL;
+  residue1 = NULL;
+  residue2 = NULL;
   parsePDBstream(file);
 }
 
@@ -79,6 +89,9 @@ PDB::PDB(istream& file)
 PDB::~PDB()
 {
   filename = NULL;
+  ligandsToFind = NULL;
+  residue1 = NULL;
+  residue2 = NULL;
   chains.clear();
   atoms.clear();
   hetatms.clear();
@@ -91,7 +104,7 @@ bool PDB::fail()
 }
 
 // Parses the given PDB file
-void PDB::parsePDB(char * fn)
+void PDB::parsePDB(const char * fn)
 {
   filename = fn;
 
@@ -99,12 +112,13 @@ void PDB::parsePDB(char * fn)
   igzstream PDBfile(fn); 
 
   // Ensure the file opened correctly
-  if( PDBfile.fail() || !PDBfile.good()){
-    cerr << red << "Error" << reset << ": Failed to open PDB file " << fn << endl;
-    perror("\t");
-    failure=true;
-    return;
-  }
+  if( PDBfile.fail() )
+    {
+      cerr << red << "Error" << reset << ": Failed to open PDB file " << fn << endl;
+      perror("\t");
+      failure = true;
+      return;
+    }
 
   parsePDBstream(PDBfile);
 
@@ -162,6 +176,16 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   OBMol mol;
   string addedH;
   istringstream tempss;
+  bool ligand;
+  if(b.atom[0]->line.find("HETATM") != string::npos)
+    {
+      ligand = true;
+    }
+  else
+    {
+      ligand = false;
+    }
+
   // This section is just to suppress all of the 
   // warning message that aren't important to us
   {
@@ -190,7 +214,7 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
     {
       if( !b.atom[i]->skip )
         {
-          packedFile += b.atom[i]->line + "\n";
+            packedFile += b.atom[i]->line + "\n";
         }
     }
 
@@ -206,20 +230,43 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   // and adds hydrogens to the pair
   // TO ADD: option to set pH
   this->conv.ReadString(&mol,packedFile);
-  mol.AddHydrogens(false,true,7.0);
+  mol.AddHydrogens(false,true,PH_LEVEL);
 
   // Let's write the newly written hydrogens to 
   // a string and parse it
   addedH = this->conv.WriteString(&mol);
   tempss.str(addedH);
+
+  // This ensures that the ligand hydrogens are labeled as
+  // HETATM instead of ATOM just for the sake of STAAR. 
+  // This may be wrong, but it should be fine since we are
+  // stripping out that information later when we write 
+  // the GAMESS inp files
+  if( ligand )
+    {
+      string line;
+      string f = "";
+      while( getline(tempss,line) )
+        {
+          if( line.find(b.residue) != string::npos )
+            {
+              line.replace(0,6,"HETATM");
+            }
+          f += line + "\n";
+        }
+      tempss.seekg(ios_base::beg);
+      tempss.clear();
+      tempss.str(f);
+    }
+
   this->failure = false;
   this->parsePDB(tempss);
 
   // This is just to ensure that all of the atoms
   // are grouped together because Babel just 
   // appends the H to the end of the file
-  //cout << brown << *this << endl;
-  this->sortAtoms();
+  if( !ligand )
+    this->sortAtoms();
 
   // Split the atoms up into amino acids and chains
   this->populateChains(true);
@@ -233,6 +280,18 @@ vector<Chain>::iterator PDB::findChainNumber(char id)
   return find(chains.begin(), chains.end(), c);
 }
 
+void PDB::setResiduesToFind(vector<string>* r1,
+                            vector<string>* r2)
+{
+  residue1 = r1;
+  residue2 = r2;
+}
+
+void PDB::setLigandsToFind(vector<string>* l)
+{
+  ligandsToFind = l;
+}
+
 // Organizes the the data by chains
 void PDB::populateChains(bool center)
 {
@@ -240,26 +299,28 @@ void PDB::populateChains(bool center)
   char chainID =  '-';
   // Index for the chain
   int chainIndex = -1;
-
-  // All of this assumes that the chains are in order
-  // and all atoms within the chain are grouped together
-
+  vector<char>chainIDs;
+  
   // Go through each atom
   for(unsigned int i = 0; i < atoms.size(); i++)
     {
-      // Check if this is a new chain
       if(atoms[i].chainID != chainID )
         {
-          chainIndex++;
           chainID = atoms[i].chainID;
-          chains.resize(chainIndex+1);
-          chains[chainIndex].id = chainID;
+          chainIndex = distance(chainIDs.begin(),find(chainIDs.begin(),chainIDs.end(),chainID));
+          if( chainIndex == chainIDs.size() )
+            {
+              chainIDs.push_back(chainID);
+              chains.resize(chainIndex+1); 
+              chains[chainIndex].id = chainID;
+            }
         }
 
       // Separate the atoms into amino acids
       AminoAcid aa;
       unsigned int residue_number = atoms[i].resSeq;
-      while(residue_number == atoms[i].resSeq)
+      while(residue_number == atoms[i].resSeq &&
+            atoms[i].chainID == chainID)
         {
           aa.atom.push_back(&atoms[i]);
           i++;
@@ -271,9 +332,9 @@ void PDB::populateChains(bool center)
       i--;
       
       aa.residue = atoms[i].residueName;
-      if(aa.residue == "TRP" || aa.residue == "PHE" ||
-         aa.residue == "TYR" || aa.residue == "ASP" ||
-         aa.residue == "GLU")
+      vector<string>::iterator found1 = find(residue1->begin(), residue1->end(), aa.residue);
+      vector<string>::iterator found2 = find(residue2->begin(), residue2->end(), aa.residue);
+      if( found1 != residue1->end() || found2 != residue2->end())
         {
           aa.calculateCenter(center);
         }
@@ -291,61 +352,107 @@ void PDB::populateChains(bool center)
   chainIndex = -1;
 
   // Go through each hetatm
-  for(int i = 0; i < hetatms.size(); i++)
+  if( ligandsToFind )
     {
-      // Check if this is a new chain
-      if(hetatms[i].chainID != chainID )
+      for(int i = 0; i < hetatms.size(); i++)
         {
-          chainIndex++;
-          // This is here because sometimes there are extra
-          // hetatms that aren't part of any chain (at least
-          // based on the chainID).  For example look at 
-          // 1A2Z at atom 7011
-          if(chainIndex == chains.size())
+          // Check if this is a new chain
+          if(hetatms[i].chainID != chainID )
             {
-              chains.resize(chainIndex+1);
+              chainID = hetatms[i].chainID;
+              chainIndex = distance(chainIDs.begin(),find(chainIDs.begin(),chainIDs.end(),chainID));
+              if( chainIndex == chainIDs.size() )
+                {
+                  chainIDs.push_back(chainID);
+                  chains.resize(chainIndex+1); 
+                  chains[chainIndex].id = chainID;
+                }
             }
-          chainID = hetatms[i].chainID;
-        }
       
-      // Separate the hetatms into Residues
-      Residue r;
-      unsigned int residue_number = hetatms[i].resSeq;
-      while(residue_number == hetatms[i].resSeq)
-        {
-          r.atom.push_back(&hetatms[i]);
-          i++;
-          if( i == hetatms.size() )
+          // Separate the hetatms into Residues
+          Residue r;
+          unsigned int residue_number = hetatms[i].resSeq;
+          while(residue_number == hetatms[i].resSeq &&
+                hetatms[i].chainID == chainID)
             {
-              break;
+              r.atom.push_back(&hetatms[i]);
+              i++;
+              if( i == hetatms.size() )
+                {
+                  break;
+                }
             }
-        }
-      i--;
-      r.residue = hetatms[i].residueName;
-      r.calculateCenter(center);
+          i--;
+          r.residue = hetatms[i].residueName;
+          vector<string>::iterator found1 = find(ligandsToFind->begin(), ligandsToFind->end(), r.residue);
+          if(found1 != ligandsToFind->end())
+            {
+              r.calculateCenter(center);
+            }
       
-      // Store the reference of the hetatm in the corresponding chain info
-      chains[chainIndex].addHetatm(r);
+          // Store the reference of the hetatm in the corresponding chain info
+          chains[chainIndex].addHetatm(r);
+        }
     }
+}
 
-  // again, reset the flags
-  chainID = '-';
-  chainIndex = -1;
-
-  // Go through each seqres
-  for(unsigned int i = 0; i < seqres.size(); i++)
+// this function just puts the benzene in r1 and formate or 
+// ligand in r2
+void PDB::getPair(unsigned int& resSeq1, 
+                  unsigned int& resSeq2, 
+                  Residue* r1, 
+                  Residue* r2,
+                  bool ligand)
+{
+  // The following is just to put the benzene in aa1h
+  // and the formate in aa2h just so that I can keep
+  // this straight in my head.  This may not be necessary
+  // but it helps me when I am looking through the code.
+  if( !ligand )
     {
-      // Check if this is a new chain
-      if(seqres[i].chainID != chainID )
+      // If these residues were in different chains
+      if( this->chains.size() != 1 )
         {
-          chainIndex++;
-          chainID = seqres[i].chainID;
+          // If the benzene was naturally first,
+          // it is in the first chain while the formate
+          // is in the second chain
+          if(resSeq1 < resSeq2)
+            {
+              *r1 = this->chains[0].aa[0];
+              *r2 = this->chains[1].aa[0];
+            }
+          // otherwise they are in the opposite order
+          else
+            {
+              *r1 = this->chains[1].aa[0];
+              *r2 = this->chains[0].aa[0];
+            }
         }
-
-      //Store the reference of the seqres in the corresponding chain info
-      chains[chainIndex].addSeqres(&seqres[i]);
+      // If these residues were in the same chain
+      else
+        {
+          // If the benzene was naturally first,
+          // it is in the first chain while the formate
+          // is in the second chain
+          if(resSeq1 < resSeq2)
+            {
+              *r1 = this->chains[0].aa[0];
+              *r2 = this->chains[0].aa[1];
+            }
+          // otherwise they are in the opposite order
+          else
+            {
+              *r1 = this->chains[0].aa[1];
+              *r2 = this->chains[0].aa[0];
+            }
+        }
     }
-
+  else
+    {
+      this->findLigands(*ligandsToFind);
+      *r1 = this->chains[0].aa[0];
+      *r2 = *(this->ligands[0]);
+    }
 }
 
 void PDB::findLigands(vector<string> ligandsToFind)

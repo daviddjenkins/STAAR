@@ -147,8 +147,12 @@ gzstreambase::~gzstreambase() {
 }
 
 void gzstreambase::open( const char* name, int open_mode) {
+  failure = false;
     if ( ! buf.open( name, open_mode))
+      {
         clear( rdstate() | std::ios::badbit);
+        failure = true;
+      }
 }
 
 void gzstreambase::close() {

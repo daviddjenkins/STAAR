@@ -43,9 +43,11 @@
 #define MASS_C 12.0107
 #define MASS_N 14.00674
 #define MASS_O 15.9994
+#define MASS_P 30.974
 #define CHARGE_C 0.898571
 #define CHARGE_O -0.83462
 #define CHARGE_H -0.229336
+#define CHARGE_P 1.442
 
 class Atom
 {

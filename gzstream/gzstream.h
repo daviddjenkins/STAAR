@@ -74,6 +74,7 @@ public:
 class gzstreambase : virtual public std::ios {
 protected:
     gzstreambuf buf;
+    bool failure;
 public:
     gzstreambase() { init(&buf); }
     gzstreambase( const char* name, int open_mode);
@@ -81,6 +82,7 @@ public:
     void open( const char* name, int open_mode);
     void close();
     gzstreambuf* rdbuf() { return &buf; }
+    bool fail() { return failure; }
 };
 
 // ----------------------------------------------------------------------------

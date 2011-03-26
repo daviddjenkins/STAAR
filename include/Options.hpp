@@ -58,17 +58,19 @@ public:
   bool   center;                // Flag indicating to perform center calculations
   char  *pdbfile;               // Directory that the PDB files are stored
   char  *outputfile;            // File that the results are written to
-  float  threshold;		// Holds the cutoff for what is considered a close
+  float  threshold;             // Holds the cutoff for what is considered a close
                                 // distance between residues
-  bool sameChain;     		// Flag indicating whether to look only on same 
+  bool sameChain;               // Flag indicating whether to look only on same 
                                 // chain for interactions or not
-  vector<string>residue1;	// first group of residues to be matches with...
-  vector<string>residue2;  	// ...these!
+  vector<string>residue1;       // first group of residues to be matches with...
+  vector<string>residue2;       // ...these!
   vector<string>ligands;        // Ligands that residue1 will be matches with
-  int numLigands; 		// Number of ligands
-  char* gamessfolder;		// Directory in which all of the GAMESS INP files
+  int numLigands;               // Number of ligands
+  char* gamessfolder;           // Directory in which all of the GAMESS INP files
                                 // will be stored.
-  bool outputGamessINP;		// True if GAMESS INP are to be outputted
+  bool outputGamessINP;         // True if GAMESS INP are to be outputted
+  char* pdblist;                // List of PDB files to parse
+  string extension;             // extension to use to append to pdb list files
 
   // Constructor that sets everything to empty stuff
   Options();  
