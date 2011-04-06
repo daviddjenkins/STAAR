@@ -82,6 +82,8 @@ public:
 
   // Operator overloads
   Coordinates& operator=(const Coordinates &rhs);
+  bool operator==(const Coordinates &rhs) const;
+  bool operator!=(const Coordinates &rhs) const;
   Coordinates & operator+=(const Coordinates &rhs);
   Coordinates & operator-=(const Coordinates &rhs);
   Coordinates & operator*=(const Coordinates &rhs);

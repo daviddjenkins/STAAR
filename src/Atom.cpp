@@ -131,9 +131,9 @@ void Atom::parseAtom(string line, int num)
     }
 
   // Get the serial number and error check
-  if(!from_string<unsigned int>(serialNumber,this->line.substr(6,5),dec))
+  if(!from_string<int>(serialNumber,this->line.substr(6,5),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert aa into an unsigned int" << endl;
+      cerr << red << "Error" << reset << ": failed to convert serial number into an unsigned int on line " << num << endl;
       failure = true;
     }
 
@@ -144,9 +144,9 @@ void Atom::parseAtom(string line, int num)
   chainID = this->line[21];
 
   // Grab the residue sequence number
-  if(!from_string<unsigned int>(resSeq,this->line.substr(22,4),dec))
+  if(!from_string<int>(resSeq,this->line.substr(22,4),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert aa into an unsigned int" << endl;
+      cerr << red << "Error" << reset << ": failed to convert residue sequence into an unsigned int " << num << endl;
       failure = true;
     }
 
@@ -156,27 +156,27 @@ void Atom::parseAtom(string line, int num)
   // Grab the coordinates, occupancy and temperature factor
   if(!from_string<float>(coord.x,this->line.substr(30,8),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert x coordinate into a double" << endl;
+      cerr << red << "Error" << reset << ": failed to convert x coordinate into a double" << endl;
       failure = true;
     }
   if(!from_string<float>(coord.y,this->line.substr(38,8),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert y coordinate into a double" << endl;
+      cerr << red << "Error" << reset << ": failed to convert y coordinate into a double" << endl;
       failure = true;
     }
   if(!from_string<float>(coord.z,this->line.substr(46,8),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert z coordinate into a double" << endl;
+      cerr << red << "Error" << reset << ": failed to convert z coordinate into a double" << endl;
       failure = true;
     }
   if(!from_string<double>(occupancy,this->line.substr(54,6),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert occupancy into a double" << endl;
+      cerr << red << "Error" << reset << ": failed to convert occupancy into a double" << endl;
       failure = true;
     }
   if(!from_string<double>(tempFactor,this->line.substr(60,8),dec))
     {
-      cerr << red << "Error" << reset << ":failed to convert temperature factor into a double" << endl;
+      cerr << red << "Error" << reset << ": failed to convert temperature factor into a double" << endl;
       failure = true;
     }
 
@@ -227,7 +227,7 @@ ostream& operator<<(ostream& output, const Atom& p)
   //     << "          ";
   // output << setw(2) << right << p.element
   //     << setw(2) << left  << p.charge;
-  output << p.line;
+  output << p.line << "\t" << p.skip;
 
   return output;  // for multiple << operators.
 }

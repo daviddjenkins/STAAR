@@ -99,8 +99,8 @@ public:
   // Organizes ligands into an array
   void findLigands(vector<string> ligandsToFind);
   
-  void getPair(unsigned int& resSeq1, 
-               unsigned int& resSeq2, 
+  void getPair(int& resSeq1, 
+               int& resSeq2, 
                Residue* r1, 
                Residue* r2, 
                bool ligand);

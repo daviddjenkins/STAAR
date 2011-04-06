@@ -78,8 +78,10 @@ private:
   void centerTRP();
 
   // Calculates the center of mass for the PO4, 2HP, and PI ligands
+  //void centerPO4();
   void centerPO4or2HPorPI();
   // and the center of charge of PO4, 2HP, and PI ligands
+  //void centerPO4();
   void centerPO4or2HPorPI_charge();
 
   // Calculates the center of mass for the 2PO and PO3 ligands
@@ -104,6 +106,26 @@ private:
   void printPHEorTYR(FILE* output);
   void printASP(FILE* output);
   void printGLU(FILE* output);
+
+  // These functions mark the alternate locations of the atoms that were
+  // not used in the calculation of the center of mass
+  void markAltLocAtomsPHEorTYR(int index);
+  void markAltLocAtomsASP(int index);
+  void markAltLocAtomsGLU(int index);
+  void markAltLocAtomsPO4or2HPorPI(int index);
+  void markAltLocAtoms2POorPO3(int index);
+
+  void unmarkAltLocAtomsPHEorTYR();
+  void unmarkAltLocAtomsASP();
+  void unmarkAltLocAtomsGLU();
+  void unmarkAltLocAtomsPO4or2HPorPI();
+  void unmarkAltLocAtoms2POorPO3();
+
+  string makeConectPHEorTYR();
+  string makeConectASP();
+  string makeConectGLU();
+  string makeConectPO4or2HPorPI();
+  string makeConect2POorPO3();
 
 public:
   // constructor
@@ -133,6 +155,17 @@ public:
 
   // Prints out only the atoms that we need to create benzene or formate
   void printNeededAtoms(FILE* output);
+
+  // Marks alt loc atoms that aren't used for center calculations
+  void markAltLocAtoms(int index);
+
+  // Unmarks alt loc atoms that aren't used for center calculations
+  // Needed so that coordinates aren't invalid when they are 
+  // looked at as a different pair
+  void unmarkAltLocAtoms();
+
+  // Make CONECT lines.  This avoids mono/di-atomic molecules
+  string makeConect();
 
   // this holds pointers to the ATOM strings
   vector<Atom*> atom;

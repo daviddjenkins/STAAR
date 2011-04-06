@@ -217,6 +217,8 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
             packedFile += b.atom[i]->line + "\n";
         }
     }
+  packedFile += a.makeConect();
+  packedFile += b.makeConect();
 
   // Now, let's set up some Babel information
   // First, we get the PDB format to tell
@@ -398,8 +400,8 @@ void PDB::populateChains(bool center)
 
 // this function just puts the benzene in r1 and formate or 
 // ligand in r2
-void PDB::getPair(unsigned int& resSeq1, 
-                  unsigned int& resSeq2, 
+void PDB::getPair(int& resSeq1, 
+                  int& resSeq2, 
                   Residue* r1, 
                   Residue* r2,
                   bool ligand)
@@ -442,6 +444,7 @@ void PDB::getPair(unsigned int& resSeq1,
           // otherwise they are in the opposite order
           else
             {
+              //cout << *this << endl;
               *r1 = this->chains[0].aa[1];
               *r2 = this->chains[0].aa[0];
             }

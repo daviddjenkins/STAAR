@@ -94,6 +94,22 @@ Coordinates& Coordinates::operator=(const Coordinates &rhs)
   return *this;
 }
 
+// Overload the == operator
+bool Coordinates::operator==(const Coordinates &rhs) const
+{
+  bool result;
+  result  = (this->x == rhs.x);
+  result |= (this->y == rhs.y);
+  result |= (this->z == rhs.z);
+
+  return result;
+}
+
+bool Coordinates::operator!=(const Coordinates &rhs) const
+{
+  return !( *this == rhs );
+}
+
 // Overload the += operator
 Coordinates & Coordinates::operator+=(const Coordinates &rhs) 
 {
@@ -171,6 +187,6 @@ const Coordinates Coordinates::operator/(const float &num) const
 
 
 ostream& operator<<(ostream& output, const Coordinates& p) {
-  output <<  p.x << "\t" << p.y << "\t" << p.z;
+  output <<  p.x << "," << p.y << "," << p.z;
   return output;  // for multiple << operators.
 }

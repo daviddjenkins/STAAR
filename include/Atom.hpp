@@ -49,6 +49,28 @@
 #define CHARGE_H -0.229336
 #define CHARGE_P 1.442
 
+#define CHARGE_C_FORMATE  1.020
+#define CHARGE_O_FORMATE -0.900
+#define CHARGE_H_FORMATE -0.220
+
+// These numbers are from Babel
+// #define CHARGE_P_P3O   0.4698173845
+// #define CHARGE_O1_P3O -0.3027211954
+// #define CHARGE_O2_P3O CHARGE_O1_H2PO4
+// #define CHARGE_O3_P3O -0.2277181216
+// #define CHARGE_O4_P3O CHARGE_O1_H2PO4
+// #define CHARGE_H1_P3O 0.2220214411
+// #define CHARGE_H2_P3O CHARGE_H1_H2PO4
+// #define CHARGE_H3_P3O CHARGE_H1_H2PO4
+
+// #define CHARGE_P_P4O   0.3262889618
+// #define CHARGE_O1_P4O -0.3279197820
+// #define CHARGE_O2_P4O CHARGE_O1_2PO
+// #define CHARGE_O3_P4O CHARGE_O1_2PO
+// #define CHARGE_H1_P4O 0.2191567947
+// #define CHARGE_H2_P4O CHARGE_H1_2PO
+// #define CHARGE_H3_P4O CHARGE_H1_2PO 
+
 class Atom
 {
 private:
@@ -71,12 +93,12 @@ public:
   // Returns true if parsing failed, false otherwise
   bool fail();
 
-  unsigned int  serialNumber;  //Atom serial number: 7-11
+  int           serialNumber;  //Atom serial number: 7-11
   string        name;          //Atom name:          13-16
   char          altLoc;        //Alt. location:      17
   string        residueName;   //Residue name:       18-20
   char          chainID;       //Chain identifier:   22
-  unsigned int  resSeq;        //Residue sequence #: 23-26
+  int           resSeq;        //Residue sequence #: 23-26
   char          iCode;         //Insertion code:     27
   Coordinates   coord;         //Coordinates:        31-54
   double        occupancy;     //Occupancy:          55-60

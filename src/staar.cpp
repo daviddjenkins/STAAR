@@ -469,7 +469,12 @@ void findBestInteraction( AminoAcid& aa1,
       char code2 = 'S';
       //if( aa1.center.size() > 1 || aa2.center.size() > 1 )
       if( aa1.altLoc || aa2.altLoc )
-        code2 = 'M';
+        {
+          // Mark the alt loc atoms that aren't important
+          aa1.markAltLocAtoms(closestDist_index1);
+          aa2.markAltLocAtoms(closestDist_index2);
+          code2 = 'M';
+        }
 
       PDB pairWithHydrogen;
       pairWithHydrogen.setResiduesToFind(PDBfile.residue1, PDBfile.residue2);
@@ -516,29 +521,36 @@ void findBestInteraction( AminoAcid& aa1,
         }
 
       // and we finally output some results!
-      output_file << aa1.residue                        << "\t"
-                  << aa2.residue                        << "\t"
-                  << closestDist                        << "\t"
-                  << angle                              << "\t"
-                  << angleP                             << "\t"
-                  << angle1                             << "\t"
-                  << aa1.atom[0]->resSeq                << "\t"
-                  << aa2.atom[0]->resSeq                << "\t"
-                  << code1 << code2                     << "\t"
-                  << PDBfile.filename                   << "\t"
-                  << output_filename                    << "\t"
-                  << aa1.atom[0]->chainID               << "\t"
-                  << aa2.atom[0]->chainID               << "\t"
-                  << aa1.center[closestDist_index1]     << "\t"
-                  << aa2.center[closestDist_index2]     << "\t"
-                  << aa1h.center[0]                     << "\t"
-                  << aa2h.center[0]                     << "\t"
-                  << dist                               << "\t"
-                  << distOxy                            << "\t"
-                  << distOxy2                           << "\t "
-                  << angleh                             << "\t"
-                  << angleOxy                           << "\t "
-                  << angleOxy2                          << "\t" << endl;
+      output_file << aa1.residue                        << ","
+                  << aa2.residue                        << ","
+                  << closestDist                        << ","
+                  << angle                              << ","
+                  << angleP                             << ","
+                  << angle1                             << ","
+                  << aa1.atom[0]->resSeq                << ","
+                  << aa2.atom[0]->resSeq                << ","
+                  << code1 << code2                     << ","
+                  << PDBfile.filename                   << ","
+                  << output_filename                    << ","
+                  << aa1.atom[0]->chainID               << ","
+                  << aa2.atom[0]->chainID               << ","
+                  << aa1.center[closestDist_index1]     << ","
+                  << aa2.center[closestDist_index2]     << ","
+                  << aa1h.center[0]                     << ","
+                  << aa2h.center[0]                     << ","
+                  << dist                               << ","
+                  << distOxy                            << ","
+                  << distOxy2                           << ","
+                  << angleh                             << ","
+                  << angleOxy                           << ","
+                  << angleOxy2                          << endl;
+
+      if(code2 == 'M')
+        {
+          // Now we are going to undo the alt loc markings
+          aa1.unmarkAltLocAtoms();
+          aa2.unmarkAltLocAtoms();
+        }
     }
 }
 
@@ -595,5 +607,5 @@ void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, Amino
 
 void write_output_head(ofstream& out)
 {
-  out <<"# res1  res2    dist    angle   angleP  angle1  loc1    loc2    code    pdbID                           gamessinput             center1                 center2                 center1h                center2h                dist    distOxy     distOxy2 angleh         angleOxy angleOxy2" << endl;
+  out <<"#res1,res2,dist,angle,angleP,angle1,loc1,loc2,code,pdbID,gamessinput,chain1,chain2,center1,,,center2,,,center1h,,,center2h,,,dist,distOxy,distOxy2,angleh,angleOxy,angleOxy2,gamessoutput,electrostatic(Hartree),electrostatic(kcal/mol),exchangerep(Hartree),exchangerep(kcol/mole),polarization(Hartree),polarization(kcal/mole),chargexfer(Hartree),chargexfer(kcal/mol),highordercoup(Hartree),highordercoup(kcal/mole),totalinter(Hartree),totalinter(kcal/mole)" << endl;
 }

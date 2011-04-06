@@ -169,10 +169,14 @@ void AminoAcid::centerPHEorTYR()
                     {
                       for(unsigned int n = 0; n < temp[5].size(); n++, index++) // go through all the CE2
                         {
-                          center[index].plane_info.resize(3);
+                          center[index].plane_info.resize(6);
                           center[index].plane_info[ CG_PLANE_COORD_PTT] = &(temp[0][i]->coord);
                           center[index].plane_info[CD1_PLANE_COORD_PTT] = &(temp[2][k]->coord);
                           center[index].plane_info[CD2_PLANE_COORD_PTT] = &(temp[3][l]->coord);
+                          center[index].plane_info[3] = &(temp[1][i]->coord);
+                          center[index].plane_info[4] = &(temp[4][m]->coord);
+                          center[index].plane_info[5] = &(temp[5][n]->coord);
+
                           // This is just an average of the all the coordinates
                           center[index] = ( temp[0][i]->coord +
                                             temp[1][j]->coord +
@@ -908,10 +912,12 @@ void AminoAcid::centerPO4or2HPorPI()
 
                       center[index] /= totalmass;
 
-                      center[index].plane_info.resize(3);
-                      center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
-                      center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
-                      center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+                      center[index].plane_info.resize(5);
+                      center[index].plane_info[0] = &(temp[0][j]->coord);
+                      center[index].plane_info[1] = &(temp[1][k]->coord);
+                      center[index].plane_info[2] = &(temp[2][l]->coord);
+                      center[index].plane_info[3] = &(temp[3][m]->coord);
+                      center[index].plane_info[4] = &(temp[4][n]->coord);
 
 #ifdef DEBUG
                       cout << "CHECK: " << residue  << " " << atom[0]->resSeq << " : " << center[index] << endl;
@@ -1085,10 +1091,11 @@ void AminoAcid::center2POorPO3()
 
                   center[index] /= totalmass;
 
-                  center[index].plane_info.resize(3);
-                  center[index].plane_info[C__PLANE_COORD_AG]  = &(temp[0][j]->coord);
-                  center[index].plane_info[O_1_PLANE_COORD_AG] = &(temp[1][k]->coord);
-                  center[index].plane_info[O_2_PLANE_COORD_AG] = &(temp[2][l]->coord);
+                  center[index].plane_info.resize(4);
+                  center[index].plane_info[0] = &(temp[0][j]->coord);
+                  center[index].plane_info[1] = &(temp[1][k]->coord);
+                  center[index].plane_info[2] = &(temp[2][l]->coord);
+                  center[index].plane_info[3] = &(temp[3][m]->coord);
 
 #ifdef DEBUG
                   cout << "CHECK: " << residue  << " " << atom[0]->resSeq << " : " << center[index] << endl;
@@ -1121,11 +1128,11 @@ void AminoAcid::center2POorPO3_charge()
         {
           P = atom[i];
         }
-      else if(atom[i]->name == " O3 " || atom[i]->name == " O3P")
+      else if(atom[i]->name == " O1 " || atom[i]->name == " O1P")
         {
           O.push_back(atom[i]);
         }
-      else if(atom[i]->name == " O3 " || atom[i]->name == " O3P")
+      else if(atom[i]->name == " O2 " || atom[i]->name == " O2P")
         {
           O.push_back(atom[i]);
         }
@@ -1400,17 +1407,497 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
 
 }
 
+void AminoAcid::markAltLocAtomsPHEorTYR(int index)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CG " &&
+          &this->atom[i]->coord != (this->center[index].plane_info[CG_PLANE_COORD_PTT]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " CD1" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[CD1_PLANE_COORD_PTT]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " CD2" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[CD2_PLANE_COORD_PTT]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " CZ " &&
+               &this->atom[i]->coord != (this->center[index].plane_info[3]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " CE1" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[4]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " CE2" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[5]))
+        {
+          this->atom[i]->skip = true;
+        }
+    }  
+}
+
+void AminoAcid::markAltLocAtomsASP(int index)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CG " &&
+          &this->atom[i]->coord != (this->center[index].plane_info[C__PLANE_COORD_AG]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " OD1" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[O_1_PLANE_COORD_AG]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " OD2" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[O_2_PLANE_COORD_AG]))
+        {
+          this->atom[i]->skip = true;
+        }
+    }  
+}
+
+void AminoAcid::markAltLocAtomsGLU(int index)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CD " &&
+          &this->atom[i]->coord != (this->center[index].plane_info[C__PLANE_COORD_AG]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " OE1" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[O_1_PLANE_COORD_AG]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " OE2" &&
+               &this->atom[i]->coord != (this->center[index].plane_info[O_2_PLANE_COORD_AG]))
+        {
+          this->atom[i]->skip = true;
+        }
+    }  
+}
+
+void AminoAcid::markAltLocAtomsPO4or2HPorPI(int index)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " P  " &&
+          &this->atom[i]->coord != (this->center[index].plane_info[0]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " O1 " &&
+               &this->atom[i]->coord != (this->center[index].plane_info[1]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " O2 " &&
+               &this->atom[i]->coord != (this->center[index].plane_info[2]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " O3 " &&
+               &this->atom[i]->coord != (this->center[index].plane_info[3]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( this->atom[i]->name == " O4 " &&
+               &this->atom[i]->coord != (this->center[index].plane_info[4]))
+        {
+          this->atom[i]->skip = true;
+        }
+    }  
+}
+
+void AminoAcid::markAltLocAtoms2POorPO3(int index)
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " P  " &&
+          &this->atom[i]->coord != (this->center[index].plane_info[0]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( (this->atom[i]->name == " O1 " || this->atom[i]->name == " O1P") &&
+               &this->atom[i]->coord != (this->center[index].plane_info[1]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( (this->atom[i]->name == " O2 "  || this->atom[i]->name == " O2P") &&
+               &this->atom[i]->coord != (this->center[index].plane_info[2]))
+        {
+          this->atom[i]->skip = true;
+        }
+      else if( (this->atom[i]->name == " O3 "  || this->atom[i]->name == " O2P") &&
+               &this->atom[i]->coord != (this->center[index].plane_info[3]))
+        {
+          this->atom[i]->skip = true;
+        }
+    }  
+}
+
+void AminoAcid::markAltLocAtoms(int index)
+{
+  if(residue == "PHE" || residue == "TYR")
+    {
+      markAltLocAtomsPHEorTYR(index);
+    }
+  else if(residue == "ASP")
+    {
+      markAltLocAtomsASP(index);
+    }
+  else if(residue == "GLU")
+    {
+      markAltLocAtomsGLU(index);
+    }
+  else if(residue == "PO4" || residue == "2HP" || residue == " PI")
+    {
+      markAltLocAtomsPO4or2HPorPI(index);
+    }
+  else if(residue == "2PO" || residue == "PO3")
+    {
+      markAltLocAtoms2POorPO3(index);
+    }
+}
+
+void AminoAcid::unmarkAltLocAtomsPHEorTYR()
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CG " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " CD1" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " CD2" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " CZ " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " CE1" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " CE2" )
+        {
+          this->atom[i]->skip = false;
+        }
+    }  
+}
+
+void AminoAcid::unmarkAltLocAtomsASP()
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CG " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " OD1" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " OD2" )
+        {
+          this->atom[i]->skip = false;
+        }
+    }  
+}
+
+void AminoAcid::unmarkAltLocAtomsGLU()
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CD " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " OE1" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " OE2" )
+        {
+          this->atom[i]->skip = false;
+        }
+    }  
+}
+
+void AminoAcid::unmarkAltLocAtomsPO4or2HPorPI()
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " P  " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O1 " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O2 " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O3 " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O4 " )
+        {
+          this->atom[i]->skip = false;
+        }
+    }  
+}
+
+void AminoAcid::unmarkAltLocAtoms2POorPO3()
+{
+  for(int i=0; i < this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " P  " )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O1 "  || this->atom[i]->name == " O1P" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O2 "  || this->atom[i]->name == " O2P" )
+        {
+          this->atom[i]->skip = false;
+        }
+      else if( this->atom[i]->name == " O3 "  || this->atom[i]->name == " O3P" )
+        {
+          this->atom[i]->skip = false;
+        }
+    }  
+}
+
+void AminoAcid::unmarkAltLocAtoms()
+{
+  if(residue == "PHE" || residue == "TYR")
+    {
+      unmarkAltLocAtomsPHEorTYR();
+    }
+  else if(residue == "ASP")
+    {
+      unmarkAltLocAtomsASP();
+    }
+  else if(residue == "GLU")
+    {
+      unmarkAltLocAtomsGLU();
+    }
+  else if(residue == "PO4" || residue == "2HP" || residue == " PI")
+    {
+      unmarkAltLocAtomsPO4or2HPorPI();
+    }
+  else if(residue == "2PO" || residue == "PO3")
+    {
+      unmarkAltLocAtoms2POorPO3();
+    }
+}
+
+string AminoAcid::makeConectPHEorTYR()
+{
+  string serials[6];
+  for(int i=0; i<this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CG " && !this->atom[i]->skip )
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " CD1"  && !this->atom[i]->skip )
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " CD2"  && !this->atom[i]->skip )
+        {
+          serials[2] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " CZ " && !this->atom[i]->skip )
+        {
+          serials[3] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " CE1" && !this->atom[i]->skip )
+        {
+          serials[4] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " CE2" && !this->atom[i]->skip )
+        {
+          serials[5] = this->atom[i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[2] + serials[1] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[4] + serials[0] + "                                                 \n";
+  conect += "CONECT" + serials[2] + serials[5] + serials[0] + "                                                 \n";
+  conect += "CONECT" + serials[3] + serials[5] + serials[4] + "                                                 \n";
+  conect += "CONECT" + serials[4] + serials[1] + serials[3] + "                                                 \n";
+  conect += "CONECT" + serials[5] + serials[2] + serials[3] + "                                                 \n";
+  return conect;
+}
+
+string AminoAcid::makeConectGLU()
+{
+  string serials[3];
+  for(int i=0; i<this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CD " && !this->atom[i]->skip )
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " OE1"  && !this->atom[i]->skip )
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " OE2"  && !this->atom[i]->skip )
+        {
+          serials[2] = this->atom[i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  return conect;
+}
+
+string AminoAcid::makeConectASP()
+{
+  string serials[3];
+  for(int i=0; i<this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " CG " && !this->atom[i]->skip )
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " OD1"  && !this->atom[i]->skip )
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " OD2"  && !this->atom[i]->skip )
+        {
+          serials[2] = this->atom[i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  return conect;
+}
+
+string AminoAcid::makeConectPO4or2HPorPI()
+{
+  string serials[5];
+  for(int i=0; i<this->atom.size(); i++)
+    {
+      if( this->atom[i]->name == " P  " && !this->atom[i]->skip )
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " O1 "  && !this->atom[i]->skip )
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " O2 "  && !this->atom[i]->skip )
+        {
+          serials[2] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " O3 "  && !this->atom[i]->skip )
+        {
+          serials[3] = this->atom[i]->line.substr(6,5);
+        }
+      else if( this->atom[i]->name == " O4 "  && !this->atom[i]->skip )
+        {
+          serials[4] = this->atom[i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + serials[3] + serials[4] + "\n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[3] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[4] + serials[0] + "                                                       \n";
+  return conect;
+}
+
+string AminoAcid::makeConect2POorPO3()
+{
+  string serials[5];
+  for(int i=0; i<this->atom.size(); i++)
+    {
+      if( (this->atom[i]->name == " P  ") && !this->atom[i]->skip )
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
+      else if( (this->atom[i]->name == " O1 " || this->atom[i]->name == " O1P" )  && !this->atom[i]->skip )
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
+      else if( (this->atom[i]->name == " O2 " || this->atom[i]->name == " O1P" )  && !this->atom[i]->skip )
+        {
+          serials[2] = this->atom[i]->line.substr(6,5);
+        }
+      else if( (this->atom[i]->name == " O3 " || this->atom[i]->name == " O1P" )  && !this->atom[i]->skip )
+        {
+          serials[3] = this->atom[i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + serials[3] + "      \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[3] + serials[0] + "                                                       \n";
+  return conect;
+}
+
+string AminoAcid::makeConect()
+{
+  if(residue == "PHE" || residue == "TYR")
+    {
+      return makeConectPHEorTYR();
+    }
+  else if(residue == "ASP")
+    {
+      return makeConectASP();
+    }
+  else if(residue == "GLU")
+    {
+      return makeConectGLU();
+    }
+  else if(residue == "PO4" || residue == "2HP" || residue == " PI")
+    {
+      return makeConectPO4or2HPorPI();
+    }
+  else if(residue == "2PO" || residue == "PO3")
+    {
+      return makeConect2POorPO3();
+    }
+}
 
 void AminoAcid::printPHEorTYR(FILE* output)
 {
   for(int i=0; i < this->atom.size(); i++)
     {
-      if(atom[i]->name == " CD1" || 
-         atom[i]->name == " CD2" || 
-         atom[i]->name == " CE1" || 
-         atom[i]->name == " CE2" || 
-         atom[i]->name == " CZ " ||
-         atom[i]->name == " CG ")
+      if((atom[i]->name == " CD1" || 
+          atom[i]->name == " CD2" || 
+          atom[i]->name == " CE1" || 
+          atom[i]->name == " CE2" || 
+          atom[i]->name == " CZ " ||
+          atom[i]->name == " CG ") && !atom[i]->skip)
         {
           this->atom[i]->print(output);
         }
@@ -1421,9 +1908,9 @@ void AminoAcid::printASP(FILE* output)
 {
   for(int i=0; i < this->atom.size(); i++)
     {
-      if(atom[i]->name == " OD1" || 
+      if((atom[i]->name == " OD1" || 
          atom[i]->name == " OD2" || 
-         atom[i]->name == " CG " )
+         atom[i]->name == " CG " ) && !atom[i]->skip)
         {
           this->atom[i]->print(output);
         }
@@ -1434,9 +1921,9 @@ void AminoAcid::printGLU(FILE* output)
 {
   for(int i=0; i < this->atom.size(); i++)
     {
-      if(atom[i]->name == " OE1" || 
+      if((atom[i]->name == " OE1" || 
          atom[i]->name == " OE2" || 
-         atom[i]->name == " CD " )
+         atom[i]->name == " CD " )&& !atom[i]->skip)
         {
           this->atom[i]->print(output);
         }
