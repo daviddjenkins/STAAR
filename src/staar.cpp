@@ -457,7 +457,7 @@ void findBestInteraction( AminoAcid& aa1,
                                     &closestDist_index1,
                                     &closestDist_index2);
 
-  // AND WE HAVE A WINNER! (sorta)
+  // AND WE HAVE A WINNER! 
   // if we found something output it to the file,
   // add hydrogens, and try the process again
   if( closestDist != FLT_MAX )
@@ -480,6 +480,7 @@ void findBestInteraction( AminoAcid& aa1,
       pairWithHydrogen.setResiduesToFind(PDBfile.residue1, PDBfile.residue2);
       pairWithHydrogen.setLigandsToFind(PDBfile.ligandsToFind);
       pairWithHydrogen.addHydrogensToPair(aa1,aa2);
+      pairWithHydrogen.filename = PDBfile.filename;
 
       // Separate the pair into 2 variables
       pairWithHydrogen.getPair(aa1.atom[0]->resSeq,
@@ -607,5 +608,5 @@ void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, Amino
 
 void write_output_head(ofstream& out)
 {
-  out <<"#res1,res2,dist,angle,angleP,angle1,loc1,loc2,code,pdbID,gamessinput,chain1,chain2,center1,,,center2,,,center1h,,,center2h,,,dist,distOxy,distOxy2,angleh,angleOxy,angleOxy2,gamessoutput,electrostatic(Hartree),electrostatic(kcal/mol),exchangerep(Hartree),exchangerep(kcol/mole),polarization(Hartree),polarization(kcal/mole),chargexfer(Hartree),chargexfer(kcal/mol),highordercoup(Hartree),highordercoup(kcal/mole),totalinter(Hartree),totalinter(kcal/mole)" << endl;
+  out <<"#res1,res2,dist,angle,angleP,angle1,loc1,loc2,code,pdbID,gamessinput,chain1,chain2,center1,,,center2,,,center1h,,,center2h,,,dist,distOxy,distOxy2,angleh,angleOxy,angleOxy2,gamessoutput,electrostatic(Hartree),electrostatic(kcal/mol),exchangerep(Hartree),exchangerep(kcal/mole),polarization(Hartree),polarization(kcal/mole),chargexfer(Hartree),chargexfer(kcal/mol),highordercoup(Hartree),highordercoup(kcal/mole),totalinter(Hartree),totalinter(kcal/mole)" << endl;
 }

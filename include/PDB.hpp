@@ -49,7 +49,8 @@
 #include "Chain.hpp"
 
 static char INPheader[] = \
-  " $CONTRL SCFTYP=RHF  RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=60 $END\n" \
+  " $CONTRL SCFTYP=RHF  RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=1000 $END\n" \
+  " $SYSTEM TIMLIM=1000 $END"                                           \
   " $BASIS GBASIS=TZV $END\n"                                           \
   " $GUESS GUESS=HUCKEL $END\n"                                         \
   " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END";
@@ -121,6 +122,7 @@ public:
   vector<Atom>            hetatms;        // Vector holding all the hetatm lines
   vector<Residue*>        ligands;        // Vector holding all the ligand lines
   vector<Seqres>          seqres;         // Vector holding all the seqres lines
+  vector<string>          conect;         // Vector holding all the CONECT lines
   const char*             filename;       // Holds the filename, if needed
   OpenBabel::OBConversion conv;           // Holds OpenBabel reading of important
                                           //  residue pairs adding H. Will also 

@@ -167,6 +167,10 @@ public:
   // Make CONECT lines.  This avoids mono/di-atomic molecules
   string makeConect();
 
+  // Fix to remove excess hydrogens that Babel sometimes adds
+  // to the GLU and ASP residues
+  bool removeExcessHydrogens(vector<string> conect);
+
   // this holds pointers to the ATOM strings
   vector<Atom*> atom;
 
@@ -181,6 +185,8 @@ public:
 
   // true if there is an alt loc in ATOM line
   bool altLoc;
+
+  bool corrected;
 
   string line;
 

@@ -34,6 +34,10 @@ as we were only concerned with the ATOM lines (well, for one of our
 side projects, HETATM lines). If you need support for other PDB 
 features, you will need to edit PDB.{cpp,hpp}.  Anyway, good luck.
 
+The scripts folder contains some scripts and codes for parsing the 
+GAMESS output, added the results to the STAAR output, dealing with
+some of the database stuff, etc.
+
 Oh, and if you don't want to use this code on your own computer, we 
 have considered developing a web page to take user requests to run on
 our own server.  But that is just in talks so far...

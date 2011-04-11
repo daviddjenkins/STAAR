@@ -46,6 +46,7 @@ AminoAcid::AminoAcid()
   center.clear();
   skip = false;
   altLoc = false;
+  corrected = false;
 }
 
 AminoAcid::~AminoAcid()
@@ -54,6 +55,7 @@ AminoAcid::~AminoAcid()
   center.clear();
   skip = false;
   altLoc = false;
+  corrected = false;
 }
 
 // All combinations of centers are calculated for every possible
@@ -1886,6 +1888,84 @@ string AminoAcid::makeConect()
     {
       return makeConect2POorPO3();
     }
+}
+
+// This checks the validity of the hydrogens for 
+// GLU and ASP residues.  Sometimes babel will add 4 hydrogens:
+// 2 to C and 1 to each O.  We can figure out why, but we came
+// up with this hackish fix.  We take the 2 that are connected
+// to the carbon, average them, and use that as the coordinates 
+// for the hydrogen that we are looking for.  We then throw all
+// of the other hydrogens away.
+bool AminoAcid::removeExcessHydrogens(vector<string> conect)
+{
+  if( !(residue == "GLU" || residue == "ASP") )
+    return false;
+  
+  vector<Atom*>::iterator it;
+  int carbonSerialNumber;
+  int hydrogenCount = 0;
+  for(it = atom.begin(); it != atom.end(); ++it)
+    {
+      if( (*it)->name == " CG " || (*it)->name == " CD " )
+        {
+          carbonSerialNumber = (*it)->serialNumber;
+        }
+      else if( (*it)->name == " H  " )
+        {
+          hydrogenCount++;
+        }
+    }
+  corrected = false;
+  if( hydrogenCount > 1 )
+    {
+      corrected = true;
+      Coordinates avg(0,0,0);
+      vector<string>::iterator conectit;
+      Atom* lastHydrogen;
+      for(it = atom.begin(); it < atom.end(); ++it)
+        {
+          for(conectit = conect.begin(); conectit < conect.end(); ++conectit)
+            {
+              int number;
+              int cnumber;
+              if(!from_string<int>(number,(*conectit).substr(7,5),dec))
+                {
+                  cerr << red << "Error" << reset << ": failed to convert serial number into an int"  << endl;
+                }
+              string tempstr = (*conectit).substr(11,5);
+              if(tempstr != "     ")
+                {
+                  if(!from_string<int>(cnumber,(*conectit).substr(11,5),dec))
+                    {
+                      cerr << red << "Error" << reset << ": failed to convert serial number into an int "  << endl;
+                    }
+
+                  if( (*it)->name == " H  " && (*it)->serialNumber == number 
+                      && cnumber == carbonSerialNumber )
+                    {
+                      avg += (*it)->coord;
+                    }
+                }
+            }
+          if((*it)->name == " H  " )
+            {
+              lastHydrogen = (*it);
+              vector<Atom*>::iterator tempit = it-1;
+              atom.erase(it);
+              it = tempit;
+            }
+        }
+      avg /= 2;
+      lastHydrogen->coord = avg;
+      char cstr[25];
+      sprintf(cstr,"%8.3lf%8.3lf%8.3lf",avg.x, avg.y, avg.z);
+      string temp(cstr);
+      lastHydrogen->line = lastHydrogen->line.substr(0,30) + 
+        temp.substr(0,24) + lastHydrogen->line.substr(54,26);
+      atom.push_back(lastHydrogen);
+    }
+  return corrected;
 }
 
 void AminoAcid::printPHEorTYR(FILE* output)

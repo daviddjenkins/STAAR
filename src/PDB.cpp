@@ -165,6 +165,14 @@ void PDB::parsePDBstream(istream& PDBfile)
           failure = h.fail();
           hetatms.push_back(h);
         }
+
+      // Parse the line if we are on a CONECT line
+      // Used to find ligands
+      found = line.find("CONECT");
+      if( found == 0 )
+        {
+          conect.push_back(line);
+        }
     }
 
 }
@@ -268,7 +276,8 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   // are grouped together because Babel just 
   // appends the H to the end of the file
   if( !ligand )
-    this->sortAtoms();
+      this->sortAtoms();
+      
 
   // Split the atoms up into amino acids and chains
   this->populateChains(true);
@@ -448,6 +457,12 @@ void PDB::getPair(int& resSeq1,
               *r1 = this->chains[0].aa[1];
               *r2 = this->chains[0].aa[0];
             }
+        }
+      if( (*r2).removeExcessHydrogens(this->conect) )
+        {
+          cout << brown << "Corrected" << reset << ": " << filename
+               << " | " << (*r1).residue << (*r1).atom[0]->resSeq << " Chain " << (*r1).atom[0]->chainID
+               << " - " << (*r2).residue << (*r2).atom[0]->resSeq << " Chain " << (*r2).atom[0]->chainID << endl;
         }
     }
   else
