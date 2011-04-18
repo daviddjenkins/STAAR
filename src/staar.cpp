@@ -477,9 +477,15 @@ void findBestInteraction( AminoAcid& aa1,
         }
 
       PDB pairWithHydrogen;
+
+      // Set the residues and ligands to find
       pairWithHydrogen.setResiduesToFind(PDBfile.residue1, PDBfile.residue2);
       pairWithHydrogen.setLigandsToFind(PDBfile.ligandsToFind);
+      
+      // Add the hydrogens
       pairWithHydrogen.addHydrogensToPair(aa1,aa2);
+
+      // Set the filename
       pairWithHydrogen.filename = PDBfile.filename;
 
       // Separate the pair into 2 variables
@@ -488,6 +494,9 @@ void findBestInteraction( AminoAcid& aa1,
                                &aa1h,
                                &aa2h,
                                ligand);
+      //if(aa1.atom[0]->resSeq == aa2.atom[0]->resSeq)
+        //cout << pairWithHydrogen << endl;
+        //cout << aa1h << aa2h << endl;
 
       // calculate the angles of this interaction
       aa1.calculateAnglesPreHydrogens(aa2,
@@ -509,42 +518,102 @@ void findBestInteraction( AminoAcid& aa1,
                                                     &angleOxy,
                                                     &angleOxy2);
 
-      // Here, we are outputting the
-      if( gamessfolder )
+      // The following is pretty hackish.  For the time being since we don't
+      // have an agreement on how to deal with the PO4 ligands completely, 
+      // we will take 1 H out at a time and output the GAMESS input file.
+      // Thus, for each PO4, we will have 3 GAMESS input files.
+      // Good thing there aren't too many of these
+      if(aa2h.residue == "PO4")
         {
-          numOutputted++;
-          sprintf(output_filename, "%s/gamessinp-%d.inp", gamessfolder, numOutputted);
-          outputINPfile(PDBfile.filename, output_filename, aa1h, aa2h);
-        }
-      else
-        {
-          sprintf(output_filename, "N/A");
-        }
+          vector<Atom*>::iterator atom_iterator;
+          int count = 0;
+          for( atom_iterator  = aa2h.atom.begin();
+               atom_iterator != aa2h.atom.end();
+               ++atom_iterator )
+            {
+              if((*atom_iterator)->name == " H  ")
+                {
+                  (*atom_iterator)->skip = true;
+                  if( gamessfolder )
+                    {
+                      numOutputted++;
+                      sprintf(output_filename, "%s/gamessinp-%d.inp", gamessfolder, numOutputted);
+                      outputINPfile(PDBfile.filename, output_filename, aa1h, aa2h);
+                    }
+                  else
+                    {
+                      sprintf(output_filename, "N/A");
+                    }
 
-      // and we finally output some results!
-      output_file << aa1.residue                        << ","
-                  << aa2.residue                        << ","
-                  << closestDist                        << ","
-                  << angle                              << ","
-                  << angleP                             << ","
-                  << angle1                             << ","
-                  << aa1.atom[0]->resSeq                << ","
-                  << aa2.atom[0]->resSeq                << ","
-                  << code1 << code2                     << ","
-                  << PDBfile.filename                   << ","
-                  << output_filename                    << ","
-                  << aa1.atom[0]->chainID               << ","
-                  << aa2.atom[0]->chainID               << ","
-                  << aa1.center[closestDist_index1]     << ","
-                  << aa2.center[closestDist_index2]     << ","
-                  << aa1h.center[0]                     << ","
-                  << aa2h.center[0]                     << ","
-                  << dist                               << ","
-                  << distOxy                            << ","
-                  << distOxy2                           << ","
-                  << angleh                             << ","
-                  << angleOxy                           << ","
-                  << angleOxy2                          << endl;
+                  // and we finally output some results!
+                  output_file << aa1.residue                        << ","
+                              << aa2.residue                        << ","
+                              << closestDist                        << ","
+                              << angle                              << ","
+                              << angleP                             << ","
+                              << angle1                             << ","
+                              << aa1.atom[0]->resSeq                << ","
+                              << aa2.atom[0]->resSeq                << ","
+                              << code1 << code2                     << ","
+                              << PDBfile.filename                   << ","
+                              << output_filename                    << ","
+                              << aa1.atom[0]->chainID               << ","
+                              << aa2.atom[0]->chainID               << ","
+                              << aa1.center[closestDist_index1]     << ","
+                              << aa2.center[closestDist_index2]     << ","
+                              << aa1h.center[0]                     << ","
+                              << aa2h.center[0]                     << ","
+                              << dist                               << ","
+                              << distOxy                            << ","
+                              << distOxy2                           << ","
+                              << angleh                             << ","
+                              << angleOxy                           << ","
+                              << angleOxy2                          << endl;
+                  (*atom_iterator)->skip = false;
+                  if(count == 2) break;
+                  ++count;
+                }
+            }
+        }
+      else 
+        {
+          // Here, we are outputting the
+          if( gamessfolder )
+            {
+              numOutputted++;
+              sprintf(output_filename, "%s/gamessinp-%d.inp", gamessfolder, numOutputted);
+              outputINPfile(PDBfile.filename, output_filename, aa1h, aa2h);
+            }
+          else
+            {
+              sprintf(output_filename, "N/A");
+            }
+
+          // and we finally output some results!
+          output_file << aa1.residue                        << ","
+                      << aa2.residue                        << ","
+                      << closestDist                        << ","
+                      << angle                              << ","
+                      << angleP                             << ","
+                      << angle1                             << ","
+                      << aa1.atom[0]->resSeq                << ","
+                      << aa2.atom[0]->resSeq                << ","
+                      << code1 << code2                     << ","
+                      << PDBfile.filename                   << ","
+                      << output_filename                    << ","
+                      << aa1.atom[0]->chainID               << ","
+                      << aa2.atom[0]->chainID               << ","
+                      << aa1.center[closestDist_index1]     << ","
+                      << aa2.center[closestDist_index2]     << ","
+                      << aa1h.center[0]                     << ","
+                      << aa2h.center[0]                     << ","
+                      << dist                               << ","
+                      << distOxy                            << ","
+                      << distOxy2                           << ","
+                      << angleh                             << ","
+                      << angleOxy                           << ","
+                      << angleOxy2                          << endl;
+        }
 
       if(code2 == 'M')
         {
@@ -560,7 +629,15 @@ void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, Amino
   ofstream inpout(filename);
 
   inpout << INPheader << endl;
-  inpout << " $MOROKM IATM(1)=" << aa1h.atom.size() << "," << aa2h.atom.size() << " ICHM(1)=0,-1" << " $END" << endl;
+  inpout << " $MOROKM IATM(1)=" << aa1h.atom.size() << ",";
+  if(aa2h.residue == "PO4")
+    {
+      inpout<< aa2h.atom.size() - 1 << " ICHM(1)=0,-1" << " $END" << endl;
+    }
+  else
+    {
+      inpout<< aa2h.atom.size() << " ICHM(1)=0,-1" << " $END" << endl;
+    }
   inpout << " $DATA" << endl;
   inpout << input_filename << endl;
   inpout << "C1" << endl;
@@ -583,23 +660,26 @@ void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, Amino
 
   for(int i=0; i<aa2h.atom.size(); i++)
     {
-      if( aa2h.atom[i]->element == " H")
+      if( !aa2h.atom[i]->skip )
         {
-          inpout << "H      1.0     ";
+          if( aa2h.atom[i]->element == " H")
+            {
+              inpout << "H      1.0     ";
+            }
+          else if( aa2h.atom[i]->element == " C")
+            {
+              inpout << "C      6.0     ";
+            }
+          else if( aa2h.atom[i]->element == " O")
+            {
+              inpout << "O      8.0     ";
+            }
+          else if( aa2h.atom[i]->element == " P")
+            {
+              inpout << "P     15.0     ";
+            }
+          inpout << aa2h.atom[i]->coord << endl;
         }
-      else if( aa2h.atom[i]->element == " C")
-        {
-          inpout << "C      6.0     ";
-        }
-      else if( aa2h.atom[i]->element == " O")
-        {
-          inpout << "O      8.0     ";
-        }
-      else if( aa2h.atom[i]->element == " P")
-        {
-          inpout << "P     15.0     ";
-        }
-      inpout << aa2h.atom[i]->coord << endl;
     }
 
   inpout << " $END" << endl;

@@ -49,7 +49,9 @@
 #include "../gzstream/gzstream.h"
 #include "CoutColors.hpp"
 
+#ifndef NO_BABEL
 using namespace OpenBabel;
+#endif
 
 // Constructor to initialize the PDB class object by 
 // ensuring all the vectors are empty
@@ -177,6 +179,7 @@ void PDB::parsePDBstream(istream& PDBfile)
 
 }
 
+#ifndef NO_BABEL
 // This function will call the Babel library to add 
 // hydrogens to the residues
 void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
@@ -277,11 +280,11 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
   // appends the H to the end of the file
   if( !ligand )
       this->sortAtoms();
-      
 
   // Split the atoms up into amino acids and chains
   this->populateChains(true);
 }
+#endif
 
 // Search the chain by id
 //    - Not used, right now
@@ -427,7 +430,7 @@ void PDB::getPair(int& resSeq1,
           // If the benzene was naturally first,
           // it is in the first chain while the formate
           // is in the second chain
-          if(resSeq1 < resSeq2)
+          if(resSeq1 <= resSeq2)
             {
               *r1 = this->chains[0].aa[0];
               *r2 = this->chains[1].aa[0];
@@ -445,7 +448,7 @@ void PDB::getPair(int& resSeq1,
           // If the benzene was naturally first,
           // it is in the first chain while the formate
           // is in the second chain
-          if(resSeq1 < resSeq2)
+          if(resSeq1 <= resSeq2)
             {
               *r1 = this->chains[0].aa[0];
               *r2 = this->chains[0].aa[1];

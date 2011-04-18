@@ -40,8 +40,10 @@
 #include <vector>
 #include <algorithm>
 #include <sys/stat.h>
+#ifndef NO_BABEL
 #include <openbabel/obconversion.h>
 #include <openbabel/mol.h>
+#endif
 #include "AminoAcid.hpp"
 #include "Atom.hpp"
 #include "Seqres.hpp"
@@ -49,11 +51,18 @@
 #include "Chain.hpp"
 
 static char INPheader[] = \
-  " $CONTRL SCFTYP=RHF  RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=1000 $END\n" \
-  " $SYSTEM TIMLIM=1000 $END"                                           \
+  " $CONTRL SCFTYP=RHF RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=200 $END\n" \
+  " $SYSTEM TIMLIM=1000 $END\n"                                         \
   " $BASIS GBASIS=TZV $END\n"                                           \
   " $GUESS GUESS=HUCKEL $END\n"                                         \
-  " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END";
+  " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END\n";
+
+
+  // " $CONTRL SCFTYP=RHF  RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=200 $END\n" \
+  // " $SYSTEM TIMLIM=1000 $END\n"                                         \
+  // " $BASIS GBASIS=TZV $END\n"                                           \
+  // " $GUESS GUESS=HUCKEL $END\n"                                         \
+  // " $SCF SOSCF=.F. DAMP=.T. SHIFT=.T. DEM=.F. $END";
 
 #define PH_LEVEL 7.4
 
@@ -91,8 +100,10 @@ public:
   void parsePDB(const char* fn);
   void parsePDB(istream& file);
 
+#ifndef NO_BABEL
   // Calls Babel to add the hydrogens and inputs them into the PDB
   void addHydrogensToPair(AminoAcid& a, AminoAcid& b);
+#endif
 
   // Organizes the data read from parsePDB into chains
   void populateChains(bool center);
@@ -124,9 +135,11 @@ public:
   vector<Seqres>          seqres;         // Vector holding all the seqres lines
   vector<string>          conect;         // Vector holding all the CONECT lines
   const char*             filename;       // Holds the filename, if needed
+#ifndef NO_BABEL
   OpenBabel::OBConversion conv;           // Holds OpenBabel reading of important
                                           //  residue pairs adding H. Will also 
                                           //  be used to output to GAMESS format
+#endif
   friend ostream& operator<<(ostream& output, const PDB& p);
 };
   

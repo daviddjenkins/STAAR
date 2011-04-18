@@ -234,5 +234,10 @@ ostream& operator<<(ostream& output, const Atom& p)
 
 bool Atom::operator<(const Atom &rhs) const
 {
-  return this->resSeq < rhs.resSeq;
+  if(this->resSeq == rhs.resSeq)
+    {
+      return (this->chainID < rhs.chainID);
+    }
+  else
+    return this->resSeq < rhs.resSeq;
 }

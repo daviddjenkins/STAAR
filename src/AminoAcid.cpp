@@ -148,8 +148,10 @@ void AminoAcid::centerPHEorTYR()
      temp[4].size() == 0 || temp[5].size() == 0 )
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 
@@ -285,8 +287,10 @@ void AminoAcid::centerTRP()
      temp[8].size() == 0)
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
   // Allocate size for all of the possible centers
@@ -414,8 +418,10 @@ void AminoAcid::centerASP()
      temp[2].size() == 0 || temp[3].size() == 0)
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 
@@ -516,8 +522,10 @@ void AminoAcid::centerGLU()
      temp[2].size() == 0 || temp[3].size() == 0)
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 
@@ -615,8 +623,10 @@ void AminoAcid::centerASP_oxygen()
       temp[2].size() == 0)
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
   unsigned int offset = temp[0].size() * temp[1].size() * temp[2].size();
@@ -711,8 +721,10 @@ void AminoAcid::centerGLU_oxygen()
      temp[2].size() == 0)
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
   unsigned int offset = temp[0].size() * temp[1].size() * temp[2].size();
@@ -887,8 +899,10 @@ void AminoAcid::centerPO4or2HPorPI()
      temp[4].size() == 0 )
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 
@@ -984,8 +998,10 @@ void AminoAcid::centerPO4or2HPorPI_charge()
   if(P == NULL || O.size() != 4 || H.size() == 0 )
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 
@@ -1068,8 +1084,10 @@ void AminoAcid::center2POorPO3()
      temp[2].size() == 0 || temp[3].size() == 0 )
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 
@@ -1157,8 +1175,10 @@ void AminoAcid::center2POorPO3_charge()
   if(P == NULL || O.size() != 3 || H.size() == 0 )
     {
       skip = true;
+#ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
            << atom[0]->resSeq << endl;
+#endif
       return;
     }
 

@@ -1,0 +1,20 @@
+#!/bin/bash
+# File to redirect STDOUT 
+#$ -o /lustre/AQ/Ghost/stdouterr.txt
+
+# File to redirect STDERR 
+#$ -e /lustre/AQ/Ghost/stdouterr.txt
+
+# Email the user at the end of the program completion
+#$ -M david.d.jenkins@gmail.com
+#$ -m es
+
+# Specify the queue
+#$ -q short*
+
+# change to the current working directory
+#$ -cwd
+
+# And this is where you will add your program call
+./parseGamess /lustre/AQ/Ghost/STAAR.out /lustre/AQ/Ghost/out > /lustre/AQ/Ghost/STAARwEnergy.csv
+sleep 10
