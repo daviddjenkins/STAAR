@@ -34,6 +34,7 @@
 //  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*************************************************************************************************/
 
+#include <cstring>
 #include "Utils.hpp"
 #include "CoutColors.hpp"
 

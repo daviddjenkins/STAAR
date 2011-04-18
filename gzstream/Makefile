@@ -77,6 +77,9 @@ test_gzip : test_gzip.o libgzstream.a
 test_gunzip : test_gunzip.o libgzstream.a
 	${CXX} -o test_gunzip test_gunzip.o ${LDFLAGS}
 
+install: default
+	cp libgzstream.a ../lib
+
 clean :
 	rm *.o
 
