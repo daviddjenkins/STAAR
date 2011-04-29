@@ -1328,7 +1328,7 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
                                                          float* angleOxy2)
 {
   AminoAcid aa1 = *this;
-  
+
   // These are the 3 points in the benzene ring determined in centerPHEorTYR_simplified()
   Coordinates dBenzene1 = *aa1.center[0].plane_info[1] - *aa1.center[0].plane_info[0];
   Coordinates dBenzene2 = *aa1.center[0].plane_info[2] - *aa1.center[0].plane_info[0];

@@ -36,6 +36,7 @@
 
 #include <cstdlib>
 #include <cstdio>
+#include <cmath>
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -68,6 +69,16 @@ vector<string> split(const string &s, char delim)
       elems.push_back(item);
     }
   return elems;
+}
+
+// Converts a string to any class specified by T
+template <class T>
+bool from_string(T&                     t,
+                 const std::string&     s,
+                 std::ios_base& (*f)(std::ios_base&))
+{
+  std::istringstream    iss(s);
+  return !(iss >> f >> t).fail();
 }
 
 
@@ -145,15 +156,42 @@ int main(int argc, char* argv[]){
               line2.find("TOTAL INTERACTION ENERGY")   != string::npos ||
               line2.find("HIGH ORDER COUPLING ENERGY") != string::npos   )
             {
+              string har  = get_fields(line2.substr(37,12))[0];
+              string kcal = get_fields(line2.substr(52,8))[0];
+              if( kcal == "********")
+                {
+                  count = -2;
+                  break;
+                }
               // And append it to the end of the line
-              line += "," + get_fields(line2.substr(37,12))[0] 
-                + "," + get_fields(line2.substr(52,8))[0];
+              line += "," + har 
+                + "," + kcal;
               count ++;
+            }
+          // Cut out results that have a high mix term
+          if( line2.find("HIGH ORDER COUPLING ENERGY") != string::npos )
+            {
+              float mix;
+              if( !from_string<float>(mix, get_fields(line2.substr(52,8))[0], dec) )
+                {
+                  count = -2;
+                  break;
+                }
+              if( fabs(mix) > 0.25 )
+                {
+                  count = -1;
+                  break;
+                }
             }
         }
 
       // output the new line or print error if the results weren't present
-      if(count != 0)
+      if(count == -1)
+        cerr << "Skipped because mix energy was too high : "<< gamess_inp << " : " 
+             << fields[0] << fields[6] << " - " << fields[1] << fields[7] << " pair in " << fields[9] << endl;
+      else if(count == -2)
+        cerr << "Skipping because the run did not converge within 200 iterations" << endl;
+      else if(count != 0)
         cout << line << endl;
       else 
         cerr << "No results found for " << gamess_inp << " : " 

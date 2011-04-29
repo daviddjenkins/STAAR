@@ -333,8 +333,10 @@ void PDB::populateChains(bool center)
       // Separate the atoms into amino acids
       AminoAcid aa;
       unsigned int residue_number = atoms[i].resSeq;
+      char iCode = atoms[i].iCode;
       while(residue_number == atoms[i].resSeq &&
-            atoms[i].chainID == chainID)
+            atoms[i].chainID == chainID &&
+            atoms[i].iCode == iCode)
         {
           aa.atom.push_back(&atoms[i]);
           i++;
@@ -344,7 +346,7 @@ void PDB::populateChains(bool center)
             }
         }
       i--;
-      
+
       aa.residue = atoms[i].residueName;
       vector<string>::iterator found1 = find(residue1->begin(), residue1->end(), aa.residue);
       vector<string>::iterator found2 = find(residue2->begin(), residue2->end(), aa.residue);

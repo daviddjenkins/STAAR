@@ -7,14 +7,18 @@ LINK := $(CPP)
 MODULES := src include
 
 CFLAGS := -O3
-CPPFLAGS := -O3 -DDISABLE_COUTCOLORS
-LFLAGS := -O3 -DDISABLE_COUTCOLORS
+CPPFLAGS := -O3
+LFLAGS := -O3 
 LIBS := -lm -lz -lgzstream -lopenbabel -Llib 
-ifdef $(BABEL_LIBDIR)
-LIBS += -L$(BABEL_LIBDIR);
+
+# Edit these!
+BABEL_LIBDIR := /lustre/AQ/openbabel-2.3.0/build/lib/
+BABEL_INCDIR := /lustre/AQ/openbabel-2.3.0/include /data/AQ/openbabel-2.3.0/build/include
+
+ifdef BABEL_LIBDIR
+LIBS += -L$(BABEL_LIBDIR)
 endif
 
-BABEL_INCDIR := /usr/local/include/openbabel-2.0/ 
 
 # You shouldn't have to go below here
 
@@ -49,11 +53,19 @@ $(NAME) : $(OBJ) gzip
 	@mkdir -p `echo '$@' | sed -e 's|/[^/]*.d$$||'`
 	$(call MAKEDEPS,$(call DIRNAME, $<), $(CFLAGS), $<) > $@
 
+.dep/%.d : %.C
+	@mkdir -p `echo '$@' | sed -e 's|/[^/]*.d$$||'`
+	$(call MAKEDEPS,$(call DIRNAME, $<), $(CFLAGS), $<) > $@
+
 obj/%.o : %.cpp
 	@mkdir -p `echo '$@' | sed -e 's|/[^/]*.o$$||'`
 	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
-gzip : 
+obj/%.o : %.C
+	@mkdir -p `echo '$@' | sed -e 's|/[^/]*.o$$||'`
+	$(CPP) $(CPPFLAGS) -c -o $@ $<
+
+gzip : gzstream/gzstream.C
 	$(MAKE) -C gzstream install
 
 # include the C include dependencies
