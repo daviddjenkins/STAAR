@@ -336,7 +336,7 @@ void PDB::populateChains(bool center)
       char iCode = atoms[i].iCode;
       while(residue_number == atoms[i].resSeq &&
             atoms[i].chainID == chainID &&
-            atoms[i].iCode == iCode)
+            atoms[i].iCode == iCode )
         {
           aa.atom.push_back(&atoms[i]);
           i++;
@@ -355,6 +355,14 @@ void PDB::populateChains(bool center)
           aa.calculateCenter(center);
         }
       else
+        {
+          aa.skip = true;
+        }
+
+      // This is a little hack to skip over residue locations that have 
+      // insertion codes.  Mainly because this adds more complexity than
+      // we need.
+      if( aa.atom[0]->iCode != ' ' )
         {
           aa.skip = true;
         }

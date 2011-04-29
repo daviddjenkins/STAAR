@@ -352,7 +352,7 @@ void searchChainInformation(PDB & PDBfile,
       if( c1->aa[i].residue.compare(residue1) == 0 && !(c1->aa[i].skip))
         {
           for(unsigned int j = 0; j < c2->aa.size(); j++)
-            {
+            {              
               if(c2->aa[j].residue == residue2 && !(c2->aa[j].skip))
                 {
                   // Find the best interaction out of all the centers

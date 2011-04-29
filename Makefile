@@ -66,6 +66,7 @@ obj/%.o : %.C
 	$(CPP) $(CPPFLAGS) -c -o $@ $<
 
 gzip : gzstream/gzstream.C
+	mkdir -p lib
 	$(MAKE) -C gzstream install
 
 # include the C include dependencies
