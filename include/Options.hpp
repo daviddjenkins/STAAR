@@ -71,6 +71,7 @@ public:
   bool outputGamessINP;         // True if GAMESS INP are to be outputted
   char* pdblist;                // List of PDB files to parse
   string extension;             // extension to use to append to pdb list files
+  float resolution;             // Max resolution cut-off
 
   // Constructor that sets everything to empty stuff
   Options();  

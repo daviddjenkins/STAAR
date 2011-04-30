@@ -57,43 +57,43 @@ using namespace OpenBabel;
 // ensuring all the vectors are empty
 PDB::PDB()
 {
-  filename = NULL;
+  filename      = NULL;
   chains.clear();
   atoms.clear();
   hetatms.clear();
   seqres.clear();
   ligandsToFind = NULL;
-  residue1 = NULL;
-  residue2 = NULL;
+  residue1      = NULL;
+  residue2      = NULL;
 }
 
 // Constructor to parse the inputted PDB file
-PDB::PDB(const char* fn)
+PDB::PDB(const char* fn, float resolution)
 {
-  failure = false;
+  failure       = false;
   ligandsToFind = NULL;
-  residue1 = NULL;
-  residue2 = NULL;
-  parsePDB(fn);
+  residue1      = NULL;
+  residue2      = NULL;
+  parsePDB(fn, resolution);
 }
 
 // Constructor to parse the inputted PDB file
-PDB::PDB(istream& file)
+PDB::PDB(istream& file, float resolution)
 {
-  failure = false;
+  failure       = false;
   ligandsToFind = NULL;
-  residue1 = NULL;
-  residue2 = NULL;
-  parsePDBstream(file);
+  residue1      = NULL;
+  residue2      = NULL;
+  parsePDBstream(file, resolution);
 }
 
 // Destructor to empty the arrays
 PDB::~PDB()
 {
-  filename = NULL;
+  filename      = NULL;
   ligandsToFind = NULL;
-  residue1 = NULL;
-  residue2 = NULL;
+  residue1      = NULL;
+  residue2      = NULL;
   chains.clear();
   atoms.clear();
   hetatms.clear();
@@ -105,8 +105,33 @@ bool PDB::fail()
   return failure;
 }
 
+void PDB::printFailure()
+{
+  if(failflag == FAILED_TO_OPEN_FILE)
+    {
+      cerr << red << "Error" << reset << ": Failed to open PDB file " << filename << endl;
+      perror("\t");
+    }
+  else if(failflag == RESOLUTION_NOT_APPLICABLE)
+    {
+      cout << cyan << "Skipping" << reset << " because no resolution was specified" << endl;
+    }
+  else if(failflag == RESOLUTION_TOO_HIGH)
+    {
+      cout << cyan << "Skipping" << reset << " because resolution was too high" << endl;
+    }
+  else if(failflag == RESOLUTION_TO_NUMBER_FAILED)
+    {
+      cout << cyan << "Skipping" << reset << " because resolution could not be converted to a number" << endl;
+    }
+  else
+    {
+      cerr << red << "Unspecified failure" << endl;
+    }
+}
+
 // Parses the given PDB file
-void PDB::parsePDB(const char * fn)
+void PDB::parsePDB(const char * fn, float resolution)
 {
   filename = fn;
 
@@ -116,23 +141,22 @@ void PDB::parsePDB(const char * fn)
   // Ensure the file opened correctly
   if( PDBfile.fail() )
     {
-      cerr << red << "Error" << reset << ": Failed to open PDB file " << fn << endl;
-      perror("\t");
       failure = true;
+      failflag = FAILED_TO_OPEN_FILE;
       return;
     }
 
-  parsePDBstream(PDBfile);
+  parsePDBstream(PDBfile, resolution);
 
   PDBfile.close();
 }
 
-void PDB::parsePDB(istream& file)
+void PDB::parsePDB(istream& file, float resolution)
 {
-  parsePDBstream(file);
+  parsePDBstream(file, resolution);
 }
 
-void PDB::parsePDBstream(istream& PDBfile)
+void PDB::parsePDBstream(istream& PDBfile, float resolution)
 {
   string line; // this is a temp var to hold the current line from the file
   int count = 0;
@@ -140,13 +164,40 @@ void PDB::parsePDBstream(istream& PDBfile)
   while( getline(PDBfile, line) && !failure)
     {
       count++;
+
+      // Check the resolution of the PDB
+      int found = line.find("REMARK   2 RESOLUTION.");
+      if( found == 0 )
+        {
+          if(line.substr(23, 7) == "NOT APP")
+            {
+              failure = true;
+              failflag = RESOLUTION_NOT_APPLICABLE;
+            }
+          else
+            {
+              float res;
+              if(!from_string<float>(res, line.substr(23,7), dec))
+                {
+                  failure = true;
+                  failflag = RESOLUTION_TO_NUMBER_FAILED;
+                }
+              if(res > resolution)
+                {
+                  failure = true;
+                  failflag  = RESOLUTION_TOO_HIGH;
+                }
+            }
+        }
+
       // Parse the line if we are on a SEQRES line
-      int found = line.find("SEQRES");
+      found = line.find("SEQRES");
       if( found == 0 )
         {
           Seqres s(line);
           failure = s.fail();
           seqres.push_back(s);
+          continue;
         }
 
       // Parse the line if we are on an ATOM line
@@ -156,6 +207,7 @@ void PDB::parsePDBstream(istream& PDBfile)
           Atom a(line, count);
           failure = a.fail();
           atoms.push_back(a);
+          continue;
         }
 
       // Parse the line if we are on a HETATM line
@@ -166,6 +218,7 @@ void PDB::parsePDBstream(istream& PDBfile)
           Atom h(line, count);
           failure = h.fail();
           hetatms.push_back(h);
+          continue;
         }
 
       // Parse the line if we are on a CONECT line
@@ -174,6 +227,7 @@ void PDB::parsePDBstream(istream& PDBfile)
       if( found == 0 )
         {
           conect.push_back(line);
+          continue;
         }
     }
 
@@ -273,7 +327,7 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
     }
 
   this->failure = false;
-  this->parsePDB(tempss);
+  this->parsePDB(tempss,99999.99);
 
   // This is just to ensure that all of the atoms
   // are grouped together because Babel just 

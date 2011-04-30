@@ -66,6 +66,12 @@ static char INPheader[] = \
 
 #define PH_LEVEL 7.4
 
+// Error conditions
+#define FAILED_TO_OPEN_FILE         -1
+#define RESOLUTION_NOT_APPLICABLE   -2
+#define RESOLUTION_TOO_HIGH         -3
+#define RESOLUTION_TO_NUMBER_FAILED -4
+
 class PDB
 {
 
@@ -77,7 +83,7 @@ private:
   // Indicates parsing success or failure
   bool failure;
 
-  void parsePDBstream(istream& PDBfile);
+  void parsePDBstream(istream& PDBfile, float resolution);
   bool atomsCompare();
 public:
   // Default constructor that ensures everything is empty
@@ -85,20 +91,23 @@ public:
 
   // Constructor that parses the file pointed to by 
   // supplied filename
-  PDB(const char* fn);
+  PDB(const char* fn, float resolution);
 
   // Constructor that parses the supplied file
-  PDB(istream& file);
+  PDB(istream& file, float resolution);
 
   // Destructed that empties everything
   ~PDB();
 
   // Returns true if the parsing failed
   bool fail();
+
+  // Print a failure message
+  void printFailure();
   
   // Parses the file and stores the data
-  void parsePDB(const char* fn);
-  void parsePDB(istream& file);
+  void parsePDB(const char* fn, float resolution);
+  void parsePDB(istream& file, float resolution);
 
 #ifndef NO_BABEL
   // Calls Babel to add the hydrogens and inputs them into the PDB
@@ -140,6 +149,7 @@ public:
                                           //  residue pairs adding H. Will also 
                                           //  be used to output to GAMESS format
 #endif
+  int failflag;
   friend ostream& operator<<(ostream& output, const PDB& p);
 };
   

@@ -41,33 +41,35 @@
 // Initialize the Options to empty stuff
 Options::Options()
 {
-  center = false;
-  pdbfile = NULL;
-  outputfile = NULL;
-  failure = false;
-  sameChain = false;
-  gamessfolder = NULL;
+  center          = false;
+  pdbfile         = NULL;
+  outputfile      = NULL;
+  failure         = false;
+  sameChain       = false;
+  gamessfolder    = NULL;
   outputGamessINP = false;
-  pdblist = NULL;
-  extension = ".pdb.gz";
-  threshold = 7.0;
-  numLigands = 0;
+  pdblist         = NULL;
+  extension       = ".pdb.gz";
+  threshold       = 7.0;
+  numLigands      = 0;
+  resolution      = 2.0;
 }
 
 // Intialize options then parse the cmd line arguments
 Options::Options( int argc, char **argv )
 {
-  center = false;
-  pdbfile = NULL;
-  outputfile = NULL;
-  failure = false;
-  sameChain = false;
-  threshold = 7.0;
-  numLigands = 0;
-  gamessfolder = NULL;
+  center          = false;
+  pdbfile         = NULL;
+  outputfile      = NULL;
+  failure         = false;
+  sameChain       = false;
+  threshold       = 7.0;
+  numLigands      = 0;
+  gamessfolder    = NULL;
   outputGamessINP = false;
-  pdblist = NULL;
-  extension = ".pdb.gz";
+  pdblist         = NULL;
+  extension       = ".pdb.gz";
+  resolution      = 2.0;
   parseCmdline( argc, argv );
 }
 
@@ -77,23 +79,25 @@ Options::~Options(){}
 // Print a help page
 void printHelp()
 {
-  cerr << "-h or --help          " << "Displays this message" << endl;
-  cerr << "-p or --pdbdir        " << "Specifies the folder for PDB files" << endl;
-  cerr << "-o or --out           " << "Specifies the output file" << endl;
+  cerr << "-h or --help          " << "Displays this message"                                          << endl;
+  cerr << "-p or --pdbdir        " << "Specifies the folder for PDB files"                             << endl;
+  cerr << "-o or --out           " << "Specifies the output file"                                      << endl;
   cerr << "-L or --pdblist       " << "File containing a list of PDBs to use. -p must be a directory." << endl;
-  cerr << "-e or --ext           " << "Specifies extension of files in -L PDB list" << endl;
-  cerr << "                      " << " by default, it is .pdb.gz but can also be .pdb" << endl;
-  cerr << "                      " << " must have beginning dot" << endl;
-  cerr << "-r or --residues      " << "Set the residues that we are going to analyze" << endl;
-  cerr << "                      " << " residues are set as follows (include quotations):" << endl;
-  cerr << "                      " << " \"PHE;GLU,ASP\"" << endl;
-  cerr << "                      " << " at least 1, but as many as you want" << endl;
-  cerr << "-g or --gamess        " << "Output folder of the GAMESS files" << endl;
-  cerr << "-t or --threshold     " << "Set the distance threshold between amino acids" << endl;
-  cerr << "-s or --samechain     " << "Look for interactions in same chain only" << endl;
-  cerr << "-l or --ligands       " << "Look for interactions with ligands" << endl;
-  cerr << "                      " << " add in the residue name looking for in HETATM:" << endl;
-  cerr << "                      " << " \"PO4,2HP,PI,2PO,PO3\"" << endl;
+  cerr << "-e or --ext           " << "Specifies extension of files in -L PDB list"                    << endl;
+  cerr << "                      " << " by default, it is .pdb.gz but can also be .pdb"                << endl;
+  cerr << "                      " << " must have beginning dot"                                       << endl;
+  cerr << "-r or --residues      " << "Set the residues that we are going to analyze"                  << endl;
+  cerr << "                      " << " residues are set as follows (include quotations):"             << endl;
+  cerr << "                      " << " \"PHE;GLU,ASP\""                                               << endl;
+  cerr << "                      " << " at least 1, but as many as you want"                           << endl;
+  cerr << "-g or --gamess        " << "Output folder of the GAMESS files"                              << endl;
+  cerr << "-t or --threshold     " << "Set the distance threshold between amino acids"                 << endl;
+  cerr << "-s or --samechain     " << "Look for interactions in same chain only"                       << endl;
+  cerr << "-l or --ligands       " << "Look for interactions with ligands"                             << endl;
+  cerr << "                      " << " add in the residue name looking for in HETATM:"                << endl;
+  cerr << "                      " << " \"PO4,2HP,PI,2PO,PO3\""                                        << endl;
+  cerr << "-c or --resolution    " << "Resolution cut-off.  Will only look at the PDBs with"           << endl;
+  cerr << "                      " << " a resolution <= specified value"                               << endl;
 }
 
 // Return true of cmd line parsing failed, false otherwise
@@ -120,12 +124,13 @@ void Options::parseCmdline( int argc, char **argv )
       {"residues",      required_argument, 0, 'r'},
       {"ligands",       required_argument, 0, 'l'},
       {"gamess",        required_argument, 0, 'g'},
+      {"resolution",    required_argument, 0, 'c'},
       {0, 0, 0, 0}
     };
   int option_index;
   bool indir = false;
   // Go through the options and set them to variables
-  while( !( ( c = getopt_long(argc, argv, "hp:o:L:e:t:sr:l:g:", long_options, &option_index) ) < 0 ) )
+  while( !( ( c = getopt_long(argc, argv, "hp:o:L:e:t:sr:l:g:c:", long_options, &option_index) ) < 0 ) )
     {
     switch(c)
       {
@@ -225,6 +230,17 @@ void Options::parseCmdline( int argc, char **argv )
           else
             {
               cerr << red << "Error" << reset << ": Ensure GAMESS output directory exists and is a directory" << endl;
+              printHelp();
+              exit(1);
+            }
+          break;
+        }
+
+      case 'c':
+        {
+          if(!from_string<float>(resolution, optarg, dec))
+            {
+              cerr << red << "Error" << reset << ": please input a number for resolution!" << endl;
               printHelp();
               exit(1);
             }

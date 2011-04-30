@@ -164,7 +164,7 @@ bool processSinglePDBFile(const char* filename,
   // we really need, but the files are relatively small so it isn't
   // taking up much RAM (from what I saw, < 5MB each PDB file)
   // with a few exceptions
-  PDB PDBfile(filename);
+  PDB PDBfile(filename, opts.resolution);
 
   if( PDBfile.fail() )
     {
@@ -494,9 +494,6 @@ void findBestInteraction( AminoAcid& aa1,
                                &aa1h,
                                &aa2h,
                                ligand);
-      //if(aa1.atom[0]->resSeq == aa2.atom[0]->resSeq)
-        //cout << pairWithHydrogen << endl;
-        //cout << aa1h << aa2h << endl;
 
       // calculate the angles of this interaction
       aa1.calculateAnglesPreHydrogens(aa2,
