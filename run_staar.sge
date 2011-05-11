@@ -24,14 +24,5 @@
 # Send an email on suspension of the job
 #$ -m bes
 
-# -t 1-5
+./staar -p /data/AQ/PDB -L lists/PDBList.txt -o /lustre/AQ/AllPDB/STAAR.out -r "PHE;GLU,ASP" -l "PO4" -t 7 -g /lustre/AQ/AllPDB/inp/ >/lustre/AQ/AllPDB/staarcpp.txt -c 5
 
-
-
-./staar -p /data/AQ/PDB -o /lustre/AQ/AllPDB/STAAR.out -r "PHE;GLU,ASP" -l "PO4" -t 7 -g /lustre/AQ/AllPDB/inp/ >/lustre/AQ/AllPDB/staarcpp.txt
-
-#./staar -p /data/AQ/PDB -L lists/PDBList-$SGE_TASK_ID.txt -o /lustre/AQ/AllPDB/STAAR-$SGE_TASK_ID.out -r "PHE;GLU,ASP" -l "PO4" -t 7 -g /lustre/AQ/AllPDB/inp/ >/lustre/AQ/AllPDB/staarcpp-$SGE_TASK_ID.txt
-
-#./staar -p /data/AQ/PDB -L lists/Ghost_list.txt -o /lustre/AQ/Ghost/STAAR.out -r "PHE;GLU,ASP" -l "PO4" -t 7 -g /lustre/AQ/Ghost/inp/ >/lustre/AQ/Ghost/staarcpp.txt
-
-#./staar -p /data/AQ/Jason/PDB/ -o /data/AQ/data/d/STAARtable.out -r "PHE;GLU,ASP" -s -t 7 -g /data/AQ/data/d/INP

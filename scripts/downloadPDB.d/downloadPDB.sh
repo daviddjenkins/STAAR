@@ -1,10 +1,5 @@
-# David D. Jenkins
-# getNewPDBFiles.sh
-# 17 Mar 2011
-#
-# Script to get the new files from the PDB website
-#   Usage: sh getNewPDBFiles.sh PDBList output_dir
-# Very primitive, uses wget
+#! /bin/bash
+# Downloads the PDBs from a list if they do not already exist
 
 if [[ $# -ne 2 ]]; then
     echo "Usage: sh getNewPDBFiles.sh PDBList output_dir"
@@ -38,17 +33,8 @@ echo "Latest PDB files: "
 for line in $(< $pdblist);do
     # If it doesn't exists already, we need to download it
     if [ ! -f "$outdir/$line.$ext" ]; then
-        wget -nv -P $outdir $site/$line.$ext
+        wget -P $outdir $site/$line.$ext
         echo $line.$ext
     fi
 done
 
-# Here is where we will get rid of old ones that aren't included
-# on the list anymore
-ls $outdir | cut -d'.' -f1 > tmp.txt
-echo "Old PDBs:"
-for f in `diff tmp.txt $pdblist | grep "<" | cut -d' ' -f2""`; do
-        rm $outdir/$f.$ext
-        echo "$outdir/$f.$ext";
-done
-rm tmp.txt

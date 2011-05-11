@@ -58,10 +58,15 @@
 // Parses through a single PDB file checking for interactions
 bool processSinglePDBFile(const char* filename,
                           Options& opts,
-                          ofstream& output_file);
+                          ofstream& output_file,
+                          const char* chains=NULL);
 
-// Read PDB names from a list and parse them from the specified directory
+// Read PDB names from a list and parses them from the specified directory
 bool processPDBList(Options& opts);
+
+// Reads the PDB names and chains from a list and parses them from the
+// specified directory
+bool processPDBChainList(Options& opts);
 
 // Traverses through a directory of PDB files processing each one
 bool processPDBDirectory(Options& opts);
@@ -132,6 +137,10 @@ int main(int argc, char* argv[]){
     {
       return_value = processPDBList(opts);
     }
+  else if( opts.chain_list )
+    {
+      return_value = processPDBChainList(opts);
+    }
   else if( isDirectory(opts.pdbfile) )
     {
       // go through each file in the directory
@@ -156,7 +165,8 @@ int main(int argc, char* argv[]){
 
 bool processSinglePDBFile(const char* filename,
                           Options& opts,
-                          ofstream& output_file)
+                          ofstream& output_file,
+                          const char* chains)
 {
 
   // Read in the PDB file
@@ -168,7 +178,8 @@ bool processSinglePDBFile(const char* filename,
 
   if( PDBfile.fail() )
     {
-      cerr << red << "Error" << reset << ": Parsing PDB file failed!" << endl;
+      //cerr << red << "Error" << reset << ": Parsing PDB file failed!" << endl;
+      PDBfile.printFailure();
       return false;
     }
   PDBfile.setResiduesToFind(&opts.residue1, &opts.residue2);
@@ -189,6 +200,13 @@ bool processSinglePDBFile(const char* filename,
   // Searching for interations within each chain
   for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
     {
+      if( chains )
+        {
+          if( !strchr(chains,PDBfile.chains[i].id) )
+            {
+              continue;
+            }
+        }
       // if we want to look for interactions between the ith chain
       // and each of the other chains, we set the indices to loop
       // though all the chains
@@ -240,6 +258,7 @@ bool processSinglePDBFile(const char* filename,
 
 bool processPDBList(Options& opts)
 {
+  // Open the list file
   ifstream listfp(opts.pdblist);
   if( !listfp )
     {
@@ -248,25 +267,80 @@ bool processPDBList(Options& opts)
       return false;
     }
 
+  // Open the output file
   ofstream output_file(opts.outputfile);
   if( !output_file )
     {
       cerr << red << "Error" << reset << ": Failed to open output file" << endl;
       perror("\t");
     }
+
+  // Write the header to output file
   write_output_head(output_file);
 
   string line;
 
+  // Go through each line of the PDB list file
   while(getline(listfp, line))
     {
+      // Get and print the file name
       string filename(opts.pdbfile);
       filename += "/" + line + opts.extension;
       cout << purple << line << opts.extension << endl;
-      if(!processSinglePDBFile(filename.c_str(), opts, output_file))
+
+      // Process the PDB file
+      processSinglePDBFile(filename.c_str(), opts, output_file);
+    }
+  cout << endl;
+  output_file.close();
+  listfp.close();
+  return true;
+}
+
+bool processPDBChainList(Options& opts)
+{
+  // Open up the chain list file
+  ifstream listfp(opts.chain_list);
+  if( !listfp )
+    {
+      cerr << red << "Error" << reset << ": Failed to open list file, " << opts.chain_list << endl;
+      perror("\t");
+      return false;
+    }
+
+  // Open up the output file
+  ofstream output_file(opts.outputfile);
+  if( !output_file )
+    {
+      cerr << red << "Error" << reset << ": Failed to open output file" << endl;
+      perror("\t");
+    }
+
+  // Write the header to the ouput file
+  write_output_head(output_file);
+
+  string line;
+
+  // Go through each line of the list file
+  while(getline(listfp, line))
+    {
+      // Store the PDB directory path first
+      string filename(opts.pdbfile);
+
+      // Separate the line into files
+      vector<string> fields = split(line,'\t');
+      if( fields.size() < 2)
         {
+          cerr << "Chain file is malformed!" << endl;
           return false;
         }
+
+      // Create and output the file name
+      filename += "/" + fields[0] + opts.extension;
+      cout << purple << fields[0] << opts.extension << endl;
+
+      // Process the file
+      processSinglePDBFile(filename.c_str(), opts, output_file, fields[1].c_str());
     }
   cout << endl;
   output_file.close();
@@ -305,11 +379,7 @@ bool processPDBDirectory(Options& opts)
               sprintf(fullFilePath, "%s/%s", opts.pdbfile, filename->d_name);
 
               // perform some work on the current file
-              if ( !processSinglePDBFile(fullFilePath, opts, output_file) )
-                {
-                  closedir(directory);
-                  return false;
-                }
+              processSinglePDBFile(fullFilePath, opts, output_file);
             }
         }
     }
@@ -488,12 +558,18 @@ void findBestInteraction( AminoAcid& aa1,
       // Set the filename
       pairWithHydrogen.filename = PDBfile.filename;
 
+
       // Separate the pair into 2 variables
       pairWithHydrogen.getPair(aa1.atom[0]->resSeq,
                                aa2.atom[0]->resSeq,
                                &aa1h,
                                &aa2h,
                                ligand);
+
+      if( aa2h.skip == true || aa1h.skip == true )
+        {
+          return;
+        }
 
       // calculate the angles of this interaction
       aa1.calculateAnglesPreHydrogens(aa2,

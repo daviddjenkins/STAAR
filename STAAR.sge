@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# File to redirect STDOUT 
+#$ -o /lustre/AQ/AllPDB/STAAR.out
+
+# File to redirect STDERR 
+#$ -e /lustre/AQ/AllPDB/STAAR.out
+
+# Email the user at the end of the program completion
+#$ -M david.d.jenkins@gmail.com
+#$ -m es
+
+# Specify the queue
+#$ -q *
+
+# change to the current working directory
+#$ -cwd
+
+# Set up an array job
+#$ -t 1-79
+
+#$ -V
+
+# And this is where you will add your program call
+/home/djenki11/scratch/repo/staar --residues "PHE;GLU,ASP" --ligands "PO4" --threshold 7 --resolution 3 --out /lustre/AQ/AllPDB/STAAR-$SGE_TASK_ID.csv --pdbdir /lustre/AQ/PDB --pdblist /lustre/AQ/AllPDB/list/x$SGE_TASK_ID --gamess /lustre/AQ/AllPDB/inp/x$SGE_TASK_ID > /lustre/AQ/AllPDB/staarcpp-$SGE_TASK_ID.txt
+

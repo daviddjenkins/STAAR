@@ -190,7 +190,7 @@ int main(int argc, char* argv[]){
         cerr << "Skipped because mix energy was too high : "<< gamess_inp << " : " 
              << fields[0] << fields[6] << " - " << fields[1] << fields[7] << " pair in " << fields[9] << endl;
       else if(count == -2)
-        cerr << "Skipping because the run did not converge within 200 iterations" << endl;
+        cerr << "Skipping because the run did not converge within 200 iterations: " << gamess_inp << endl;
       else if(count != 0)
         cout << line << endl;
       else 

@@ -72,6 +72,7 @@ public:
   char* pdblist;                // List of PDB files to parse
   string extension;             // extension to use to append to pdb list files
   float resolution;             // Max resolution cut-off
+  char* chain_list;             // like pdblist, but contains chains to search in
 
   // Constructor that sets everything to empty stuff
   Options();  

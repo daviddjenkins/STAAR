@@ -36,11 +36,13 @@ features, you will need to edit PDB.{cpp,hpp}.  Anyway, good luck.
 
 The scripts folder contains some scripts and codes for parsing the 
 GAMESS output, added the results to the STAAR output, dealing with
-some of the database stuff, etc.
+some of the database stuff, etc. Speaking on this folder, here are 
+some explanations of the codes in there:
+     downloadPDB - This will download a list of PDBs from 
 
 Oh, and if you don't want to use this code on your own computer, we 
 have considered developing a web page to take user requests to run on
-our own server.  But that is just in talks so far...
+our own server.  Stay tuned!
 
 -----------------------------------------------------------------------
 

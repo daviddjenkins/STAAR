@@ -142,7 +142,10 @@ void Atom::parseAtom(string line, int num)
   altLoc = this->line[16];
   residueName = this->line.substr(17,3);
   chainID = this->line[21];
-
+  if(chainID == ' ')
+    {
+      chainID = 'A';
+    }
   // Grab the residue sequence number
   if(!from_string<int>(resSeq,this->line.substr(22,4),dec))
     {

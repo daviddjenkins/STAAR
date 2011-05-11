@@ -69,9 +69,13 @@ static char INPheader[] = \
 // Error conditions
 #define FAILED_TO_OPEN_FILE         -1
 #define RESOLUTION_NOT_APPLICABLE   -2
-#define RESOLUTION_TOO_HIGH         -3
-#define RESOLUTION_TO_NUMBER_FAILED -4
-
+#define RESOLUTION_BLANKS           -3
+#define RESOLUTION_TOO_HIGH         -4
+#define RESOLUTION_TO_NUMBER_FAILED -5
+#define RESOLUTION_BLANK            -6
+#define NO_RESOLUTION               -7
+#define MODEL_TO_NUMBER_FAILED      -8
+#define MULTIPLE_MODELS_SKIP        -9
 class PDB
 {
 

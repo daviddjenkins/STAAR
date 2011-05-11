@@ -8,7 +8,7 @@ MODULES := src include
 
 CFLAGS := -g
 CPPFLAGS := -g
-LFLAGS := -g 
+LFLAGS := -g
 LIBS := -lm -lz -lgzstream -lopenbabel -Llib 
 
 # Edit these!

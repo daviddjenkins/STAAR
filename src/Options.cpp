@@ -48,7 +48,7 @@ Options::Options()
   sameChain       = false;
   gamessfolder    = NULL;
   outputGamessINP = false;
-  pdblist         = NULL;
+  chain_list      = NULL;
   extension       = ".pdb.gz";
   threshold       = 7.0;
   numLigands      = 0;
@@ -68,6 +68,7 @@ Options::Options( int argc, char **argv )
   gamessfolder    = NULL;
   outputGamessINP = false;
   pdblist         = NULL;
+  chain_list      = NULL;
   extension       = ".pdb.gz";
   resolution      = 2.0;
   parseCmdline( argc, argv );
@@ -83,6 +84,7 @@ void printHelp()
   cerr << "-p or --pdbdir        " << "Specifies the folder for PDB files"                             << endl;
   cerr << "-o or --out           " << "Specifies the output file"                                      << endl;
   cerr << "-L or --pdblist       " << "File containing a list of PDBs to use. -p must be a directory." << endl;
+  cerr << "-C or --pdbchainlist  " << "Like -L but points to list that specifies chains to look in."   << endl;
   cerr << "-e or --ext           " << "Specifies extension of files in -L PDB list"                    << endl;
   cerr << "                      " << " by default, it is .pdb.gz but can also be .pdb"                << endl;
   cerr << "                      " << " must have beginning dot"                                       << endl;
@@ -91,13 +93,13 @@ void printHelp()
   cerr << "                      " << " \"PHE;GLU,ASP\""                                               << endl;
   cerr << "                      " << " at least 1, but as many as you want"                           << endl;
   cerr << "-g or --gamess        " << "Output folder of the GAMESS files"                              << endl;
-  cerr << "-t or --threshold     " << "Set the distance threshold between amino acids"                 << endl;
+  cerr << "-t or --threshold     " << "Set the distance threshold between amino acids (default 7 A)"   << endl;
   cerr << "-s or --samechain     " << "Look for interactions in same chain only"                       << endl;
   cerr << "-l or --ligands       " << "Look for interactions with ligands"                             << endl;
   cerr << "                      " << " add in the residue name looking for in HETATM:"                << endl;
   cerr << "                      " << " \"PO4,2HP,PI,2PO,PO3\""                                        << endl;
   cerr << "-c or --resolution    " << "Resolution cut-off.  Will only look at the PDBs with"           << endl;
-  cerr << "                      " << " a resolution <= specified value"                               << endl;
+  cerr << "                      " << " a resolution <= specified value (default: 2 Angstroms)"        << endl;
 }
 
 // Return true of cmd line parsing failed, false otherwise
@@ -118,6 +120,7 @@ void Options::parseCmdline( int argc, char **argv )
       {"pdbdir",        required_argument, 0, 'p'},
       {"out",           required_argument, 0, 'o'}, 
       {"pdblist",       required_argument, 0, 'L'},
+      {"pdbchainlist",  required_argument, 0, 'C'},
       {"ext",           required_argument, 0, 'e'},
       {"threshold",     required_argument, 0, 't'},
       {"samechain",     no_argument,       0, 's'},
@@ -130,7 +133,7 @@ void Options::parseCmdline( int argc, char **argv )
   int option_index;
   bool indir = false;
   // Go through the options and set them to variables
-  while( !( ( c = getopt_long(argc, argv, "hp:o:L:e:t:sr:l:g:c:", long_options, &option_index) ) < 0 ) )
+  while( !( ( c = getopt_long(argc, argv, "hp:o:L:C:e:t:sr:l:g:c:", long_options, &option_index) ) < 0 ) )
     {
     switch(c)
       {
@@ -162,6 +165,10 @@ void Options::parseCmdline( int argc, char **argv )
 
       case 'L':
         pdblist = optarg;
+        break;
+
+      case 'C':
+        chain_list = optarg;
         break;
 
       case 'e':
@@ -280,6 +287,17 @@ void Options::parseCmdline( int argc, char **argv )
       cerr << red << "Error" << reset << ": -p or --pdbdir must point to a directory!" << endl;
       printHelp();
       failure=true;
+    }
+  else if( chain_list && !isDirectory(pdbfile) )
+    {
+      cerr << red << "Error" << reset << ": -p or --pdbdir must point to a directory!" << endl;
+      printHelp();
+      failure=true;      
+    }
+  else if( chain_list && !sameChain)
+    {
+      sameChain = true;
+      cout << blue << "Note" << reset << ": -s flag must be set with -C. Setting it." << endl;
     }
   else if( !gamessfolder )
     {

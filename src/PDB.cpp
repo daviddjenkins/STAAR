@@ -5,7 +5,7 @@
 //  Date: 12 Jan 2011
 //  Date Modified: 4 Feb 2011
 //  Version: 1.0
-//  Description: Actual does all PDB file reading. Also splits info into chains for further
+//  Description: Actually does all PDB file reading. Also splits info into chains for further
 //               analysis.
 //
 //  Updates: Added ability to read .gz files (4 Feb 2011)
@@ -112,7 +112,8 @@ void PDB::printFailure()
       cerr << red << "Error" << reset << ": Failed to open PDB file " << filename << endl;
       perror("\t");
     }
-  else if(failflag == RESOLUTION_NOT_APPLICABLE)
+  else if(failflag == RESOLUTION_NOT_APPLICABLE || failflag == RESOLUTION_BLANK ||
+          failflag == NO_RESOLUTION)
     {
       cout << cyan << "Skipping" << reset << " because no resolution was specified" << endl;
     }
@@ -123,6 +124,14 @@ void PDB::printFailure()
   else if(failflag == RESOLUTION_TO_NUMBER_FAILED)
     {
       cout << cyan << "Skipping" << reset << " because resolution could not be converted to a number" << endl;
+    }
+  else if(failflag == MODEL_TO_NUMBER_FAILED)
+    {
+      cout << cyan << "Skipping" << reset << ": couldn't convert model number to an int" << endl;
+    }
+  else if(failflag == MULTIPLE_MODELS_SKIP)
+    {
+      cout << cyan << "Skipping" << reset << ": multiple models exist in PDB file" << endl;
     }
   else
     {
@@ -160,19 +169,50 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
 {
   string line; // this is a temp var to hold the current line from the file
   int count = 0;
+  bool rflag = false;
   // For each line in the file
   while( getline(PDBfile, line) && !failure)
     {
       count++;
 
-      // Check the resolution of the PDB
-      int found = line.find("REMARK   2 RESOLUTION.");
+      // Check to see if there are more than one model
+      // If there is, we will just skip the file altogether because
+      // it is less of a hassle to deal with.
+      // So here, we check the model number, if it is greater
+      // than 1, we will just break from this loop and print
+      // a note
+      int found = line.find("MODEL");
       if( found == 0 )
         {
+          int model_number;
+          if( !from_string<int>(model_number, line.substr(10,4), dec) )
+            {
+              failure = true;
+              failflag = MODEL_TO_NUMBER_FAILED;
+              continue;
+            }
+          if( model_number > 1 )
+            {
+              failure = true;
+              failflag = MULTIPLE_MODELS_SKIP;
+              continue;
+            }
+        }
+
+      // Check the resolution of the PDB
+      found = line.find("REMARK   2 RESOLUTION.");
+      if( found == 0 )
+        {
+          rflag = true;
           if(line.substr(23, 7) == "NOT APP")
             {
               failure = true;
               failflag = RESOLUTION_NOT_APPLICABLE;
+            }
+          else if(line.substr(23, 7) == "       ")
+            {
+              failure = true;
+              failflag = RESOLUTION_BLANK;
             }
           else
             {
@@ -188,6 +228,7 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
                   failflag  = RESOLUTION_TOO_HIGH;
                 }
             }
+          continue;
         }
 
       // Parse the line if we are on a SEQRES line
@@ -230,7 +271,11 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
           continue;
         }
     }
-
+  if( !rflag )
+    {
+      failure = true;
+      failflag = NO_RESOLUTION;
+    }
 }
 
 #ifndef NO_BABEL

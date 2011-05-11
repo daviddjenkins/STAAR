@@ -901,7 +901,7 @@ void AminoAcid::centerPO4or2HPorPI()
       skip = true;
 #ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
-           << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << " chain " << atom[0]->chainID << endl;
 #endif
       return;
     }
@@ -1000,8 +1000,10 @@ void AminoAcid::centerPO4or2HPorPI_charge()
       skip = true;
 #ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the " << residue <<  " at "
-           << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << " chain " << atom[0]->chainID << endl;
 #endif
+      cout << cyan << "Skipping " << reset << " because there weren't enough hydrogens in " 
+           << residue << " " << atom[0]->resSeq << " chain " << atom[0]->chainID << endl;
       return;
     }
 
