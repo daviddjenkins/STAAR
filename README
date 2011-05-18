@@ -37,8 +37,28 @@ features, you will need to edit PDB.{cpp,hpp}.  Anyway, good luck.
 The scripts folder contains some scripts and codes for parsing the 
 GAMESS output, added the results to the STAAR output, dealing with
 some of the database stuff, etc. Speaking on this folder, here are 
-some explanations of the codes in there:
-     downloadPDB - This will download a list of PDBs from 
+some explanations of the codes in there [Disclaimer: they weren't
+created with general applicability in mind. They were simply created
+for our own specific needs, but we are including them in case you
+might need them for reference]:
+     downloadPDB - This will download a supplied list of PDBs from 
+                    the RCSB website
+     getNewPDBFiles - Similar to downloadPDB, but it will only 
+                      download whatever hasn't already been 
+                      downloaded before
+     make_scripts - Makes the submission scripts and submits the jobs
+                    to the Newton cluster.  This is specific to our 
+                    needs, so it may not help others much. Check the
+                    comments inside the script for more explanations
+     parseGamess.pl - Perl script to parse out the information from 
+                      the GAMESS runs.  Again, this is somewhat 
+                      specific to our needs, but you can use it as a 
+                      guideline, if you wish
+     splitInput - Splits a large list of PDBs into multiple smaller 
+                  ones.  Again, specific to our needs
+     stats - Gets stats about our runs.  This one is actually one you
+             can use on your own, assuming you don't have results 
+             split up. 
 
 Oh, and if you don't want to use this code on your own computer, we 
 have considered developing a web page to take user requests to run on
