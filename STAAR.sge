@@ -22,5 +22,5 @@
 #$ -V
 
 # And this is where you will add your program call
-/home/djenki11/scratch/repo/staar --residues "PHE;GLU,ASP" --ligands "PO4" --threshold 7 --resolution 3 --out /lustre/AQ/AllPDB/STAAR-$SGE_TASK_ID.csv --pdbdir /lustre/AQ/PDB --pdblist /lustre/AQ/AllPDB/list/x$SGE_TASK_ID --gamess /lustre/AQ/AllPDB/inp/x$SGE_TASK_ID > /lustre/AQ/AllPDB/staarcpp-$SGE_TASK_ID.txt
+/home/djenki11/scratch/repo/staar --residues "PHE;GLU,ASP" --threshold 7 --resolution 3 --out /lustre/AQ/AllPDB/STAAR-$SGE_TASK_ID.csv --pdbdir /lustre/AQ/PDB --pdblist /lustre/AQ/AllPDB/list/x$SGE_TASK_ID --gamess /lustre/AQ/AllPDB/inp/x$SGE_TASK_ID > /lustre/AQ/AllPDB/staarcpp-$SGE_TASK_ID.txt
 

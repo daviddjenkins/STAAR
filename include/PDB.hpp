@@ -49,6 +49,8 @@
 #include "Seqres.hpp"
 #include "Utils.hpp"
 #include "Chain.hpp"
+#include "Model.hpp"
+
 
 static char INPheader[] = \
   " $CONTRL SCFTYP=RHF RUNTYP=EDA ICHARG=-1 MULT=1 COORD=CART MAXIT=200 $END\n" \
@@ -103,6 +105,9 @@ public:
   // Destructed that empties everything
   ~PDB();
 
+  // Deletes everything 
+  void clear();
+
   // Returns true if the parsing failed
   bool fail();
 
@@ -147,6 +152,7 @@ public:
   vector<Residue*>        ligands;        // Vector holding all the ligand lines
   vector<Seqres>          seqres;         // Vector holding all the seqres lines
   vector<string>          conect;         // Vector holding all the CONECT lines
+
   const char*             filename;       // Holds the filename, if needed
 #ifndef NO_BABEL
   OpenBabel::OBConversion conv;           // Holds OpenBabel reading of important
@@ -154,6 +160,24 @@ public:
                                           //  be used to output to GAMESS format
 #endif
   int failflag;
+  float resolution;
+
+  int model_number;
+  vector<PDB> models;                     // Vector of models in the PDB
+  // NOTE: the way I handle models is not intelligent!  I did a quick and dirty 
+  // implementation just to get it done.  What makes it stupid is that I just
+  // creates duplicates of stuff in memory because I didn't want to spend
+  // must more time on this to make it pretty.  Someone else can do that if they
+  // want, but they will have to change a bunch of code.  Had I known about how
+  // the faculty wanted to handle multiple models in the beginning, it would have
+  // been trivial to code it up.  But now that there is just so much code centered
+  // on a single model, it's a lot of work to add in now.  What should be done is 
+  // create a model class that will essentially take the place of what the PDB class
+  // is right now.  Then the PDB class will just contain a vector of all the models
+  // But having it the way it is now is not much of a problem anyway because the 
+  // PDBs aren't that large anyway so it isn't going to completely dominate the 
+  // system's memory...hopefully.
+
   friend ostream& operator<<(ostream& output, const PDB& p);
 };
   

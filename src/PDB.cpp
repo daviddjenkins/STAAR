@@ -62,29 +62,38 @@ PDB::PDB()
   atoms.clear();
   hetatms.clear();
   seqres.clear();
+  ligands.clear();
+  conect.clear();
+  models.clear();
   ligandsToFind = NULL;
   residue1      = NULL;
   residue2      = NULL;
+  resolution = -2;
+  model_number=1;
 }
 
 // Constructor to parse the inputted PDB file
-PDB::PDB(const char* fn, float resolution)
+PDB::PDB(const char* fn, float res)
 {
   failure       = false;
   ligandsToFind = NULL;
   residue1      = NULL;
   residue2      = NULL;
-  parsePDB(fn, resolution);
+  resolution = -2;
+  model_number=1;
+  parsePDB(fn, res);
 }
 
 // Constructor to parse the inputted PDB file
-PDB::PDB(istream& file, float resolution)
+PDB::PDB(istream& file, float res)
 {
   failure       = false;
   ligandsToFind = NULL;
   residue1      = NULL;
   residue2      = NULL;
-  parsePDBstream(file, resolution);
+  resolution = -2;
+  model_number=1;
+  parsePDBstream(file, res);
 }
 
 // Destructor to empty the arrays
@@ -98,6 +107,28 @@ PDB::~PDB()
   atoms.clear();
   hetatms.clear();
   seqres.clear();
+  ligands.clear();
+  conect.clear();
+  models.clear();
+  resolution = -2;
+  model_number=1;
+}
+
+void PDB::clear()
+{
+  filename      = NULL;
+  ligandsToFind = NULL;
+  residue1      = NULL;
+  residue2      = NULL;
+  chains.clear();
+  atoms.clear();
+  hetatms.clear();
+  seqres.clear();
+  ligands.clear();
+  conect.clear();
+  models.clear();
+  resolution = -2;
+  model_number=1;
 }
 
 bool PDB::fail()
@@ -170,6 +201,9 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
   string line; // this is a temp var to hold the current line from the file
   int count = 0;
   bool rflag = false;
+  PDB model;
+  int modelnum=1;
+
   // For each line in the file
   while( getline(PDBfile, line) && !failure)
     {
@@ -185,17 +219,27 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
       if( found == 0 )
         {
           int model_number;
-          if( !from_string<int>(model_number, line.substr(10,4), dec) )
+          if(line.substr(10,4) == "    ")
+            {
+              continue;
+            }
+          else if( !from_string<int>(model_number, line.substr(10,4), dec) )
             {
               failure = true;
               failflag = MODEL_TO_NUMBER_FAILED;
               continue;
             }
-          if( model_number > 1 )
+          else if( model_number > 1 )
             {
-              failure = true;
-              failflag = MULTIPLE_MODELS_SKIP;
-              continue;
+              model.model_number = modelnum;
+              models.push_back(model);
+              model.clear();
+              modelnum++;
+              //models.push_back(model);
+              //model.clear();
+              //failure = true;
+              //failflag = MULTIPLE_MODELS_SKIP;
+              //continue;
             }
         }
 
@@ -203,11 +247,12 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
       found = line.find("REMARK   2 RESOLUTION.");
       if( found == 0 )
         {
-          rflag = true;
+          this->resolution = 0;
           if(line.substr(23, 7) == "NOT APP")
             {
-              failure = true;
-              failflag = RESOLUTION_NOT_APPLICABLE;
+              //failure = true;
+              //failflag = RESOLUTION_NOT_APPLICABLE;
+              this->resolution = -1;
             }
           else if(line.substr(23, 7) == "       ")
             {
@@ -216,13 +261,12 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
             }
           else
             {
-              float res;
-              if(!from_string<float>(res, line.substr(23,7), dec))
+              if(!from_string<float>(this->resolution, line.substr(23,7), dec))
                 {
                   failure = true;
                   failflag = RESOLUTION_TO_NUMBER_FAILED;
                 }
-              if(res > resolution)
+              if(this->resolution > resolution)
                 {
                   failure = true;
                   failflag  = RESOLUTION_TOO_HIGH;
@@ -232,14 +276,14 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
         }
 
       // Parse the line if we are on a SEQRES line
-      found = line.find("SEQRES");
-      if( found == 0 )
-        {
-          Seqres s(line);
-          failure = s.fail();
-          seqres.push_back(s);
-          continue;
-        }
+      // found = line.find("SEQRES");
+      // if( found == 0 )
+      //   {
+      //     Seqres s(line);
+      //     failure = s.fail();
+      //     seqres.push_back(s);
+      //     continue;
+      //   }
 
       // Parse the line if we are on an ATOM line
       found = line.find("ATOM");
@@ -248,6 +292,7 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
           Atom a(line, count);
           failure = a.fail();
           atoms.push_back(a);
+          model.atoms.push_back(a);
           continue;
         }
 
@@ -259,6 +304,7 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
           Atom h(line, count);
           failure = h.fail();
           hetatms.push_back(h);
+          model.hetatms.push_back(h);
           continue;
         }
 
@@ -268,14 +314,23 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
       if( found == 0 )
         {
           conect.push_back(line);
+          model.conect.push_back(line);
           continue;
         }
     }
-  if( !rflag )
+
+  // This checks to see if we even had a resolution line
+  // in the PDB.  If we don't, we are skipping it
+  if( this->resolution == -2 )
     {
       failure = true;
       failflag = NO_RESOLUTION;
     }
+
+  // This ensures that we have the last model
+  // we parsed in out model list
+  model.model_number = modelnum;
+  models.push_back(model);
 }
 
 #ifndef NO_BABEL

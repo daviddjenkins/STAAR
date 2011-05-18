@@ -1,3 +1,12 @@
+
+// IGNORE THIS FILE!  THIS IS OUTDATED AND DOESN'T PARSE CORRECTLY!!!
+// FOR THE CORRECT PARSER, LOOK AT ../parseGamess.pl
+
+
+
+
+
+
 /****************************************************************************************************/
 //  COPYRIGHT 2011, University of Tennessee
 //  Author: David Jenkins (david.d.jenkins@gmail.com)

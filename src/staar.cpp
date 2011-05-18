@@ -168,91 +168,97 @@ bool processSinglePDBFile(const char* filename,
                           ofstream& output_file,
                           const char* chains)
 {
+  int numRes1 = opts.residue1.size();
+  int numRes2 = opts.residue2.size();
 
   // Read in the PDB file
   // This function actually reads and stores more information than
   // we really need, but the files are relatively small so it isn't
   // taking up much RAM (from what I saw, < 5MB each PDB file)
   // with a few exceptions
-  PDB PDBfile(filename, opts.resolution);
+  PDB PDBfile_whole(filename, opts.resolution);
 
-  if( PDBfile.fail() )
+  if( PDBfile_whole.fail() )
     {
       //cerr << red << "Error" << reset << ": Parsing PDB file failed!" << endl;
-      PDBfile.printFailure();
+      PDBfile_whole.printFailure();
       return false;
     }
-  PDBfile.setResiduesToFind(&opts.residue1, &opts.residue2);
-  if(opts.numLigands)
-    {
-      PDBfile.setLigandsToFind(&opts.ligands);
-    }
-  PDBfile.populateChains(false);
 
-  if( opts.numLigands )
+  for(unsigned int model=0; model < PDBfile_whole.models.size(); model++)
     {
-      PDBfile.findLigands( opts.ligands );
-    }
+      PDB PDBfile = PDBfile_whole.models[model];
+      PDBfile.filename = PDBfile_whole.filename;
+      PDBfile.resolution = PDBfile_whole.resolution;
 
-  int numRes1 = opts.residue1.size();
-  int numRes2 = opts.residue2.size();
-
-  // Searching for interations within each chain
-  for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
-    {
-      if( chains )
+      PDBfile.setResiduesToFind(&opts.residue1, &opts.residue2);
+      if(opts.numLigands)
         {
-          if( !strchr(chains,PDBfile.chains[i].id) )
-            {
-              continue;
-            }
+          PDBfile.setLigandsToFind(&opts.ligands);
         }
-      // if we want to look for interactions between the ith chain
-      // and each of the other chains, we set the indices to loop
-      // though all the chains
-      unsigned int start = 0;
-      unsigned int end   = PDBfile.chains.size();
+      PDBfile.populateChains(false);
 
-      // otherwise we just set the indices to go through the ith chain
-      if(opts.sameChain)
+      if( opts.numLigands )
         {
-          start = i;
-          end   = i+1;
+          PDBfile.findLigands( opts.ligands );
         }
 
-      for(unsigned int j = start; j < end; j++)
+      // Searching for interations within each chain
+      for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
         {
-          for(int ii = 0; ii < numRes1; ii++)
+          if( chains )
             {
-              for(int jj = 0; jj < numRes2; jj++)
+              if( !strchr(chains,PDBfile.chains[i].id) )
                 {
-                  // Search for different residue combinations
-                   searchChainInformation(PDBfile,
-                                          i,
-                                          j,
-                                          opts.residue1[ii],
-                                          opts.residue2[jj],
-                                          opts,
-                                          output_file);
+                  continue;
+                }
+            }
+          // if we want to look for interactions between the ith chain
+          // and each of the other chains, we set the indices to loop
+          // though all the chains
+          unsigned int start = 0;
+          unsigned int end   = PDBfile.chains.size();
+
+          // otherwise we just set the indices to go through the ith chain
+          if(opts.sameChain)
+            {
+              start = i;
+              end   = i+1;
+            }
+
+          for(unsigned int j = start; j < end; j++)
+            {
+              for(int ii = 0; ii < numRes1; ii++)
+                {
+                  for(int jj = 0; jj < numRes2; jj++)
+                    {
+                      // Search for different residue combinations
+                      searchChainInformation(PDBfile,
+                                             i,
+                                             j,
+                                             opts.residue1[ii],
+                                             opts.residue2[jj],
+                                             opts,
+                                             output_file);
+                    }
+                }
+            }
+      
+          // Go through the ligands, if there are any
+          for(unsigned int j = 0; j<PDBfile.ligands.size(); j++)
+            {
+              for(int ii=0; ii<numRes1; ii++)
+                {
+                  searchLigandsInformation(PDBfile,
+                                           *PDBfile.ligands[j],
+                                           i,
+                                           opts.residue1[ii],
+                                           opts,
+                                           output_file);
                 }
             }
         }
-      
-      // Go through the ligands, if there are any
-      for(unsigned int j = 0; j<PDBfile.ligands.size(); j++)
-        {
-          for(int ii=0; ii<numRes1; ii++)
-            {
-              searchLigandsInformation(PDBfile,
-                                       *PDBfile.ligands[j],
-                                       i,
-                                       opts.residue1[ii],
-                                       opts,
-                                       output_file);
-            }
-        }
     }
-
   return true;
 }
 
@@ -629,6 +635,7 @@ void findBestInteraction( AminoAcid& aa1,
                               << aa2.atom[0]->resSeq                << ","
                               << code1 << code2                     << ","
                               << PDBfile.filename                   << ","
+                              << PDBfile.resolution                 << ","
                               << output_filename                    << ","
                               << aa1.atom[0]->chainID               << ","
                               << aa2.atom[0]->chainID               << ","
@@ -673,6 +680,8 @@ void findBestInteraction( AminoAcid& aa1,
                       << aa2.atom[0]->resSeq                << ","
                       << code1 << code2                     << ","
                       << PDBfile.filename                   << ","
+                      << PDBfile.resolution                 << ","
+                      << PDBfile.model_number               << ","
                       << output_filename                    << ","
                       << aa1.atom[0]->chainID               << ","
                       << aa2.atom[0]->chainID               << ","
@@ -761,5 +770,5 @@ void outputINPfile(string input_filename, char* filename, AminoAcid& aa1h, Amino
 
 void write_output_head(ofstream& out)
 {
-  out <<"#res1,res2,dist,angle,angleP,angle1,loc1,loc2,code,pdbID,gamessinput,chain1,chain2,center1,,,center2,,,center1h,,,center2h,,,dist,distOxy,distOxy2,angleh,angleOxy,angleOxy2,gamessoutput,electrostatic(Hartree),electrostatic(kcal/mol),exchangerep(Hartree),exchangerep(kcal/mole),polarization(Hartree),polarization(kcal/mole),chargexfer(Hartree),chargexfer(kcal/mol),highordercoup(Hartree),highordercoup(kcal/mole),totalinter(Hartree),totalinter(kcal/mole)" << endl;
+  out <<"#res1,res2,dist,angle,angleP,angle1,loc1,loc2,code,pdbID,resolution,model,gamessinput,chain1,chain2,center1,,,center2,,,center1h,,,center2h,,,dist,distOxy,distOxy2,angleh,angleOxy,angleOxy2,gamessoutput,electrostatic(Hartree),electrostatic(kcal/mol),exchangerep(Hartree),exchangerep(kcal/mole),polarization(Hartree),polarization(kcal/mole),chargexfer(Hartree),chargexfer(kcal/mol),highordercoup(Hartree),highordercoup(kcal/mole),totalinter(Hartree),totalinter(kcal/mole)" << endl;
 }

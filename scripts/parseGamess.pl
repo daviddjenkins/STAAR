@@ -40,7 +40,7 @@ for( $i=1; $i<$number_of_pairs; $i++ )
     my @fields = split(/,/,$pair_line);
 
     # get the corresponding output filename
-    my $out_filename = &getOutputFilename(@fields[10],$output_directory);
+    my $out_filename = &getOutputFilename(@fields[12],$output_directory);
 
     # Check if this is a PO4 line, if it is, we are going to look for the one
     # with the most negative total energy
@@ -60,13 +60,13 @@ for( $i=1; $i<$number_of_pairs; $i++ )
             }
 
             # get the corresponding output filename
-            my $out_filename = &getOutputFilename(@po4fields[10],$output_directory);
+            my $out_filename = &getOutputFilename(@po4fields[12],$output_directory);
             
             # Get the energies
             my $energies = &getEnergies($out_filename);
             
             # Check the validity of the results
-            my ($skipped,$total) = &checkForInvalidResults($energies, @po4fields[10]);
+            my ($skipped,$total) = &checkForInvalidResults($energies, @po4fields[12]);
             
             # If the results are good, let's print them out
             if( not $skipped )
@@ -101,7 +101,7 @@ for( $i=1; $i<$number_of_pairs; $i++ )
         my $energies = &getEnergies($out_filename);
 
         # Check the validity of the results
-        my ($skipped,$total) = &checkForInvalidResults($energies, @fields[10]);
+        my ($skipped,$total) = &checkForInvalidResults($energies, @fields[12]);
 
         # If the results are good, let's print them out
         if( not $skipped )

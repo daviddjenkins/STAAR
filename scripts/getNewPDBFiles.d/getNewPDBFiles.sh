@@ -1,54 +1,20 @@
+#!/bin/bash
 # David D. Jenkins
-# getNewPDBFiles.sh
-# 17 Mar 2011
-#
 # Script to get the new files from the PDB website
 #   Usage: sh getNewPDBFiles.sh PDBList output_dir
 # Very primitive, uses wget
 
+# Check the command line args
 if [[ $# -ne 2 ]]; then
     echo "Usage: sh getNewPDBFiles.sh PDBList output_dir"
     exit
 fi
 
-# This is an option to get compressed or uncompressed files
-# hidden option because it isn't necessary for most purposes
-comp=1
+# Store the command line args
+list=$                          # So, this is the most up to date, complete list file from www.pdb.org
+outdir=$2                       # And this is where the PDB files will be stored
 
-# This is the address that the PDB files will be retrieved from
-site="http://www.rcsb.org/pdb/files/"
-
-# You shouldn't have to edit anything below this line (hopefully)
-
-# List of PDB files
-pdblist=$1
-
-# output directory
-outdir=$2
-
-# Set the extension based on compression option
-if [[ "$comp" -eq "1" ]]; then
-    ext="pdb.gz"
-else
-    ext="pdb"
-fi
-
-echo "Latest PDB files: "
-# Now, we go through each line of the PDB list file
-for line in $(< $pdblist);do
-    # If it doesn't exists already, we need to download it
-    if [ ! -f "$outdir/$line.$ext" ]; then
-        wget -nv -P $outdir $site/$line.$ext
-        echo $line.$ext
-    fi
-done
-
-# Here is where we will get rid of old ones that aren't included
-# on the list anymore
-ls $outdir | cut -d'.' -f1 > tmp.txt
-echo "Old PDBs:"
-for f in `diff tmp.txt $pdblist | grep "<" | cut -d' ' -f2""`; do
-        rm $outdir/$f.$ext
-        echo "$outdir/$f.$ext";
-done
-rm tmp.txt
+# This is some magical stuff.  What it does is the following:
+# ls-es the PDB directory | remove the extensions | compares the list to the directory listing | takes the PDB names that are in the list, but not in the directory
+#    | puts those PDB names in the URL where the PDB can be downloaded | downloads each PDB 20 at a time
+ls $outdir | cut -d'.' -f1 | diff $list - | grep "<" | awk '{print "http://www.rcsb.org/pdb/files/"$2".pdb.gz"}' | xargs -P 20 -r -n 1 wget -nv -P $outdir
