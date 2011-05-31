@@ -206,6 +206,7 @@ bool processSinglePDBFile(const char* filename,
       // Searching for interations within each chain
       for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
         {
+          // Check if we are supposed to look at certain chains
           if( chains )
             {
               if( !strchr(chains,PDBfile.chains[i].id) )

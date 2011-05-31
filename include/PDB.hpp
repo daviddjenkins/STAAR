@@ -49,7 +49,6 @@
 #include "Seqres.hpp"
 #include "Utils.hpp"
 #include "Chain.hpp"
-#include "Model.hpp"
 
 
 static char INPheader[] = \

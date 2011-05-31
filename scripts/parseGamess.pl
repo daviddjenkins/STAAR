@@ -16,7 +16,7 @@
 # Check for arguments
 if($#ARGV + 1 != 2)
 {
-    print STDERR "Usage: gamess_output_directory STAAR.out\n";
+    print STDERR "Usage: perl parseGamess.pl gamess_output_directory STAAR.out\n";
     exit;
 }
 
@@ -30,6 +30,9 @@ my @STAARtable = <fp>;
 close(fp);
 
 my $number_of_pairs = scalar @STAARtable;
+
+# Prints out the header of the table
+print @STAARtable[0];
 
 # Go through all the potential pairs in the STAAR.out table
 for( $i=1; $i<$number_of_pairs; $i++ )

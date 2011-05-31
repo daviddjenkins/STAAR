@@ -3,10 +3,10 @@
 # Usage: bash stats.sh staarcpp.txt STAAR.out STAARwEnergy.out
 
 if [[ "$1" -eq "-n" ]]; then
-    staarcpp="/lustre/AQ/$2/staarcpp.txt";
-    STAARout="/lustre/AQ/$2/STAAR.out";
-    STAARwEnergy="/lustre/AQ/$2/STAARwEnergy.csv";
-    gamessskipped="/lustre/AQ/$2/skipped.txt";
+    staarcpp='/lustre/AQ/'$2'/staarcpp*.txt';
+    STAARout='/lustre/AQ/'$2'/STAAR*.out';
+    STAARwEnergy='/lustre/AQ/'$2'/STAAR-*-wEnergy.csv';
+    gamessskipped='/lustre/AQ/'$2'/skipped*.txt';
 else
     if [ $# -ne 4 ]
     then
@@ -46,11 +46,11 @@ echo "Total Skipped: "$skipped;
 echo -e "\n== Processed PDBs ==";
 # Get the number of unique PDBs with results
 PDBwResults=`grep -v "#" $STAARout | cut -d',' -f10 | sort | uniq | wc -l`;
-echo "PDBs with results: "$PDBwResults;
+echo "PDBs with results (pre-GAMESS): "$PDBwResults;
 
 # PDBs with no results
 PDBwoResults=$(($searched - ($skipped + $PDBwResults)));
-echo "PDBs without results: "$PDBwoResults;
+echo "PDBs without results (pre-GAMESS): "$PDBwoResults;
 
 echo -e "\n== Results Information - Before GAMESS ==";
 # Get the number of results before GAMESS
@@ -86,9 +86,9 @@ echo "Number of GAMESS runs that didn't converge: "$NoConverge;
 HighMix=`grep "abs( MIX energy )" $gamessskipped | wc -l`;
 echo "Number of GAMESS results that had abs(MIX energy) > .25: "$HighMix;
 
-# Get the number of PO4 that were reject
+# Get the number of PO4 that were rejected
 PO4rej=`grep "Another PO4 result had better energy" $gamessskipped | wc -l`;
-echo "Number of PO4 results that were rejected: "$(($PO4rej-2));
+echo "Number of PO4 results that were rejected: "$(($PO4rej));
 
 # Get the number of PHE-GLU results
 PHEGLU=`grep -v "#" $STAARwEnergy | grep "PHE,GLU" | wc -l`;
@@ -101,5 +101,3 @@ echo "Number of PHE-ASP pairs: "$PHEASP" | "`awk 'BEGIN{printf("%0.2f", '$PHEASP
 # Get the number of PHE-PO4 results
 PHEPO4=`grep -v "#" $STAARwEnergy | grep "PHE,PO4" | wc -l`;
 echo "Number of PHE-PO4 pairs: "$PHEPO4" | "`awk 'BEGIN{printf("%0.2f", '$PHEPO4' / '$NumResults' * 100)}'`"%";
-
-

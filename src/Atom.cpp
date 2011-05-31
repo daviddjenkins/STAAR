@@ -230,7 +230,7 @@ ostream& operator<<(ostream& output, const Atom& p)
   //     << "          ";
   // output << setw(2) << right << p.element
   //     << setw(2) << left  << p.charge;
-  output << p.line << "\t" << p.skip;
+  output << p.line;
 
   return output;  // for multiple << operators.
 }

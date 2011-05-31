@@ -52,7 +52,7 @@ Options::Options()
   extension       = ".pdb.gz";
   threshold       = 7.0;
   numLigands      = 0;
-  resolution      = 2.0;
+  resolution      = 99999.0;
 }
 
 // Intialize options then parse the cmd line arguments
@@ -70,7 +70,7 @@ Options::Options( int argc, char **argv )
   pdblist         = NULL;
   chain_list      = NULL;
   extension       = ".pdb.gz";
-  resolution      = 2.0;
+  resolution      = 99999.0;
   parseCmdline( argc, argv );
 }
 
