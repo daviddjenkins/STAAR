@@ -12,8 +12,8 @@ LFLAGS := -O3
 LIBS := -lm -lz -lgzstream -lopenbabel -Llib 
 
 # Edit these!
-BABEL_LIBDIR := /lustre/AQ/openbabel-2.3.0/build/lib/
-BABEL_INCDIR := /lustre/AQ/openbabel-2.3.0/include /data/AQ/openbabel-2.3.0/build/include
+BABEL_LIBDIR := /home/jason/Desktop/build/lib
+BABEL_INCDIR :=/home/jason/Desktop/openbabel-2.3.0/include /home/jason/Desktop/build/include
 
 ifdef BABEL_LIBDIR
 LIBS += -L$(BABEL_LIBDIR)
