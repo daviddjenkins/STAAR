@@ -362,16 +362,12 @@ void AminoAcid::centerTRP()
     }
 }
 
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
-  //Add comment stuffs here~~~~~~~~~~~~~~~~~~~~~~~!!!
+// Calculate the centers for LYS
+// these AA need the following atoms:
+//   CE, NZ, and (for now) CD
+// all of the other ones don't affect the center
+// This also sets the plane coordinates used to calculate 
+// the angle later in the program
 void AminoAcid::centerLYS()
 {
   // This makes a vector of a vector of ATOM*
@@ -389,17 +385,22 @@ void AminoAcid::centerLYS()
 	{
 	  altLoc = true;
 	}
+// The " CD " atom is only here to give three points needed
+// for a plane to be formed. Later, it will be used to find
+// the locations of the hydrogens and have it's position be
+// a location for a hydrogen.
       if (atom[i]->name == " CD ")
 	{
-	  temp[0].push_back(atom[i]);
+	  temp[2].push_back(atom[i]);
+	  atom[i]->skip = true;
 	}
       else if (atom[i]->name == " CE ")
 	{
-	  temp[1].push_back(atom[i]);
+	  temp[0].push_back(atom[i]);
 	}
       else if (atom[i]->name == " NZ ")
 	{
-	  temp[2].push_back(atom[i]);
+	  temp[1].push_back(atom[i]);
 	}
       else
 	{
@@ -425,11 +426,11 @@ void AminoAcid::centerLYS()
 
   // And go through all combinations of the alternate locations
   unsigned int index = 0;
-  for (unsigned int i = 0; i < temp[0].size(); i++) // Go through all the CD
+  for (unsigned int i = 0; i < temp[0].size(); i++) // Go through all the CE
     {
-      for (unsigned int j = 0; j < temp[1].size(); j++) // Go through all the CE
+      for (unsigned int j = 0; j < temp[1].size(); j++) // Go through all the NZ
 	{
-	  for (unsigned int k = 0; k < temp[2].size(); k++, index++) // Go through all the NZ
+	  for (unsigned int k = 0; k < temp[2].size(); k++, index++) // Go through all the CD
 	    {
 	      center[index].plane_info.resize(3);
 	      center[index].plane_info[0] = &temp[0][i]->coord;
@@ -438,15 +439,14 @@ void AminoAcid::centerLYS()
 
 	      // This is a weighted average of the NZ and CE atoms 
 	      // weighted by their mass
-	      center[index] = ( temp[1][j]->coord * MASS_C +
-				temp[2][k]->coord * MASS_N ) / (MASS_C + MASS_N);
+	        center[index] = ( temp[0][i]->coord * MASS_C +
+	  		          temp[1][j]->coord * MASS_N ) / (MASS_C + MASS_N);
 
 	      // And this is just so we know what combination of
 	      // alternate locations (may be able to take out later)
 	      string t;
 	      t.insert(t.end(), 1, temp[0][i]->altLoc);
 	      t.insert(t.end(), 1, temp[1][j]->altLoc);
-	      t.insert(t.end(), 1, temp[2][k]->altLoc);
 	      center[index].altLoc = t;
 #ifdef DEBUG
 	      cout << "CHECK: LYS" << atom[0]->resSeq << " : " << center[index] << endl;
@@ -456,11 +456,12 @@ void AminoAcid::centerLYS()
     }
 }
 
- // Add comment stuff here~~~~~~~~~~~~~~~~~!!!!
- // Add comment stuff here~~~~~~~~~~~~~~~~~!!!!
- // Add comment stuff here~~~~~~~~~~~~~~~~~!!!!
- // Add comment stuff here~~~~~~~~~~~~~~~~~!!!!
- // Add comment stuff here~~~~~~~~~~~~~~~~~!!!!
+// Calculate the centers for ARG
+// these AA need the following atoms:
+//   CD, NE, CZ, NH1, and NH2
+// all of the other ones don't affect the center
+// This also sets the plane coordinates used to calculate 
+// the angle later in the program
 void AminoAcid::centerARG()
 {
   // This makes a vector of a vector of ATOM*
@@ -497,6 +498,11 @@ void AminoAcid::centerARG()
       else if (atom[i]->name == " NH2")
 	{
 	  temp[4].push_back(atom[i]);
+	}
+      else
+	{
+	  // This means that this atom is not useful so we flag it
+	  atom[i]->skip = true;
 	}
     }
 
@@ -1030,14 +1036,20 @@ void AminoAcid::centerASP_charge()
 void AminoAcid::centerLYS_charge()
 {
   center.resize(1);
-  Coordinates tempCenter(0.0, 0.0, 0.0);
+  Coordinates tempA;
+  Coordinates tempB;
   for (unsigned int i = 0; i < atom.size(); i++)
     {
-      if (atom[i]->name == " NZ ")
+      if (atom[i]->name == " NZ " && !atom[i]->skip)
 	{
-	  center[0] = atom[i]->coord;
+	  tempA = atom[i]->coord;
+	}
+      if (atom[i]->name == " CE " && !atom[i]->skip)
+	{
+	  tempB = atom[i]->coord;
 	}
     }
+  center[0] = ((tempA * 82.7) + (tempB * 17.3)) / 100;
 }
 
 void AminoAcid::centerARG_charge()
@@ -1602,7 +1614,6 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
   // Calculate the distance between the centers
   // This is the vector pointing from the benzene center to formate center of charge
   Coordinates distance = aa2.center[0] - aa1.center[0];
-
   
   float num = dotProduct(perp, distance);
   float perpnorm = perp.norm();
@@ -1722,11 +1733,14 @@ void AminoAcid::markAltLocAtomsLYS(int index)
 {
   for (int i = 0; i < this->atom.size(); i++)
     {
-      if (this->atom[i]->name == " CD " &&
+      if (this->atom[i]->name == " CE " &&
 	  &this->atom[i]->coord != (this->center[index].plane_info[0]))
 	{
 	  this->atom[i]->skip = true;
 	}
+// This was, again, going to be used to add hydrogens
+// to the side chain without the use of openbabel and
+// I had to make sure the atom was not marked as skip.
       else if (this->atom[i]->name == " CD " &&
 	       &this->atom[i]->coord != (this->center[index].plane_info[1]))
 	{
@@ -1942,11 +1956,7 @@ void AminoAcid::unmarkAltLocAtomsLYS()
 {
   for (int i = 0; i < this->atom.size(); i++)
     {
-      if (this->atom[i]->name == " CG " )
-	{
-	  this->atom[i]->skip = false;
-	}
-      else if (this->atom[i]->name == " CD " )
+      if (this->atom[i]->name == " CD " )
 	{
 	  this->atom[i]->skip = false;
 	}
@@ -2165,7 +2175,7 @@ string AminoAcid::makeConectLYS()
 	  serials[1] = this->atom[i]->line.substr(6,5);
 	}
     }
-  string conect = "CONECT" + serials[0] + serials[1] + "                                                       \n";
+  string conect = "CONECT" + serials[0] + serials[1] + "                                                                \n";
   return conect;
 }
 
@@ -2195,11 +2205,11 @@ string AminoAcid::makeConectARG()
 	  serials[4] = this->atom[i]->line.substr(6,5);
 	}
     }
-  string conect = "CONECT" + serials[0] + serials[1] + "                                                       \n";
-  conect += "CONECT" + serials[1] + serials[0] + serials[2] + "                                                 \n";
-  conect += "CONECT" + serials[2] + serials[1] + serials[3] + serials[4] + "      \n";
-  conect += "CONECT" + serials[3] + serials[2] + "                                                       \n";
-  conect += "CONECT" + serials[4] + serials[2] + "                                                       \n";
+  string conect = "CONECT" + serials[0] + serials[1] + "                                                                \n";
+  conect += "CONECT" + serials[1] + serials[0] + serials[2] + "                                                           \n";
+  conect += "CONECT" + serials[2] + serials[1] + serials[3] + serials[4] + "                                                      \n";
+  conect += "CONECT" + serials[3] + serials[2] + "                                                                \n";
+  conect += "CONECT" + serials[4] + serials[2] + "                                                                \n";
   return conect;
 }
 
@@ -2443,9 +2453,7 @@ void AminoAcid::printLYS(FILE* output)
 {
   for(int i=0; i < this->atom.size(); i++)
     {
-      if((atom[i]->name == " CG " || 
-          atom[i]->name == " CD " || 
-          atom[i]->name == " CE " || 
+      if((atom[i]->name == " CE " || 
           atom[i]->name == " NZ ") && !atom[i]->skip)
         {
           this->atom[i]->print(output);
