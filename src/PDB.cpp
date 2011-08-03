@@ -445,7 +445,7 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
 // when enough information about the placement of
 // the hydrogens is aquired.
 // This returns a boolean whether it worked or not.
-bool addHydrogenToLYS (AminoAcid& aa)
+bool addHydrogenToARG (AminoAcid& aa)
 {
 	// This is a basic layout of the Hydrogens added
 	// in this function.
