@@ -575,6 +575,12 @@ void findBestInteraction( AminoAcid& aa1,
 
       if( aa2h.skip == true || aa1h.skip == true )
         {
+          if(code2 == 'M')
+            {
+              // Now we are going to undo the alt loc markings
+              aa1.unmarkAltLocAtoms();
+              aa2.unmarkAltLocAtoms();
+            }
           return;
         }
 
@@ -589,14 +595,28 @@ void findBestInteraction( AminoAcid& aa1,
       float dist;
       float distOxy;
       float distOxy2;
-      aa1h.calculateDistancesAndAnglesPostHydrogens(aa2h,
-                                                    aa2.center[closestDist_index2],
-                                                    &dist,
-                                                    &distOxy,
-                                                    &distOxy2,
-                                                    &angleh,
-                                                    &angleOxy,
-                                                    &angleOxy2);
+      if(!aa1h.calculateDistancesAndAnglesPostHydrogens(aa2h,
+                                                        aa2.center[closestDist_index2],
+                                                        threshold,
+                                                        &dist,
+                                                        &distOxy,
+                                                        &distOxy2,
+                                                        &angleh,
+                                                        &angleOxy,
+                                                        &angleOxy2))
+        {
+          // Clean up
+          if(code2 == 'M')
+            {
+              // Now we are going to undo the alt loc markings
+              aa1.unmarkAltLocAtoms();
+              aa2.unmarkAltLocAtoms();
+            }
+
+          return;
+        }
+
+      
 
       // The following is pretty hackish.  For the time being since we don't
       // have an agreement on how to deal with the PO4 ligands completely, 
