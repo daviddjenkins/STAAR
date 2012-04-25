@@ -6,7 +6,7 @@
 # 10000.  So the job files are split by 10k array jobs per file.
 # ALSO, Geri complained about the jobs being so short, so I needed
 # combine a bunch of jobs into a single job, just running back to
-# back (see the while look in the job script part).
+# back (see the while loop in the job script part).
 # 
 # Saying this, the script was not made to be generic. It was made
 # to use once, and that's it. I split the input to STAAR into 79
@@ -23,13 +23,18 @@
 
 ################################################################################
 # CHANGE THIS IF YOU WANT TO USE THIS SCRIPT
-dir=/lustre/AQ/AllPDB/
-count=79
+job_name=$1
+storage_space=$2
+count=$3
+dir=$storage_space/$job_name/
+inp_dir=$dir/inp
+out_dir=$dir/out
+staar_dir=$dir/STAAR
 jobsperscript=10
 ################################################################################
 
 # cd into the input directory
-cd $dir/inp
+cd $inp_dir
 
 # go through all the results files
 for (( i=1; i<=$count; i++ ))
@@ -38,7 +43,7 @@ do
     # And this where it has STAAR-$i if you used a different naming scheme
 
     # Count the number of results
-    num=$((`wc -l $dir/STAAR-$i.csv | cut -d' ' -f1` - 1))
+    num=$((`wc -l $staar_dir/STAAR-$i.csv | cut -d' ' -f1` - 1))
 
     ############################################################################
 

@@ -58,6 +58,8 @@ public:
 
   vector<Coordinates*> plane_info;
 
+  bool skip;
+
   // Simple constructor that sets everything to 0
   Coordinates();
   

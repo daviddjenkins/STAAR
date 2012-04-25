@@ -210,6 +210,78 @@ void AminoAcid::centerPHEorTYR()
     }
 }
 
+void AminoAcid::centerPHEorTYR_altloc()
+{
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs);
+  if(numaltlocs > 1) this->altLoc = true;
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int C_count=0;
+      center[al].skip = false;
+      center[al].plane_info.resize(6);
+      center[al].set(0,0,0);
+      // Push all of the important atoms in their respective vectors
+      for(unsigned int i =0; i< altlocs[al].size(); i++)
+        {
+          if(altlocs[al][i]->name == " CG ")
+            {
+              center[al].plane_info[ CG_PLANE_COORD_PTT] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CZ ")
+            {
+              center[al].plane_info[3] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CD1")
+            {
+              center[al].plane_info[CD1_PLANE_COORD_PTT] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CD2")
+            {
+              center[al].plane_info[CD2_PLANE_COORD_PTT] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CE1")
+            {
+              center[al].plane_info[4] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CE2")
+            {
+              center[al].plane_info[5] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it 
+              altlocs[al][i]->skip = true;
+            }
+        }
+  
+      // Error check.  If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and go to next altLoc
+      if(C_count != 6)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the PHE ring at "
+               << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
+#endif
+        }
+      center[al] /= 6;
+    }
+}
+
 // Calculate the centers for TRP
 // these AA need the following atoms:
 //   CG, CH2, CD1, CD2, NE1, CE2, CE3, CZ2, CZ3
@@ -670,6 +742,65 @@ void AminoAcid::centerASP_oxygen()
     }
 }
 
+void AminoAcid::centerASP_oxygen_altloc()
+{
+
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs*2);
+  if(numaltlocs > 1) this->altLoc = true;
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int atom_count = 0;
+      center[al].skip = false;
+      center[al].plane_info.resize(3);
+      center[al].set(0,0,0);
+      center[al+numaltlocs].skip = false;
+      center[al+numaltlocs].plane_info.resize(3);
+      center[al+numaltlocs].set(0,0,0);
+      for(unsigned int i =0; i< altlocs[al].size(); i++)
+        {
+          if(altlocs[al][i]->name == " CG ")
+            {
+              center[al].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OD1")
+            {
+              center[al].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OD2")
+            {
+              center[al].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it 
+              altlocs[al][i]->skip = true;
+            }
+        }
+
+      // Error check.  If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and leave the function
+      if(atom_count != 3)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
+               << atom[0]->resSeq << " altloc: " << altlocs[al][0]->altLoc << endl;
+#endif
+        }
+    }
+}
+
 // Calculate the centers for GLU
 // these AA need the following atoms:
 //   OE1 and OE2
@@ -764,6 +895,65 @@ void AminoAcid::centerGLU_oxygen()
               cout << "CHECK: GLU" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
             }
+        }
+    }
+}
+
+void AminoAcid::centerGLU_oxygen_altloc()
+{
+
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs*2);
+  if(numaltlocs > 1) this->altLoc = true;
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int atom_count = 0;
+      center[al].skip = false;
+      center[al].plane_info.resize(3);
+      center[al].set(0,0,0);
+      center[al+numaltlocs].skip = false;
+      center[al+numaltlocs].plane_info.resize(3);
+      center[al+numaltlocs].set(0,0,0);
+      for(unsigned int i =0; i< altlocs[al].size(); i++)
+        {
+          if(altlocs[al][i]->name == " CD ")
+            {
+              center[al].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OE1")
+            {
+              center[al].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OE2")
+            {
+              center[al].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it 
+              altlocs[al][i]->skip = true;
+            }
+        }
+
+      // Error check.  If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and leave the function
+      if(atom_count != 3)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
+               << atom[0]->resSeq << " altloc: " << altlocs[al][0]->altLoc << endl;
+#endif
         }
     }
 }
@@ -1208,6 +1398,60 @@ void AminoAcid::center2POorPO3_charge()
     center[0] /= -3;
 }
 
+template<class T>
+int find_index(vector<T>& vec, T to_find)
+{
+  for(int i=0; i<vec.size(); i++)
+    {
+      if(vec[i] == to_find) return i;
+    }
+  return vec.size();
+}
+
+void AminoAcid::determineAltLoc(vector<char>&altloc_ids)
+{
+  int count = altloc_ids.size();
+  if(count == 0)
+    {
+      count = 1;
+      altlocs.resize(1);
+      for(int i=0; i<this->atom.size(); i++)
+        {
+          this->atom[i]->skip = false;
+          altlocs[0].push_back(this->atom[i]);
+        }
+    }
+  else
+    {
+      altlocs.resize(count);
+
+      for(int i=0; i<this->atom.size(); i++)
+        {
+          if(this->atom[i]->altLoc == ' ')
+            {
+              for(int j=0; j<count; j++)
+                {
+                  this->atom[i]->skip = false;
+                  altlocs[j].push_back(this->atom[i]);
+                }
+            }
+          else
+            {
+              this->atom[i]->skip = false;
+              int idx = find_index(altloc_ids, this->atom[i]->altLoc);
+              altlocs[idx].push_back(this->atom[i]);
+            }
+        }
+    }
+
+  // for(int j=0; j<count; j++)
+  //   {
+  //     for(int i=0; i<altlocs[j].size(); i++)
+  //       cout << *altlocs[j][i] << endl;
+  //   }
+
+}
+
 // Calculates the center of the amino acid
 void AminoAcid::calculateCenter(bool centerOfCharge)
 {
@@ -1221,17 +1465,17 @@ void AminoAcid::calculateCenter(bool centerOfCharge)
       // PHE or TYR
       else if ( residue == "PHE" || residue == "TYR" )
         {
-          centerPHEorTYR();
+          centerPHEorTYR_altloc();
         }
       // ASP
       else if (residue == "ASP")
         {
-          centerASP_oxygen();
+          centerASP_oxygen_altloc();
         }
       // GLU
       else if (residue == "GLU")
         {
-          centerGLU_oxygen();
+          centerGLU_oxygen_altloc();
         }
       else if (residue == "PO4" || residue == "2HP" || residue == " PI")
         {
@@ -1360,7 +1604,11 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
   float distFromMassToChg = distance.norm();
   float denom = perpnorm * distFromMassToChg;
 
-  if(distFromMassToChg > threshold) return false;
+  if(distFromMassToChg > threshold)
+    {
+      cout << gray << "Note" << reset << ": post hydrogen distance, " << distFromMassToChg <<" > "<< threshold << "A.  Skipping." << endl;
+      return false;
+    }
 
   if(denom == 0)
     {
@@ -1780,6 +2028,45 @@ string AminoAcid::makeConectPHEorTYR()
   return conect;
 }
 
+string AminoAcid::makeConectPHEorTYR_altloc(int c)
+{
+  string serials[6];
+  for(int i=0; i<this->altlocs[c].size(); i++)
+    {
+      if( this->altlocs[c][i]->name == " CG " && !this->altlocs[c][i]->skip )
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CD1"  && !this->altlocs[c][i]->skip )
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CD2"  && !this->altlocs[c][i]->skip )
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CZ " && !this->altlocs[c][i]->skip )
+        {
+          serials[3] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CE1" && !this->altlocs[c][i]->skip )
+        {
+          serials[4] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CE2" && !this->altlocs[c][i]->skip )
+        {
+          serials[5] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[2] + serials[1] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[4] + serials[0] + "                                                 \n";
+  conect += "CONECT" + serials[2] + serials[5] + serials[0] + "                                                 \n";
+  conect += "CONECT" + serials[3] + serials[5] + serials[4] + "                                                 \n";
+  conect += "CONECT" + serials[4] + serials[1] + serials[3] + "                                                 \n";
+  conect += "CONECT" + serials[5] + serials[2] + serials[3] + "                                                 \n";
+  return conect;
+}
+
 string AminoAcid::makeConectGLU()
 {
   string serials[3];
@@ -1804,6 +2091,31 @@ string AminoAcid::makeConectGLU()
   return conect;
 }
 
+string AminoAcid::makeConectGLU_altloc(int c)
+{
+  string serials[3];
+  for(int i=0; i<this->altlocs[c].size(); i++)
+    {
+      if( this->altlocs[c][i]->name == " CD " && !this->altlocs[c][i]->skip )
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OE1"  && !this->altlocs[c][i]->skip )
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OE2"  && !this->altlocs[c][i]->skip )
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  return conect;
+}
+
+
 string AminoAcid::makeConectASP()
 {
   string serials[3];
@@ -1827,6 +2139,31 @@ string AminoAcid::makeConectASP()
   conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
   return conect;
 }
+
+string AminoAcid::makeConectASP_altloc(int c)
+{
+  string serials[3];
+  for(int i=0; i<this->altlocs[c].size(); i++)
+    {
+      if( this->altlocs[c][i]->name == " CG " && !this->altlocs[c][i]->skip )
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OD1"  && !this->altlocs[c][i]->skip )
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OD2"  && !this->altlocs[c][i]->skip )
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  return conect;
+}
+
 
 string AminoAcid::makeConectPO4or2HPorPI()
 {
@@ -1891,11 +2228,11 @@ string AminoAcid::makeConect2POorPO3()
   return conect;
 }
 
-string AminoAcid::makeConect()
+string AminoAcid::makeConect(int c)
 {
   if(residue == "PHE" || residue == "TYR")
     {
-      return makeConectPHEorTYR();
+      return makeConectPHEorTYR_altloc(c);
     }
   else if(residue == "ASP")
     {
@@ -1903,7 +2240,7 @@ string AminoAcid::makeConect()
     }
   else if(residue == "GLU")
     {
-      return makeConectGLU();
+      return makeConectGLU_altloc(c);
     }
   else if(residue == "PO4" || residue == "2HP" || residue == " PI")
     {

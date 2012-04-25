@@ -77,6 +77,9 @@ private:
   void centerPHEorTYR();
   void centerTRP();
 
+  // Calculates the CM of PHE using alternate locations
+  void centerPHEorTYR_altloc();
+
   // Calculates the center of mass for the PO4, 2HP, and PI ligands
   //void centerPO4();
   void centerPO4or2HPorPI();
@@ -97,7 +100,9 @@ private:
 
   // These find the oxygens that will later be used for distances for ASP and GLU
   void centerASP_oxygen();
+  void centerASP_oxygen_altloc();
   void centerGLU_oxygen();
+  void centerGLU_oxygen_altloc();
 
   void centerPHEorTYR_simplified();
   void centerASP_charge();
@@ -122,8 +127,11 @@ private:
   void unmarkAltLocAtoms2POorPO3();
 
   string makeConectPHEorTYR();
+  string makeConectPHEorTYR_altloc(int c);
   string makeConectASP();
+  string makeConectASP_altloc(int c);
   string makeConectGLU();
+  string makeConectGLU_altloc(int c);
   string makeConectPO4or2HPorPI();
   string makeConect2POorPO3();
 
@@ -133,6 +141,9 @@ public:
 
   // destructor
   ~AminoAcid();
+
+  // Finds the alternate locations
+  void determineAltLoc(vector<char>&altloc_ids);
 
   // calculate the center of the AA. Calls the individual
   // functions above depending on AA
@@ -166,11 +177,13 @@ public:
   void unmarkAltLocAtoms();
 
   // Make CONECT lines.  This avoids mono/di-atomic molecules
-  string makeConect();
+  string makeConect(int c);
 
   // Fix to remove excess hydrogens that Babel sometimes adds
   // to the GLU and ASP residues
   bool removeExcessHydrogens(vector<string> conect);
+
+  vector< vector<Atom*> > altlocs;
 
   // this holds pointers to the ATOM strings
   vector<Atom*> atom;

@@ -21,10 +21,10 @@ else
 fi
 
 # Get the PDB ids
-grep -v '#' $file | cut -c 9-12 > temp1.txt; 
+grep -v '#' $file | awk '$6=="X"{print}' | cut -c 9-12 > temp1.txt; 
 
 # Get the chains
-grep -v '#' $file | cut -c 13 > temp2.txt; 
+grep -v '#' $file | awk '$6=="X"{print}' | cut -c 13 > temp2.txt; 
 
 # Combine and sort them.  Then put chains that are from
 # the same PDB in the same line separated by a comma

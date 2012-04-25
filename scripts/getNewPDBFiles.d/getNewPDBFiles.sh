@@ -29,8 +29,8 @@ ls --color=never $outdir | cut -d'.' -f1 | sort | diff $list.whole - | grep ">" 
 #ls $outdir | cut -d'.' -f1 | diff $list - | grep "<" | awk '{print "http://www.rcsb.org/pdb/files/"$2".pdb.gz"}' | xargs -P 20 -r -n 1 wget -nv -P $outdir
 
 # But now, we don't need all of those.  we just stored the list to the disk for use later
-awk '{print "http://www.rcsb.org/pdb/files/"$2".pdb.gz"}' $list.new | xargs -P 20 -r -n 1 wget -nv -P $outdir.update
+awk '{print "http://www.rcsb.org/pdb/files/"$2".pdb.gz"}' $list.new | xargs -P 20 -r -n 1 wget -nv -P $outdir
 
 # Delete the extra depreciated files
-awk '{print $outdir/$2}' $list.del | xargs -P 20 -r -n 1 rm 
+awk -v outdir="$outdir" '{print outdir"/"$2".pdb.gz"}' $list.del | xargs -P 1 -r -n 1 rm
 
