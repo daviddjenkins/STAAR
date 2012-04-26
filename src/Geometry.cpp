@@ -41,7 +41,7 @@
 
 // Find the dot product between 2 points
 float dotProduct( Coordinates& point1,
-		  Coordinates& point2 )
+                  Coordinates& point2 )
 {
   Coordinates t = point1 * point2;
   return t.x + t.y + t.z;
@@ -53,8 +53,8 @@ float dotProduct( Coordinates& point1,
 //      x2 y2 z2
 //      x3 y3 z3
 float determinant( Coordinates& point1,
-		   Coordinates& point2,
-		   Coordinates& point3 )
+                   Coordinates& point2,
+                   Coordinates& point3 )
 {
   float t11, t12, t13;
   float t21, t22, t23;
@@ -69,15 +69,15 @@ float determinant( Coordinates& point1,
   // Standard 3x3 determinant equation
   // (unless I made a typo)
   return ( t11 * ( t22*t33 - t23*t32 ) - 
-	   t12 * ( t21*t33 - t23*t31 ) +
-	   t13 * ( t21*t32 - t22*t31 ));
+           t12 * ( t21*t33 - t23*t31 ) +
+           t13 * ( t21*t32 - t22*t31 ));
 }
 
 // Gets the coordinates for the plain
 float getPlaneEquation( Coordinates& point1,
-			Coordinates& point2,
-			Coordinates& point3,
-			Coordinates* result )
+                        Coordinates& point2,
+                        Coordinates& point3,
+                        Coordinates* result )
 {
   Coordinates t1, t2, t3;
   t1.set(1, point1.y, point1.z);
@@ -87,8 +87,8 @@ float getPlaneEquation( Coordinates& point1,
   // Get the determinant of a matrix with the 
   // x values set to 1
   result->x = determinant( t1, 
-			   t2, 
-			   t3 );
+                           t2, 
+                           t3 );
 
   t1.set(point1.x, 1, point1.z);
   t2.set(point2.x, 1, point2.z);
@@ -97,8 +97,8 @@ float getPlaneEquation( Coordinates& point1,
   // Get the determinant of a matrix with the 
   // y values set to 1
   result->y = determinant( t1, 
-			   t2, 
-			   t3 );
+                           t2, 
+                           t3 );
 
   t1.set(point1.x, point1.y, 1);
   t2.set(point2.x, point2.y, 1);
@@ -107,20 +107,20 @@ float getPlaneEquation( Coordinates& point1,
   // Get the determinant of a matrix with the 
   // z values set to 1
   result->z = determinant( t1, 
-			   t2, 
-			   t3 );
+                           t2, 
+                           t3 );
 
   // and because we will need it later, return the
   // determinant of the 3 points
   return determinant( point1, 
-		      point2, 
-		      point3 );
+                      point2, 
+                      point3 );
 }
 
 // Calculate the angle between a plane and a line
 float angleBetweenPlaneAndLine ( Coordinates& plane,
-				 Coordinates& point1,
-				 Coordinates& point2 )
+                                 Coordinates& point1,
+                                 Coordinates& point2 )
 {
   float normalv;
   float normalp;
@@ -165,14 +165,14 @@ float constantForPlaneLineIntercept(Coordinates& plane,
 
   //denom = plane.x*plane.x + plane.y*plane.y + plane.z*plane.z;
   float denom = dotProduct( plane, 
-			    plane );
+                            plane );
   
   // Make sure we aren't dividing by 0
   // because that baaaaaaaaaaaaad
   if(denom != 0)
     {
        return -1*( intercept + 
-		   dotProduct(plane, point) ) / denom;
+                   dotProduct(plane, point) ) / denom;
     }
   else
     {
@@ -196,8 +196,8 @@ void planeProjectCoordinate(Coordinates& plane,
 // Given 2 points and the coordinates where they intersect,
 // this function finds the angle between them
 float findAngle(Coordinates& point1,
-		Coordinates& intersect,
-		Coordinates& point2)
+                Coordinates& intersect,
+                Coordinates& point2)
 {
   Coordinates vec1;
   Coordinates vec2;
@@ -241,8 +241,8 @@ float findAngle(Coordinates& point1,
 // residue in question, and the index for the center that we
 // are curious about
 float calculateAngleBetweenPlanes( Coordinates& planeP,
-				   AminoAcid& aa2,
-				   int index2 )
+                                   AminoAcid& aa2,
+                                   int index2 )
 {
   Coordinates planeQ;
   
@@ -253,9 +253,9 @@ float calculateAngleBetweenPlanes( Coordinates& planeP,
 
   // get the plane equation for the center we are curious about
   getPlaneEquation( *(aa2.center[index2].plane_info[ C__PLANE_COORD_AG]),
-		    *(aa2.center[index2].plane_info[O_1_PLANE_COORD_AG]),
-		    *(aa2.center[index2].plane_info[O_2_PLANE_COORD_AG]),
-		    &planeQ);
+                    *(aa2.center[index2].plane_info[O_1_PLANE_COORD_AG]),
+                    *(aa2.center[index2].plane_info[O_2_PLANE_COORD_AG]),
+                    &planeQ);
 
   // calculate the norms of these planes
   normV = planeP.norm();
@@ -263,7 +263,7 @@ float calculateAngleBetweenPlanes( Coordinates& planeP,
 
   // and their dot product
   dotProd = dotProduct( planeP,
-			planeQ );
+                        planeQ );
 
   // and use them to calculate the value of the cosine of the angle
   cosValue = dotProd / ( normV * normP );
@@ -279,9 +279,9 @@ float calculateAngleBetweenPlanes( Coordinates& planeP,
       // and actually calculate the angle value
       float angle = acos(cosValue) * 180 / 3.14159;
       if(angle > 90)
-	{
-	  angle = 180.0 - angle;
-	}
+        {
+          angle = 180.0 - angle;
+        }
       return angle;
     }
 }

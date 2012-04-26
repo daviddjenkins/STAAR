@@ -3,10 +3,10 @@
 # Usage: bash stats.sh staarcpp.txt STAAR.out STAARwEnergy.out
 
 if [[ "$1" -eq "-n" ]]; then
-    staarcpp='/lustre/AQ/'$2'/staarcpp*.txt';
-    STAARout='/lustre/AQ/'$2'/STAAR*.out';
-    STAARwEnergy='/lustre/AQ/'$2'/STAAR-*-wEnergy.csv';
-    gamessskipped='/lustre/AQ/'$2'/skipped*.txt';
+    staarcpp='/lustre/AQ/'$2'/STAAR/staarcpp*.txt';
+    STAARout='/lustre/AQ/'$2'/STAAR/STAAR*.csv';
+    STAARwEnergy='/lustre/AQ/'$2'/energies/STAAR-*-wEnergy.csv';
+    gamessskipped='/lustre/AQ/'$2'/energies/skipped*.txt';
 else
     if [ $# -ne 4 ]
     then
@@ -21,9 +21,12 @@ else
     gamessskipped=$4;
 fi
 
+PDBdir=/lustre/AQ/PDB
+
 # Get total number of PDBs search again as a check
 echo "= Results Summary =";
-searched=`grep ".pdb.gz" $staarcpp | grep -v "Corrected" | wc -l`;
+#searched=`grep ".pdb.gz" $staarcpp | grep -v "Corrected" | wc -l`;
+searched=`ls --color=never $PDBdir | wc -l`
 echo "Total Searched: "$searched;
 
 echo -e "\n== Skipped PDBs ==";
@@ -40,7 +43,7 @@ MultiModels=`grep "multiple models exist in PDB file" $staarcpp | wc -l`;
 echo "Xray PDBs skipped because there were multiple models: "$MultiModels;
 
 # Total Skipped
-skipped=`grep "Skipping" $staarcpp | wc -l`;
+skipped=`egrep "Skipping.* " $staarcpp | wc -l`;
 echo "Total Skipped: "$skipped;
 
 echo -e "\n== Processed PDBs ==";

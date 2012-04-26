@@ -236,11 +236,6 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
               models.push_back(model);
               model.clear();
               modelnum++;
-              //models.push_back(model);
-              //model.clear();
-              //failure = true;
-              //failflag = MULTIPLE_MODELS_SKIP;
-              //continue;
             }
         }
 
@@ -275,16 +270,6 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
             }
           continue;
         }
-
-      // Parse the line if we are on a SEQRES line
-      // found = line.find("SEQRES");
-      // if( found == 0 )
-      //   {
-      //     Seqres s(line);
-      //     failure = s.fail();
-      //     seqres.push_back(s);
-      //     continue;
-      //   }
 
       // Parse the line if we are on an ATOM line
       found = line.find("ATOM");
@@ -337,7 +322,7 @@ void PDB::parsePDBstream(istream& PDBfile, float resolution)
 #ifndef NO_BABEL
 // This function will call the Babel library to add 
 // hydrogens to the residues
-void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
+void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b, int cd1, int cd2)
 {
   OBMol mol;
   string addedH;
@@ -365,26 +350,32 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b)
       }
   }
 
-
   // Now, let's pack up the information into a string
   string packedFile="";
-  for(unsigned int i=0; i < a.atom.size(); i++)
+  for(unsigned int i=0; i < a.altlocs[cd1].size(); i++)
     {
-      if( !a.atom[i]->skip )
+      if( !a.altlocs[cd1][i]->skip )
         {
-          packedFile += a.atom[i]->line + "\n";
+          packedFile += a.altlocs[cd1][i]->line + "\n";
         }
+    }
+  
+  int cd2_al = cd2;
+  if(b.residue == "ASP" || b.residue == "GLU")
+    {
+      cd2_al = cd2%(b.altlocs.size());
     }
 
-  for(unsigned int i=0; i < b.atom.size(); i++)
+  for(unsigned int i=0; i < b.altlocs[cd2_al].size(); i++)
     {
-      if( !b.atom[i]->skip )
+      if( !b.altlocs[cd2_al][i]->skip )
         {
-            packedFile += b.atom[i]->line + "\n";
+            packedFile += b.altlocs[cd2_al][i]->line + "\n";
         }
     }
-  packedFile += a.makeConect();
-  packedFile += b.makeConect();
+  packedFile += a.makeConect(cd1);
+  packedFile += b.makeConect(cd2_al);
+
 
   // Now, let's set up some Babel information
   // First, we get the PDB format to tell
@@ -577,10 +568,20 @@ void PDB::populateChains(bool center)
       AminoAcid aa;
       unsigned int residue_number = atoms[i].resSeq;
       char iCode = atoms[i].iCode;
+      vector<char> altloc_ids;
       while(residue_number == atoms[i].resSeq &&
             atoms[i].chainID == chainID &&
             atoms[i].iCode == iCode )
         {
+          // Determine how many alternate locations there are
+          if(atoms[i].altLoc != ' ')
+            {
+              vector<char>::iterator found = find(altloc_ids.begin(), altloc_ids.end(), atoms[i].altLoc);
+              if(found == altloc_ids.end())
+                {
+                  altloc_ids.push_back(atoms[i].altLoc);
+                }
+            }
           aa.atom.push_back(&atoms[i]);
           i++;
           if( i == atoms.size() )
@@ -589,7 +590,7 @@ void PDB::populateChains(bool center)
             }
         }
       i--;
-
+      aa.determineAltLoc(altloc_ids);
       aa.residue = atoms[i].residueName;
       vector<string>::iterator found1 = find(residue1->begin(), residue1->end(), aa.residue);
       vector<string>::iterator found2 = find(residue2->begin(), residue2->end(), aa.residue);
@@ -683,7 +684,7 @@ void PDB::getPair(int& resSeq1,
           // If the benzene was naturally first,
           // it is in the first chain while the formate
           // is in the second chain
-          if(resSeq1 <= resSeq2)
+          if(this->chains[0].aa[0].residue == "PHE")
             {
               *r1 = this->chains[0].aa[0];
               *r2 = this->chains[1].aa[0];
@@ -701,7 +702,7 @@ void PDB::getPair(int& resSeq1,
           // If the benzene was naturally first,
           // it is in the first chain while the formate
           // is in the second chain
-          if(resSeq1 <= resSeq2)
+          if(this->chains[0].aa[0].residue == "PHE")
             {
               *r1 = this->chains[0].aa[0];
               *r2 = this->chains[0].aa[1];

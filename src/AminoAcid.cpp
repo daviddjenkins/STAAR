@@ -149,7 +149,7 @@ void AminoAcid::centerPHEorTYR()
     {
       skip = true;
 #ifndef DISABLE_WARNING
-      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
+      cout << cyan << "WARNING" << reset << ": Could not find all atoms in the PHE ring at "
            << atom[0]->resSeq << endl;
 #endif
       return;
@@ -207,6 +207,78 @@ void AminoAcid::centerPHEorTYR()
                 }
             }
         }
+    }
+}
+
+void AminoAcid::centerPHEorTYR_altloc()
+{
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs);
+  if(numaltlocs > 1) this->altLoc = true;
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int C_count=0;
+      center[al].skip = false;
+      center[al].plane_info.resize(6);
+      center[al].set(0,0,0);
+      // Push all of the important atoms in their respective vectors
+      for(unsigned int i =0; i< altlocs[al].size(); i++)
+        {
+          if(altlocs[al][i]->name == " CG ")
+            {
+              center[al].plane_info[ CG_PLANE_COORD_PTT] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CZ ")
+            {
+              center[al].plane_info[3] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CD1")
+            {
+              center[al].plane_info[CD1_PLANE_COORD_PTT] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CD2")
+            {
+              center[al].plane_info[CD2_PLANE_COORD_PTT] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CE1")
+            {
+              center[al].plane_info[4] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else if(altlocs[al][i]->name == " CE2")
+            {
+              center[al].plane_info[5] = &(altlocs[al][i]->coord);
+              center[al] += altlocs[al][i]->coord;
+              C_count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it 
+              altlocs[al][i]->skip = true;
+            }
+        }
+  
+      // Error check.  If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and go to next altLoc
+      if(C_count != 6)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the PHE ring at "
+               << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
+#endif
+        }
+      center[al] /= 6;
     }
 }
 
@@ -382,31 +454,31 @@ void AminoAcid::centerLYS()
   for (unsigned int i = 0; i < atom.size(); i++)
     {
       if (atom[i]->altLoc != ' ')
-	{
-	  altLoc = true;
-	}
-// The " CD " atom is only here to give three points needed
-// for a plane to be formed. Later, it will be used to find
-// the locations of the hydrogens and have it's position be
-// a location for a hydrogen.
+        {
+          altLoc = true;
+        }
+      // The " CD " atom is only here to give three points needed
+      // for a plane to be formed. Later, it will be used to find
+      // the locations of the hydrogens and have it's position be
+      // a location for a hydrogen.
       if (atom[i]->name == " CD ")
-	{
-	  temp[2].push_back(atom[i]);
-	  atom[i]->skip = true;
-	}
+        {
+          temp[2].push_back(atom[i]);
+          atom[i]->skip = true;
+        }
       else if (atom[i]->name == " CE ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if (atom[i]->name == " NZ ")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it
+          atom[i]->skip = true;
+        }
     }
 
   // Error check. If we don't have at least one of each
@@ -417,7 +489,7 @@ void AminoAcid::centerLYS()
       skip = true;
 #ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the TRP ring at "
-	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
 #endif
       return;
     }
@@ -429,32 +501,93 @@ void AminoAcid::centerLYS()
   for (unsigned int i = 0; i < temp[0].size(); i++) // Go through all the CE
     {
       for (unsigned int j = 0; j < temp[1].size(); j++) // Go through all the NZ
-	{
-	  for (unsigned int k = 0; k < temp[2].size(); k++, index++) // Go through all the CD
-	    {
-	      center[index].plane_info.resize(3);
-	      center[index].plane_info[0] = &temp[0][i]->coord;
-	      center[index].plane_info[1] = &temp[1][j]->coord;
-	      center[index].plane_info[2] = &temp[2][k]->coord;
+        {
+          for (unsigned int k = 0; k < temp[2].size(); k++, index++) // Go through all the CD
+            {
+              center[index].plane_info.resize(3);
+              center[index].plane_info[0] = &temp[0][i]->coord;
+              center[index].plane_info[1] = &temp[1][j]->coord;
+              center[index].plane_info[2] = &temp[2][k]->coord;
 
-	      // This is a weighted average of the NZ and CE atoms 
-	      // weighted by their mass
-	        center[index] = ( temp[0][i]->coord * MASS_C +
-	  		          temp[1][j]->coord * MASS_N ) / (MASS_C + MASS_N);
+              // This is a weighted average of the NZ and CE atoms 
+              // weighted by their mass
+                center[index] = ( temp[0][i]->coord * MASS_C +
+                                  temp[1][j]->coord * MASS_N ) / (MASS_C + MASS_N);
 
-	      // And this is just so we know what combination of
-	      // alternate locations (may be able to take out later)
-	      string t;
-	      t.insert(t.end(), 1, temp[0][i]->altLoc);
-	      t.insert(t.end(), 1, temp[1][j]->altLoc);
-	      center[index].altLoc = t;
+              // And this is just so we know what combination of
+              // alternate locations (may be able to take out later)
+              string t;
+              t.insert(t.end(), 1, temp[0][i]->altLoc);
+              t.insert(t.end(), 1, temp[1][j]->altLoc);
+              center[index].altLoc = t;
 #ifdef DEBUG
-	      cout << "CHECK: LYS" << atom[0]->resSeq << " : " << center[index] << endl;
+              cout << "CHECK: LYS" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-	    }
-	}
+            }
+        }
     }
 }
+
+void AminoAcid::centerLYS_altloc()
+{
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs);
+  if(numaltlocs > 1) this->altLoc = true;
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int count=0;
+      center[al].skip = false;
+      center[al].plane_info.resize(3);
+      center[al].set(0,0,0);
+
+      // Push all of the important atoms in their respective vectors
+      for (unsigned int i = 0; i < altlocs[al].size(); i++)
+        {
+          // The " CD " atom is only here to give three points needed
+          // for a plane to be formed. Later, it will be used to find
+          // the locations of the hydrogens and have it's position be
+          // a location for a hydrogen.
+          if (altlocs[al][i]->name == " CD ")
+            {
+              altlocs[al][i]->skip = true;
+              center[al].plane_info[2] = &(altlocs[al][i]->coord);
+              count++;
+            }
+          else if (altlocs[al][i]->name == " CE ")
+            {
+              center[al] += (altlocs[al][i]->coord) * MASS_C;
+              center[al].plane_info[0] = &(altlocs[al][i]->coord);
+              count++;
+            }
+          else if (altlocs[al][i]->name == " NZ ")
+            {
+              center[al] += (altlocs[al][i]->coord) * MASS_N;
+              center[al].plane_info[1] = &(altlocs[al][i]->coord);
+              count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it
+              altlocs[al][i]->skip = true;
+            }
+        }
+
+      // Error check. If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and leave the function
+      if (count != 3)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the LYS ring at "
+               << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
+#endif
+          continue;
+        }
+      center[al] /= (MASS_C + MASS_N);
+    }
+}
+
 
 // Calculate the centers for ARG
 // these AA need the following atoms:
@@ -476,34 +609,34 @@ void AminoAcid::centerARG()
   for (unsigned int i = 0; i < atom.size(); i++)
     {
       if (atom[i]->altLoc != ' ' )
-	{
-	  altLoc = true;
-	}
+        {
+          altLoc = true;
+        }
       if (atom[i]->name == " CD ")
-	{
-	  temp[0].push_back(atom[i]);
-	}
+        {
+          temp[0].push_back(atom[i]);
+        }
       else if (atom[i]->name == " NE ")
-	{
-	  temp[1].push_back(atom[i]);
-	}
+        {
+          temp[1].push_back(atom[i]);
+        }
       else if (atom[i]->name == " CZ ")
-	{
-	  temp[2].push_back(atom[i]);
-	}
+        {
+          temp[2].push_back(atom[i]);
+        }
       else if (atom[i]->name == " NH1")
-	{
-	  temp[3].push_back(atom[i]);
-	}
+        {
+          temp[3].push_back(atom[i]);
+        }
       else if (atom[i]->name == " NH2")
-	{
-	  temp[4].push_back(atom[i]);
-	}
+        {
+          temp[4].push_back(atom[i]);
+        }
       else
-	{
-	  // This means that this atom is not useful so we flag it
-	  atom[i]->skip = true;
-	}
+        {
+          // This means that this atom is not useful so we flag it
+          atom[i]->skip = true;
+        }
     }
 
   // Error check. If we don't have at least one of each
@@ -516,60 +649,130 @@ void AminoAcid::centerARG()
       skip = true;
 #ifndef DISABLE_WARNING
       cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ARG ring at "
-	   << atom[0]->resSeq << endl;
+           << atom[0]->resSeq << endl;
 #endif
       return;
     }
 
   // Allocate size for all of the possible centers
   center.resize( temp[0].size() * temp[1].size() * temp[2].size() * temp[3].size() *
-		 temp[4].size());
+                 temp[4].size());
 
   // And go through all combinations of the alternate locations
   unsigned int index = 0;
   for (unsigned int i = 0; i < temp[0].size(); i++) // Go through all the CD
     {
       for (unsigned int j = 0; j < temp[1].size(); j++) // Go through all the NE
-	{
-	  for (unsigned int k = 0; k < temp[2].size(); k++) // Go through all the CZ
-	    {
-	      for (unsigned int l = 0; l < temp[3].size(); l++) // Go through all the NH1
-		{
-		  for (unsigned int m = 0; m < temp[4].size(); m++, index++) // Go through all the NH2
-		    {
-		      center[index].plane_info.resize(5);
-		      center[index].plane_info[0] = &temp[0][i]->coord;
-		      center[index].plane_info[1] = &temp[1][j]->coord;
-		      center[index].plane_info[2] = &temp[2][k]->coord;
-		      center[index].plane_info[3] = &temp[3][l]->coord;
-		      center[index].plane_info[4] = &temp[4][m]->coord;
+        {
+          for (unsigned int k = 0; k < temp[2].size(); k++) // Go through all the CZ
+            {
+              for (unsigned int l = 0; l < temp[3].size(); l++) // Go through all the NH1
+                {
+                  for (unsigned int m = 0; m < temp[4].size(); m++, index++) // Go through all the NH2
+                    {
+                      center[index].plane_info.resize(5);
+                      center[index].plane_info[0] = &temp[0][i]->coord;
+                      center[index].plane_info[1] = &temp[1][j]->coord;
+                      center[index].plane_info[2] = &temp[2][k]->coord;
+                      center[index].plane_info[3] = &temp[3][l]->coord;
+                      center[index].plane_info[4] = &temp[4][m]->coord;
 
-		      // This is a weighted average of the atoms weighted
-		      // by their mass
-		      center[index] = ( temp[0][i]->coord * MASS_C +
-					temp[1][j]->coord * MASS_N +
-					temp[2][k]->coord * MASS_C +
-					temp[3][l]->coord * MASS_N +
-					temp[4][m]->coord * MASS_N )/((MASS_C*2) + (MASS_N*3));
+                      // This is a weighted average of the atoms weighted
+                      // by their mass
+                      center[index] = ( temp[0][i]->coord * MASS_C +
+                                        temp[1][j]->coord * MASS_N +
+                                        temp[2][k]->coord * MASS_C +
+                                        temp[3][l]->coord * MASS_N +
+                                        temp[4][m]->coord * MASS_N )/((MASS_C*2) + (MASS_N*3));
 
-		      // And this is just so we know what combination of
-		      // alternate locations (may be able to take out later)
-		      string t;
-		      t.insert(t.end(), 1, temp[0][i]->altLoc);
-		      t.insert(t.end(), 1, temp[1][j]->altLoc);
-		      t.insert(t.end(), 1, temp[2][k]->altLoc);
-		      t.insert(t.end(), 1, temp[3][l]->altLoc);
-		      t.insert(t.end(), 1, temp[4][m]->altLoc);
-		      center[index].altLoc = t;
+                      // And this is just so we know what combination of
+                      // alternate locations (may be able to take out later)
+                      string t;
+                      t.insert(t.end(), 1, temp[0][i]->altLoc);
+                      t.insert(t.end(), 1, temp[1][j]->altLoc);
+                      t.insert(t.end(), 1, temp[2][k]->altLoc);
+                      t.insert(t.end(), 1, temp[3][l]->altLoc);
+                      t.insert(t.end(), 1, temp[4][m]->altLoc);
+                      center[index].altLoc = t;
 #ifdef DEBUG
-		      cout << "CHECK: ARG" << atom[0]->resSeq << " : " << center[index] << endl;
+                      cout << "CHECK: ARG" << atom[0]->resSeq << " : " << center[index] << endl;
 #endif
-		    }
-		}
-	    }
-	}
+                    }
+                }
+            }
+        }
     }
 }
+
+void AminoAcid::centerARG_altloc()
+{
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs);
+  if(numaltlocs > 1) this->altLoc = true;
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int count=0;
+      center[al].skip = false;
+      center[al].plane_info.resize(5);
+      center[al].set(0,0,0);
+
+
+      // Push all of the important atoms in their respective vectors
+      for (unsigned int i = 0; i < altlocs[al].size(); i++)
+        {
+          if (altlocs[al][i]->name == " CD ")
+            {
+              center[al].plane_info[0] = &altlocs[al][i]->coord;
+              center[al] += (altlocs[al][i]->coord) * MASS_C;
+              count++;
+            }
+          else if (altlocs[al][i]->name == " NE ")
+            {
+              center[al].plane_info[1] = &altlocs[al][i]->coord;
+              center[al] += altlocs[al][i]->coord * MASS_N;
+              count++;
+            }
+          else if (altlocs[al][i]->name == " CZ ")
+            {
+              center[al].plane_info[2] = &altlocs[al][i]->coord;
+              center[al] += altlocs[al][i]->coord * MASS_C;
+              count++;
+            }
+          else if (altlocs[al][i]->name == " NH1")
+            {
+              center[al].plane_info[3] = &altlocs[al][i]->coord;
+              center[al] += altlocs[al][i]->coord * MASS_N;
+              count++;
+            }
+          else if (altlocs[al][i]->name == " NH2")
+            {
+              center[al].plane_info[4] = &altlocs[al][i]->coord;
+              center[al] += altlocs[al][i]->coord * MASS_N;
+              count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it
+              altlocs[al][i]->skip = true;
+            }
+        }
+
+      // Error check. If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and leave the function
+      if (count != 5)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ARG ring at "
+               << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
+#endif
+          continue;
+        }
+      center[al] /= (MASS_C*2 + MASS_N*3);
+    }
+}
+
 
 // DO NOT USE THIS!!!! If you use this, a fairy will lose its wings!
 // This is only here for legacy reasons because this is what the old
@@ -879,6 +1082,65 @@ void AminoAcid::centerASP_oxygen()
     }
 }
 
+void AminoAcid::centerASP_oxygen_altloc()
+{
+
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs*2);
+  if(numaltlocs > 1) this->altLoc = true;
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int atom_count = 0;
+      center[al].skip = false;
+      center[al].plane_info.resize(3);
+      center[al].set(0,0,0);
+      center[al+numaltlocs].skip = false;
+      center[al+numaltlocs].plane_info.resize(3);
+      center[al+numaltlocs].set(0,0,0);
+      for(unsigned int i =0; i< altlocs[al].size(); i++)
+        {
+          if(altlocs[al][i]->name == " CG ")
+            {
+              center[al].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OD1")
+            {
+              center[al].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OD2")
+            {
+              center[al].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it 
+              altlocs[al][i]->skip = true;
+            }
+        }
+
+      // Error check.  If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and leave the function
+      if(atom_count != 3)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
+               << atom[0]->resSeq << " altloc: " << altlocs[al][0]->altLoc << endl;
+#endif
+        }
+    }
+}
+
 // Calculate the centers for GLU
 // these AA need the following atoms:
 //   OE1 and OE2
@@ -977,6 +1239,65 @@ void AminoAcid::centerGLU_oxygen()
     }
 }
 
+void AminoAcid::centerGLU_oxygen_altloc()
+{
+
+  int numaltlocs = altlocs.size();
+  center.resize(numaltlocs*2);
+  if(numaltlocs > 1) this->altLoc = true;
+  // Push all of the important atoms in their respective vectors  
+  for(unsigned int al = 0; al < numaltlocs; al++)
+    {
+      int atom_count = 0;
+      center[al].skip = false;
+      center[al].plane_info.resize(3);
+      center[al].set(0,0,0);
+      center[al+numaltlocs].skip = false;
+      center[al+numaltlocs].plane_info.resize(3);
+      center[al+numaltlocs].set(0,0,0);
+      for(unsigned int i =0; i< altlocs[al].size(); i++)
+        {
+          if(altlocs[al][i]->name == " CD ")
+            {
+              center[al].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[C__PLANE_COORD_AG]  = &(altlocs[al][i]->coord);
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OE1")
+            {
+              center[al].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_1_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else if(altlocs[al][i]->name == " OE2")
+            {
+              center[al].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs].plane_info[O_2_PLANE_COORD_AG] = &(altlocs[al][i]->coord);
+              center[al+numaltlocs] = altlocs[al][i]->coord;
+              atom_count++;
+            }
+          else
+            {
+              // This means that this atom is not useful so we flag it 
+              altlocs[al][i]->skip = true;
+            }
+        }
+
+      // Error check.  If we don't have at least one of each
+      // of the atoms, we throw a warning, set an ignore flag
+      // for future reference, and leave the function
+      if(atom_count != 3)
+        {
+          center[al].skip = true;
+#ifndef DISABLE_WARNING
+          cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
+               << atom[0]->resSeq << " altloc: " << altlocs[al][0]->altLoc << endl;
+#endif
+        }
+    }
+}
+
 void AminoAcid::centerPHEorTYR_simplified()
 {
   center.resize(1);
@@ -1041,13 +1362,13 @@ void AminoAcid::centerLYS_charge()
   for (unsigned int i = 0; i < atom.size(); i++)
     {
       if (atom[i]->name == " NZ " && !atom[i]->skip)
-	{
-	  tempA = atom[i]->coord;
-	}
+        {
+          tempA = atom[i]->coord;
+        }
       if (atom[i]->name == " CE " && !atom[i]->skip)
-	{
-	  tempB = atom[i]->coord;
-	}
+        {
+          tempB = atom[i]->coord;
+        }
     }
   center[0] = ((tempA * 82.7) + (tempB * 17.3)) / 100;
 }
@@ -1059,9 +1380,9 @@ void AminoAcid::centerARG_charge()
   for (unsigned int i = 0; i < atom.size(); i++)
     {
       if (atom[i]->name == " CZ ")
-	{
-	  center[0] = atom[i]->coord;
-	}
+        {
+          center[0] = atom[i]->coord;
+        }
     }
 }
 
@@ -1449,6 +1770,53 @@ void AminoAcid::center2POorPO3_charge()
     center[0] /= -3;
 }
 
+template<class T>
+int find_index(vector<T>& vec, T to_find)
+{
+  for(int i=0; i<vec.size(); i++)
+    {
+      if(vec[i] == to_find) return i;
+    }
+  return vec.size();
+}
+
+void AminoAcid::determineAltLoc(vector<char>&altloc_ids)
+{
+  int count = altloc_ids.size();
+  if(count == 0)
+    {
+      count = 1;
+      altlocs.resize(1);
+      for(int i=0; i<this->atom.size(); i++)
+        {
+          this->atom[i]->skip = false;
+          altlocs[0].push_back(this->atom[i]);
+        }
+    }
+  else
+    {
+      altlocs.resize(count);
+
+      for(int i=0; i<this->atom.size(); i++)
+        {
+          if(this->atom[i]->altLoc == ' ')
+            {
+              for(int j=0; j<count; j++)
+                {
+                  this->atom[i]->skip = false;
+                  altlocs[j].push_back(this->atom[i]);
+                }
+            }
+          else
+            {
+              this->atom[i]->skip = false;
+              int idx = find_index(altloc_ids, this->atom[i]->altLoc);
+              altlocs[idx].push_back(this->atom[i]);
+            }
+        }
+    }
+}
+
 // Calculates the center of the amino acid
 void AminoAcid::calculateCenter(bool centerOfCharge)
 {
@@ -1462,28 +1830,28 @@ void AminoAcid::calculateCenter(bool centerOfCharge)
       // PHE or TYR
       else if ( residue == "PHE" || residue == "TYR" )
         {
-          centerPHEorTYR();
+          centerPHEorTYR_altloc();
         }
       // ASP
       else if (residue == "ASP")
         {
-          centerASP_oxygen();
+          centerASP_oxygen_altloc();
         }
       // GLU
       else if (residue == "GLU")
         {
-          centerGLU_oxygen();
+          centerGLU_oxygen_altloc();
         }
       // LYS
       else if (residue == "LYS")
-	{
-	  centerLYS();
-	}
+        {
+          centerLYS_altloc();
+        }
       // ARG
       else if (residue == "ARG")
-	{
-	  centerARG();
-	}
+        {
+          centerARG_altloc();
+        }
       else if (residue == "PO4" || residue == "2HP" || residue == " PI")
         {
           centerPO4or2HPorPI();
@@ -1517,14 +1885,14 @@ void AminoAcid::calculateCenter(bool centerOfCharge)
         }
        // LYS
       else if (residue == "LYS")
-	{
-	  centerLYS_charge();
-	}
+        {
+          centerLYS_charge();
+        }
        // ARG
       else if (residue == "ARG")
-	{
-	  centerARG_charge();
-	}
+        {
+          centerARG_charge();
+        }
        // GLU
       else if (residue == "GLU")
         {
@@ -1584,6 +1952,7 @@ void AminoAcid::calculateAnglesPreHydrogens(AminoAcid aa2,
 
 bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
                                                          Coordinates closestOxygen,
+                                                         float threshold,
                                                          float* dist,
                                                          float* distOxy,
                                                          float* distOxy2,
@@ -1619,6 +1988,12 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
   float perpnorm = perp.norm();
   float distFromMassToChg = distance.norm();
   float denom = perpnorm * distFromMassToChg;
+
+  if(distFromMassToChg > threshold)
+    {
+      cout << gray << "Note" << reset << ": post hydrogen distance, " << distFromMassToChg <<" > "<< threshold << "A.  Skipping." << endl;
+      return false;
+    }
 
   if(denom == 0)
     {
@@ -1689,7 +2064,7 @@ bool AminoAcid::calculateDistancesAndAnglesPostHydrogens(AminoAcid aa2,
   *angle     = fabs( 90 - acos(u)     * 180/3.14159 );
   *angleOxy  = fabs( 90 - acos(uOxy)  * 180/3.14159 );
   *angleOxy2 = fabs( 90 - acos(uOxy2) * 180/3.14159 );
-
+  return true;
 }
 
 void AminoAcid::markAltLocAtomsPHEorTYR(int index)
@@ -1734,23 +2109,23 @@ void AminoAcid::markAltLocAtomsLYS(int index)
   for (int i = 0; i < this->atom.size(); i++)
     {
       if (this->atom[i]->name == " CE " &&
-	  &this->atom[i]->coord != (this->center[index].plane_info[0]))
-	{
-	  this->atom[i]->skip = true;
-	}
+          &this->atom[i]->coord != (this->center[index].plane_info[0]))
+        {
+          this->atom[i]->skip = true;
+        }
 // This was, again, going to be used to add hydrogens
 // to the side chain without the use of openbabel and
 // I had to make sure the atom was not marked as skip.
       else if (this->atom[i]->name == " CD " &&
-	       &this->atom[i]->coord != (this->center[index].plane_info[1]))
-	{
-	  this->atom[i]->skip = true;
-	}
+               &this->atom[i]->coord != (this->center[index].plane_info[1]))
+        {
+          this->atom[i]->skip = true;
+        }
       else if (this->atom[i]->name == " NZ " &&
-	       &this->atom[i]->coord != (this->center[index].plane_info[2]))
-	{
-	  this->atom[i]->skip = true;
-	}
+               &this->atom[i]->coord != (this->center[index].plane_info[2]))
+        {
+          this->atom[i]->skip = true;
+        }
     }
 }
 
@@ -1759,30 +2134,30 @@ void AminoAcid::markAltLocAtomsARG(int index)
   for (int i = 0; i < this->atom.size(); i++)
     {
       if (this->atom[i]->name == " CD " &&
-	  &this->atom[i]->coord != (this->center[index].plane_info[0]))
-	{
-	  this->atom[i]->skip = true;
-	}
+          &this->atom[i]->coord != (this->center[index].plane_info[0]))
+        {
+          this->atom[i]->skip = true;
+        }
       else if (this->atom[i]->name == " NE " &&
-	  &this->atom[i]->coord != (this->center[index].plane_info[1]))
-	{
-	  this->atom[i]->skip = true;
-	}
+          &this->atom[i]->coord != (this->center[index].plane_info[1]))
+        {
+          this->atom[i]->skip = true;
+        }
       else if (this->atom[i]->name == " CZ " &&
-	  &this->atom[i]->coord != (this->center[index].plane_info[2]))
-	{
-	  this->atom[i]->skip = true;
-	}
+          &this->atom[i]->coord != (this->center[index].plane_info[2]))
+        {
+          this->atom[i]->skip = true;
+        }
       else if (this->atom[i]->name == " NH1" &&
-	  &this->atom[i]->coord != (this->center[index].plane_info[3]))
-	{
-	  this->atom[i]->skip = true;
-	}
+          &this->atom[i]->coord != (this->center[index].plane_info[3]))
+        {
+          this->atom[i]->skip = true;
+        }
       else if (this->atom[i]->name == "NH2" &&
-	  &this->atom[i]->coord != (this->center[index].plane_info[4]))
-	{
-	  this->atom[i]->skip = true;
-	}
+          &this->atom[i]->coord != (this->center[index].plane_info[4]))
+        {
+          this->atom[i]->skip = true;
+        }
     }
 }
 
@@ -1957,17 +2332,17 @@ void AminoAcid::unmarkAltLocAtomsLYS()
   for (int i = 0; i < this->atom.size(); i++)
     {
       if (this->atom[i]->name == " CD " )
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " CE " )
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " NZ " )
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
     }
 }
 
@@ -1976,29 +2351,29 @@ void AminoAcid::unmarkAltLocAtomsARG()
   for (int i = 0; i < this->atom.size(); i++)
     {
       if (this->atom[i]->name == " CG ")
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " CD ")
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " NE ")
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " CZ ")
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " NH1")
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
       else if (this->atom[i]->name == " NH2")
-	{
-	  this->atom[i]->skip = false;
-	}
+        {
+          this->atom[i]->skip = false;
+        }
     }
 }
 
@@ -2167,13 +2542,31 @@ string AminoAcid::makeConectLYS()
   for (int i = 0; i < this->atom.size(); i++)
     {
       if (this->atom[i]->name == " NZ " && !this->atom[i]->skip)
-	{
-	  serials[0] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
       else if (this->atom[i]->name == " CE " && !this->atom[i]->skip)
-	{
-	  serials[1] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + "                                                                \n";
+  return conect;
+}
+
+string AminoAcid::makeConectLYS_altloc(int c)
+{
+  string serials[2];
+  for (int i = 0; i < this->altlocs[c].size(); i++)
+    {
+      if (this->altlocs[c][i]->name == " NZ " && !this->altlocs[c][i]->skip)
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if (this->altlocs[c][i]->name == " CE " && !this->altlocs[c][i]->skip)
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
     }
   string conect = "CONECT" + serials[0] + serials[1] + "                                                                \n";
   return conect;
@@ -2185,31 +2578,105 @@ string AminoAcid::makeConectARG()
   for (int i = 0; i < this->atom.size(); i++)
     {
       if (this->atom[i]->name == " CD " && !this->atom[i]->skip)
-	{
-	  serials[0] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[0] = this->atom[i]->line.substr(6,5);
+        }
       else if (this->atom[i]->name == " NE " && !this->atom[i]->skip)
-	{
-	  serials[1] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[1] = this->atom[i]->line.substr(6,5);
+        }
       else if (this->atom[i]->name == " CZ " && !this->atom[i]->skip)
-	{
-	  serials[2] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[2] = this->atom[i]->line.substr(6,5);
+        }
       else if (this->atom[i]->name == " NH1" && !this->atom[i]->skip)
-	{
-	  serials[3] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[3] = this->atom[i]->line.substr(6,5);
+        }
       else if (this->atom[i]->name == " NH2" && !this->atom[i]->skip)
-	{
-	  serials[4] = this->atom[i]->line.substr(6,5);
-	}
+        {
+          serials[4] = this->atom[i]->line.substr(6,5);
+        }
     }
   string conect = "CONECT" + serials[0] + serials[1] + "                                                                \n";
   conect += "CONECT" + serials[1] + serials[0] + serials[2] + "                                                           \n";
   conect += "CONECT" + serials[2] + serials[1] + serials[3] + serials[4] + "                                                      \n";
   conect += "CONECT" + serials[3] + serials[2] + "                                                                \n";
   conect += "CONECT" + serials[4] + serials[2] + "                                                                \n";
+  return conect;
+}
+
+string AminoAcid::makeConectARG_altloc(int c)
+{
+  string serials[5];
+  for (int i = 0; i < this->altlocs[c].size(); i++)
+    {
+      if (this->altlocs[c][i]->name == " CD " && !this->altlocs[c][i]->skip)
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if (this->altlocs[c][i]->name == " NE " && !this->altlocs[c][i]->skip)
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if (this->altlocs[c][i]->name == " CZ " && !this->altlocs[c][i]->skip)
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if (this->altlocs[c][i]->name == " NH1" && !this->altlocs[c][i]->skip)
+        {
+          serials[3] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if (this->altlocs[c][i]->name == " NH2" && !this->altlocs[c][i]->skip)
+        {
+          serials[4] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + "                                                                \n";
+  conect += "CONECT" + serials[1] + serials[0] + serials[2] + "                                                           \n";
+  conect += "CONECT" + serials[2] + serials[1] + serials[3] + serials[4] + "                                                      \n";
+  conect += "CONECT" + serials[3] + serials[2] + "                                                                \n";
+  conect += "CONECT" + serials[4] + serials[2] + "                                                                \n";
+  return conect;
+}
+
+
+string AminoAcid::makeConectPHEorTYR_altloc(int c)
+{
+  string serials[6];
+  for(int i=0; i<this->altlocs[c].size(); i++)
+    {
+      if( this->altlocs[c][i]->name == " CG " && !this->altlocs[c][i]->skip )
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CD1"  && !this->altlocs[c][i]->skip )
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CD2"  && !this->altlocs[c][i]->skip )
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CZ " && !this->altlocs[c][i]->skip )
+        {
+          serials[3] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CE1" && !this->altlocs[c][i]->skip )
+        {
+          serials[4] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " CE2" && !this->altlocs[c][i]->skip )
+        {
+          serials[5] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[2] + serials[1] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[4] + serials[0] + "                                                 \n";
+  conect += "CONECT" + serials[2] + serials[5] + serials[0] + "                                                 \n";
+  conect += "CONECT" + serials[3] + serials[5] + serials[4] + "                                                 \n";
+  conect += "CONECT" + serials[4] + serials[1] + serials[3] + "                                                 \n";
+  conect += "CONECT" + serials[5] + serials[2] + serials[3] + "                                                 \n";
   return conect;
 }
 
@@ -2237,6 +2704,31 @@ string AminoAcid::makeConectGLU()
   return conect;
 }
 
+string AminoAcid::makeConectGLU_altloc(int c)
+{
+  string serials[3];
+  for(int i=0; i<this->altlocs[c].size(); i++)
+    {
+      if( this->altlocs[c][i]->name == " CD " && !this->altlocs[c][i]->skip )
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OE1"  && !this->altlocs[c][i]->skip )
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OE2"  && !this->altlocs[c][i]->skip )
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  return conect;
+}
+
+
 string AminoAcid::makeConectASP()
 {
   string serials[3];
@@ -2260,6 +2752,31 @@ string AminoAcid::makeConectASP()
   conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
   return conect;
 }
+
+string AminoAcid::makeConectASP_altloc(int c)
+{
+  string serials[3];
+  for(int i=0; i<this->altlocs[c].size(); i++)
+    {
+      if( this->altlocs[c][i]->name == " CG " && !this->altlocs[c][i]->skip )
+        {
+          serials[0] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OD1"  && !this->altlocs[c][i]->skip )
+        {
+          serials[1] = this->altlocs[c][i]->line.substr(6,5);
+        }
+      else if( this->altlocs[c][i]->name == " OD2"  && !this->altlocs[c][i]->skip )
+        {
+          serials[2] = this->altlocs[c][i]->line.substr(6,5);
+        }
+    }
+  string conect = "CONECT" + serials[0] + serials[1] + serials[2] + "                                                 \n";
+  conect += "CONECT" + serials[1] + serials[0] + "                                                       \n";
+  conect += "CONECT" + serials[2] + serials[0] + "                                                       \n";
+  return conect;
+}
+
 
 string AminoAcid::makeConectPO4or2HPorPI()
 {
@@ -2323,27 +2840,28 @@ string AminoAcid::makeConect2POorPO3()
   conect += "CONECT" + serials[3] + serials[0] + "                                                       \n";
   return conect;
 }
-string AminoAcid::makeConect()
+
+string AminoAcid::makeConect(int c)
 {
   if(residue == "PHE" || residue == "TYR")
     {
-      return makeConectPHEorTYR();
+      return makeConectPHEorTYR_altloc(c);
     }
   else if (residue == "LYS")
     {
-      return makeConectLYS();
+      return makeConectLYS_altloc(c);
     }
   else if (residue == "ARG")
     {
-      return makeConectARG();
+      return makeConectARG_altloc(c);
     }
   else if(residue == "ASP")
     {
-      return makeConectASP();
+      return makeConectASP_altloc(c);
     }
   else if(residue == "GLU")
     {
-      return makeConectGLU();
+      return makeConectGLU_altloc(c);
     }
   else if(residue == "PO4" || residue == "2HP" || residue == " PI")
     {
