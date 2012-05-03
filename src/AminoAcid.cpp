@@ -577,7 +577,7 @@ void AminoAcid::centerLYS_altloc()
       // for future reference, and leave the function
       if (count != 3)
         {
-          center[al].skip = true;
+          skip = true;
 #ifndef DISABLE_WARNING
           cout << cyan << "WARNING" << reset << ": Could not find all atoms in the LYS ring at "
                << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
@@ -762,7 +762,7 @@ void AminoAcid::centerARG_altloc()
       // for future reference, and leave the function
       if (count != 5)
         {
-          center[al].skip = true;
+          skip = true;
 #ifndef DISABLE_WARNING
           cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ARG ring at "
                << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
