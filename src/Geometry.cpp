@@ -284,5 +284,38 @@ float calculateAngleBetweenPlanes( Coordinates& planeP,
         }
       return angle;
     }
+}
 
+// Converts the vector to a unit vector
+// USE ONLY ON VECTORS, NOT COORDINATES!
+// Return Coordinates or void?
+Coordinates unitVector( Coordinates& point )
+{
+	if (abs(point.norm() - 1) < .00001)
+	{
+		return point;
+	}
+	float norm = point.norm();
+	Coordinates newPoint((point.x / norm),
+						 (point.y / norm),
+						 (point.y / norm));
+	return newPoint;
+}
+
+// Computes a cross product of point1 x point2
+// USE ONLY ON VECTORS, NOT COORDINATES!
+Coordinates crossProduct(Coordinates& point1,
+						 Coordinates& point2)
+{
+	Coordinates newPoint((point1.y * point2.z - point1.z * point2.y),
+						 (point1.z * point2.x - point1.x * point2.z),
+						 (point1.x * point2.y - point1.y * point2.x));
+	return newPoint;
+}
+
+// Define a vector from point1 to point2
+Coordinates defineVector(Coordinates& point1,
+						 Coordinates& point2)
+{
+	return point2 - point1;
 }

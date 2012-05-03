@@ -98,5 +98,19 @@ float calculateAngleBetweenPlanes( Coordinates& planeP,
 				   AminoAcid& aa2,
 				   int index2 );
 
+// Converts the vector to a unit vector
+// USE ONLY ON VECTORS, NOT COORDINATES!
+// Return Coordinates or void?
+Coordinates unitVector(Coordinates& point);
+
+// Computes a cross product of point1 x point2
+// USE ONLY ON VECTORS, NOT COORDINATES!
+Coordinates crossProduct(Coordinates& point1,
+						 Coordinates& point2);
+
+
+// Define a vector from point1 to point2
+Coordinates defineVector(Coordinates& point1,
+						 Coordinates& point2);
 
 #endif

@@ -84,6 +84,10 @@ private:
   // information order to calculate the angle later
   void centerPHEorTYR();
   void centerTRP();
+  void centerLYS();
+  void centerLYS_altloc();
+  void centerARG();
+  void centerARG_altloc();
 
   // Calculates the CM of PHE using alternate locations
   void centerPHEorTYR_altloc();
@@ -113,28 +117,40 @@ private:
   void centerGLU_oxygen_altloc();
 
   void centerPHEorTYR_simplified();
+  void centerLYS_charge();
+  void centerARG_charge();
   void centerASP_charge();
   void centerGLU_charge();
 
   void printPHEorTYR(FILE* output);
+  void printLYS(FILE* output);
+  void printARG(FILE* output);
   void printASP(FILE* output);
   void printGLU(FILE* output);
 
   // These functions mark the alternate locations of the atoms that were
   // not used in the calculation of the center of mass
   void markAltLocAtomsPHEorTYR(int index);
+  void markAltLocAtomsLYS(int index);
+  void markAltLocAtomsARG(int index);
   void markAltLocAtomsASP(int index);
   void markAltLocAtomsGLU(int index);
   void markAltLocAtomsPO4or2HPorPI(int index);
   void markAltLocAtoms2POorPO3(int index);
 
   void unmarkAltLocAtomsPHEorTYR();
+  void unmarkAltLocAtomsLYS();
+  void unmarkAltLocAtomsARG();
   void unmarkAltLocAtomsASP();
   void unmarkAltLocAtomsGLU();
   void unmarkAltLocAtomsPO4or2HPorPI();
   void unmarkAltLocAtoms2POorPO3();
 
   string makeConectPHEorTYR();
+  string makeConectLYS();
+  string makeConectLYS_altloc(int c);
+  string makeConectARG();
+  string makeConectARG_altloc(int c);
   string makeConectPHEorTYR_altloc(int c);
   string makeConectASP();
   string makeConectASP_altloc(int c);

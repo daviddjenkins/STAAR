@@ -48,6 +48,7 @@
 #include "Utils.hpp"
 #include "../gzstream/gzstream.h"
 #include "CoutColors.hpp"
+#include "Geometry.hpp"
 
 #ifndef NO_BABEL
 using namespace OpenBabel;
@@ -430,6 +431,94 @@ void PDB::addHydrogensToPair(AminoAcid& a, AminoAcid& b, int cd1, int cd2)
   this->populateChains(true);
 }
 #endif
+
+// This adds hydrogens to LYS and will be implemented
+// when enough information about the placement of
+// the hydrogens is aquired.
+// This returns a boolean whether it worked or not.
+bool addHydrogenToARG (AminoAcid& aa)
+{
+	// This is a basic layout of the Hydrogens added
+	// in this function.
+	// As of now, H7 and H8 are not being added.
+	//     H2      H3
+	//      |      | 
+	//     NH1    NH2
+	//    /   \  /   \
+	//  H1     CZ     H4
+	//          |
+	//         NE 
+	//        /  \
+	//   H8-CD    H5  
+	//     /  \
+	//   H7    H6
+
+	Coordinates vectorA, vectorB, vectorC, vectorD, vectorE;
+	Coordinates vectorF, vectorG, vectorH, vectorI, tempVector;
+	Coordinates atomNH1, atomNH2, atomCZ, atomNE, atomCD, atomNULL;
+	for (int i = 0; i < aa.atom.size(); i++)
+	{
+		if (aa.atom[i]->name == " NH1")
+		{
+			atomNH1 = aa.atom[i]->coord;
+		}
+		else if (aa.atom[i]->name == " NH2")
+		{
+			atomNH2 = aa.atom[i]->coord;
+		}
+		else if (aa.atom[i]->name == " CZ ")
+		{
+			atomCZ = aa.atom[i]->coord;
+		}
+		else if (aa.atom[i]->name == " NE ")
+		{
+			atomNE = aa.atom[i]->coord;
+		}
+		else if (aa.atom[i]->name == " CD ")
+		{
+			atomCD = aa.atom[i]->coord;
+		}
+	}
+	if ( atomNH1 == atomNULL || atomNH2 == atomNULL || atomCZ == atomNULL ||
+		 atomNE == atomNULL || atomCD == atomNULL )
+	{
+		return false;
+	}
+
+	vectorA = defineVector(atomCZ, atomNH1);
+	vectorA = unitVector(vectorA);
+	vectorB = defineVector(atomCZ, atomNH2);
+	vectorB = unitVector(vectorB);
+	vectorC = crossProduct(vectorB, vectorA); 
+	vectorC = unitVector(vectorC);
+	vectorD = crossProduct(vectorA, vectorC);
+	vectorD = unitVector(vectorD);
+	vectorE = crossProduct(vectorC, vectorB);
+	vectorE = unitVector(vectorE);
+	// We can now use vectors A and D in 
+	// relation to atom NH1 to determine
+	// the locations of Hydrogens 1 and 2
+	// We can also use vectors E and B in
+	// relation to atom NH2 to determine
+	// the locations of Hydrogens 3 and 4
+
+	vectorF = defineVector(atomCZ, atomNE);
+	vectorF = unitVector(vectorF);
+	vectorG = defineVector(atomCD, atomNE);
+	vectorG = unitVector(vectorG);
+	vectorH = crossProduct(vectorF, vectorG);
+	vectorH = unitVector(vectorH);
+	vectorI = crossProduct(vectorH, vectorF);
+	vectorI = unitVector(vectorI);
+	// We can now use vectors F and I in
+	// relation to atom NE to determine
+	// the locations of Hydrogen 5 and 
+	// the same vectors in relation to 
+	// atom CD to determine the location 
+	// of Hydrogen 6
+
+	return true;
+}
 
 // Search the chain by id
 //    - Not used, right now
