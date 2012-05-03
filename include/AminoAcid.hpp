@@ -68,6 +68,14 @@
 #define O_1_PLANE_COORD_AG 0
 #define O_2_PLANE_COORD_AG 1
 
+//these are used by the getType method
+//note - we index an an array based on these, so be careful changing them!
+#define AATYPE_PI          0
+#define AATYPE_ANION       1
+#define AATYPE_CATION      2
+#define AATYPE_UNKNOWN     3
+#define AATYPE_MAX         4
+
 #define HYDROGEN_BOND_DISTANCE 0.632469
 
 class AminoAcid{
@@ -167,6 +175,9 @@ public:
 
   // Prints out only the atoms that we need to create benzene or formate
   void printNeededAtoms(FILE* output);
+
+  // Get the type (Anion, Cation, Pi)
+  int getType();
 
   // Marks alt loc atoms that aren't used for center calculations
   void markAltLocAtoms(int index);

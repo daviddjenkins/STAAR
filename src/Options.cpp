@@ -44,6 +44,7 @@ Options::Options()
   center          = false;
   pdbfile         = NULL;
   outputfile      = NULL;
+  pairlistfile    = NULL;
   failure         = false;
   sameChain       = false;
   gamessfolder    = NULL;
@@ -53,6 +54,7 @@ Options::Options()
   threshold       = 7.0;
   numLigands      = 0;
   resolution      = 99999.0;
+  triplets = false;
 }
 
 // Intialize options then parse the cmd line arguments
@@ -61,6 +63,7 @@ Options::Options( int argc, char **argv )
   center          = false;
   pdbfile         = NULL;
   outputfile      = NULL;
+  pairlistfile    = NULL;
   failure         = false;
   sameChain       = false;
   threshold       = 7.0;
@@ -71,6 +74,7 @@ Options::Options( int argc, char **argv )
   chain_list      = NULL;
   extension       = ".pdb.gz";
   resolution      = 99999.0;
+  triplets        = false;
   parseCmdline( argc, argv );
 }
 
@@ -83,6 +87,7 @@ void printHelp()
   cerr << "-h or --help          " << "Displays this message"                                          << endl;
   cerr << "-p or --pdbdir        " << "Specifies the folder for PDB files"                             << endl;
   cerr << "-o or --out           " << "Specifies the output file"                                      << endl;
+  cerr << "-P or --pairout       " << "Specifies the output file for the list of pairs in triplets"    << endl;
   cerr << "-L or --pdblist       " << "File containing a list of PDBs to use. -p must be a directory." << endl;
   cerr << "-C or --pdbchainlist  " << "Like -L but points to list that specifies chains to look in."   << endl;
   cerr << "-e or --ext           " << "Specifies extension of files in -L PDB list"                    << endl;
@@ -100,6 +105,7 @@ void printHelp()
   cerr << "                      " << " \"PO4,2HP,PI,2PO,PO3\""                                        << endl;
   cerr << "-c or --resolution    " << "Resolution cut-off.  Will only look at the PDBs with"           << endl;
   cerr << "                      " << " a resolution <= specified value (default: 2 Angstroms)"        << endl;
+  cerr << "-3 or --triplets      " << "Look for Cation-Anion-Pi Triplets (ignores -r flag)"            << endl;
 }
 
 // Return true of cmd line parsing failed, false otherwise
@@ -119,12 +125,14 @@ void Options::parseCmdline( int argc, char **argv )
       {"help",          required_argument, 0, 'h'},
       {"pdbdir",        required_argument, 0, 'p'},
       {"out",           required_argument, 0, 'o'}, 
+      {"pairout",       required_argument, 0, 'P'},
       {"pdblist",       required_argument, 0, 'L'},
       {"pdbchainlist",  required_argument, 0, 'C'},
       {"ext",           required_argument, 0, 'e'},
       {"threshold",     required_argument, 0, 't'},
       {"samechain",     no_argument,       0, 's'},
       {"residues",      required_argument, 0, 'r'},
+      {"triplets",      required_argument, 0, '3'},
       {"ligands",       required_argument, 0, 'l'},
       {"gamess",        required_argument, 0, 'g'},
       {"resolution",    required_argument, 0, 'c'},
@@ -133,7 +141,7 @@ void Options::parseCmdline( int argc, char **argv )
   int option_index;
   bool indir = false;
   // Go through the options and set them to variables
-  while( !( ( c = getopt_long(argc, argv, "hp:o:L:C:e:t:sr:l:g:c:", long_options, &option_index) ) < 0 ) )
+  while( !( ( c = getopt_long(argc, argv, "hp:o:P:L:C:e:t:sr:l:g:c:3", long_options, &option_index) ) < 0 ) )
     {
     switch(c)
       {
@@ -150,7 +158,7 @@ void Options::parseCmdline( int argc, char **argv )
 
       case 'o':
         // the user is wanting to set the output file, but we need to make
-        // sure that is ia a file and not a directory
+        // sure that it is a file and not a directory
         if( !isDirectory(optarg) )
           {
             this->outputfile = optarg;
@@ -158,6 +166,21 @@ void Options::parseCmdline( int argc, char **argv )
         else
           {
             cerr << red << "Error" << reset << ": Output file must be a file, not a directory" << endl;
+            printHelp();
+            exit(1);
+          }
+        break;
+
+      case 'P':
+        // the user is wanting to set the pair output file, but we need to make
+        // sure that it is a file and not a directory
+        if( !isDirectory(optarg) )
+          {
+            this->pairlistfile = optarg;
+          }
+        else
+          {
+            cerr << red << "Error" << reset << ": Pair Output file must be a file, not a directory" << endl;
             printHelp();
             exit(1);
           }
@@ -207,6 +230,13 @@ void Options::parseCmdline( int argc, char **argv )
           this->residue2 = split( temp[1], ',' );
         }
         break;
+
+      case '3':
+        {
+          this->triplets = true;
+        }
+        break;
+
 
       case 'l':
         {

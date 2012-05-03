@@ -2393,6 +2393,21 @@ void AminoAcid::printNeededAtoms(FILE* output)
     }
 }
 
+int AminoAcid::getType(){
+  if((residue == "PHE")){
+     return AATYPE_PI;
+  }
+  if((residue == "GLU") ||
+     (residue == "ASP")){
+     return AATYPE_ANION;
+  }
+  if((residue == "LYS") ||
+     (residue == "ARG")){
+     return AATYPE_CATION;
+  }
+  return AATYPE_UNKNOWN;
+}
+
 ostream& operator<<(ostream& output, const AminoAcid& p) 
 {
   for(int i=0; i < p.atom.size(); i++)
