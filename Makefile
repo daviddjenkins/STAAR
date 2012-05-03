@@ -6,14 +6,18 @@ LINK := $(CPP)
 
 MODULES := src include
 
-CFLAGS   := -O3
+CFLAGS := -O3
 CPPFLAGS := -O3
-LFLAGS   := -O3
+#CFLAGS := -O0 -g
+#CPPFLAGS := -O0 -g
+#LFLAGS := -g
+LFLAGS := -O3
+
 LIBS := -lm -lz -lgzstream -lopenbabel -Llib 
 
 # Edit these!
-BABEL_LIBDIR := /lustre/AQ/openbabel-2.3.0/build/lib/
-BABEL_INCDIR := /lustre/AQ/openbabel-2.3.0/include /data/AQ/openbabel-2.3.0/build/include
+BABEL_LIBDIR := /home/ben/projects/staar/openbabel-2.3.0/build/lib
+BABEL_INCDIR := /home/ben/projects/staar/openbabel-2.3.0/include /home/ben/projects/staar/openbabel-2.3.0/build/include
 
 ifdef BABEL_LIBDIR
 LIBS += -L$(BABEL_LIBDIR)
