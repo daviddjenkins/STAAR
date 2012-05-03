@@ -491,7 +491,7 @@ double findClosestDistance(AminoAcid& aa1,
       if(aa1.center[i].skip) continue;
       for( unsigned int j = 0; j < aa2.center.size(); j++ )
         {
-          if(aa2.center[i].skip) continue;
+          if(aa2.center[j].skip) continue;
           dist = aa1.center[i].distance(aa2.center[j]);
           // flag it if is the closest and within the threshold
           if( dist < closest && dist < threshold )

@@ -303,6 +303,12 @@ void Options::parseCmdline( int argc, char **argv )
     {
       outputGamessINP = false;
     }
+  
+  if (residue1.size() == 0 || residue2.size() == 0)
+    {
+      cerr << red << "Error" << reset << ": -r or --residues must be used to set the residues to search for!!!" << endl;
+      failure = true;
+    }
 }
 
 

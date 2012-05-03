@@ -89,7 +89,7 @@ while ( \$id < \$end )
   if ( -e gamessinp-\$id.inp ) then
     mpirun -np 4 /data/AQ/bin/rungms_multi gamessinp-\$id.inp 01 1 x$i > $dir/out/x$i/gamessout-\$id.out
     rm gamessinp-\$id.F*
-    rm /lustre/AQ/scr/x$i/gamessinp-\$id.*
+    rm /tmp/AQ/scr/x$i/gamessinp-\$id.*
   endif
   @ id++
 end

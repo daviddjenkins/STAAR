@@ -6,9 +6,9 @@ LINK := $(CPP)
 
 MODULES := src include
 
-CFLAGS   := -O3
-CPPFLAGS := -O3
-LFLAGS   := -O3
+CFLAGS   := -g
+CPPFLAGS := -g
+LFLAGS   := -g
 LIBS := -lm -lz -lgzstream -lopenbabel -Llib 
 
 # Edit these!
