@@ -272,7 +272,7 @@ void AminoAcid::centerPHEorTYR_altloc()
       // for future reference, and go to next altLoc
       if(C_count != 6)
         {
-          center[al].skip = true;
+          skip = true;
 #ifndef DISABLE_WARNING
           cout << cyan << "WARNING" << reset << ": Could not find all atoms in the PHE ring at "
                << altlocs[al][0]->resSeq << " altLoc: " << altlocs[al][0]->altLoc << endl;
@@ -792,7 +792,7 @@ void AminoAcid::centerASP_oxygen_altloc()
       // for future reference, and leave the function
       if(atom_count != 3)
         {
-          center[al].skip = true;
+          skip = true;
 #ifndef DISABLE_WARNING
           cout << cyan << "WARNING" << reset << ": Could not find all atoms in the ASP side chain at "
                << atom[0]->resSeq << " altloc: " << altlocs[al][0]->altLoc << endl;
@@ -949,7 +949,7 @@ void AminoAcid::centerGLU_oxygen_altloc()
       // for future reference, and leave the function
       if(atom_count != 3)
         {
-          center[al].skip = true;
+          skip = true;
 #ifndef DISABLE_WARNING
           cout << cyan << "WARNING" << reset << ": Could not find all atoms in the GLU side chain at "
                << atom[0]->resSeq << " altloc: " << altlocs[al][0]->altLoc << endl;
