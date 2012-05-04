@@ -244,17 +244,17 @@ bool processSinglePDBFile(const char* filename,
         for(unsigned int i = 0; i < PDBfile.chains.size(); i++)
         {
 
-	if(opts.sameChain){
+        if(opts.sameChain){
           searchTripletInformation(PDBfile,opts,i,i,i,output_file,pairlistfile);
           return true;
-	}
+        }
 
-	// in the future we may have the below double for loop go through each chain combination.
+        // in the future we may have the below double for loop go through each chain combination.
           for(unsigned int j = i; j < PDBfile.chains.size(); j++)
           {
             for(unsigned int k = j; k < PDBfile.chains.size(); k++)
             {
-		searchTripletInformation(PDBfile,opts,i,j,k,output_file,pairlistfile);
+                searchTripletInformation(PDBfile,opts,i,j,k,output_file,pairlistfile);
             }
           }
         }
@@ -582,6 +582,7 @@ void searchTripletInformation(PDB & PDBfile,
   // Go through each AA combination in the chain
   for(unsigned int i = 0; i < c1->aa.size(); i++)
   {
+    if(c1->aa[i].skip) continue;
     residueType[0] = c1->aa[i].getType();
     if(residueType[0] == AATYPE_UNKNOWN)continue;
 
@@ -592,6 +593,7 @@ void searchTripletInformation(PDB & PDBfile,
 
     for(; j < c2->aa.size(); j++)
     {
+      if(c2->aa[j].skip) continue;
       residueType[1] = c2->aa[j].getType();
       if(residueType[1] == AATYPE_UNKNOWN)continue;
 
@@ -601,20 +603,21 @@ void searchTripletInformation(PDB & PDBfile,
 
       for(; k < c3->aa.size(); k++)
       {
+        if(c3->aa[k].skip) continue;
         float angle[2];
         float angle1[2];
         float angleP[2];
-	//init these to -1, so -1 will be output for cases where this isn't calculated.
-	angle[0] = angle[1] = angle1[0] = angle1[1] = angleP[0] = angleP[1] = -1.0;
+        //init these to -1, so -1 will be output for cases where this isn't calculated.
+        angle[0] = angle[1] = angle1[0] = angle1[1] = angleP[0] = angleP[1] = -1.0;
         
         residueType[2] = c3->aa[k].getType();
-	if(residueType[2] == AATYPE_UNKNOWN)continue;
+        if(residueType[2] == AATYPE_UNKNOWN)continue;
 
         int aaCount[AATYPE_MAX]; //count each of the amino acid types, accumulate them here
 
-	for(int kk=0;kk<AATYPE_MAX;kk++)aaCount[kk]=0;
+        for(int kk=0;kk<AATYPE_MAX;kk++)aaCount[kk]=0;
 
-	for(int kk=0;kk<3;kk++)aaCount[residueType[kk]] += 1;
+        for(int kk=0;kk<3;kk++)aaCount[residueType[kk]] += 1;
 
         //if we have no PI's, then we don't care
         if(aaCount[AATYPE_PI] == 0){
@@ -623,23 +626,19 @@ void searchTripletInformation(PDB & PDBfile,
 
         unsigned int closestDist_index[6] = {0};
 
-	//c1->aa[i].calculateCenter(false);
-	//c2->aa[j].calculateCenter(false);
-	//c3->aa[k].calculateCenter(false);
-
         //compute all 3 distances
         double dist[3];
-	dist[0] = findClosestDistance(c1->aa[i],c2->aa[j],FLT_MAX,&closestDist_index[0],&closestDist_index[1]);
-	dist[1] = findClosestDistance(c1->aa[i],c3->aa[k],FLT_MAX,&closestDist_index[2],&closestDist_index[3]);
-	dist[2] = findClosestDistance(c2->aa[j],c3->aa[k],FLT_MAX,&closestDist_index[4],&closestDist_index[5]);
+        dist[0] = findClosestDistance(c1->aa[i],c2->aa[j],FLT_MAX,&closestDist_index[0],&closestDist_index[1]);
+        dist[1] = findClosestDistance(c1->aa[i],c3->aa[k],FLT_MAX,&closestDist_index[2],&closestDist_index[3]);
+        dist[2] = findClosestDistance(c2->aa[j],c3->aa[k],FLT_MAX,&closestDist_index[4],&closestDist_index[5]);
 
-	//cout << dist[0] << " " << dist[1] << " " << dist[2] << endl;
+        //cout << dist[0] << " " << dist[1] << " " << dist[2] << endl;
         //cout << green << "triplet found: " << c1->aa[i].residue << " " << c2->aa[j].residue << " " << c3->aa[k].residue
          //    << " distance1 " << dist[0] << " distance2 " << dist[1] << " distance3 " << dist[2] << endl;
 
-	//There are two cases for computing distances. If we have 1 Pi, we want the min distance from that Pi to the Anion and Cation
-	//If we have 2 or more Pi's we just want the minimum 2 out of 3 distances
-	if(aaCount[AATYPE_PI] == 1){
+        //There are two cases for computing distances. If we have 1 Pi, we want the min distance from that Pi to the Anion and Cation
+        //If we have 2 or more Pi's we just want the minimum 2 out of 3 distances
+        if(aaCount[AATYPE_PI] == 1){
           string keystr;
 
           //at this point we know these pairs may or may not be in a triplet. 
@@ -713,7 +712,7 @@ void searchTripletInformation(PDB & PDBfile,
         }
 
 
-	if(aaCount[AATYPE_PI] > 1){
+        if(aaCount[AATYPE_PI] > 1){
           //if the minimum 2 distances are < threshold we want to keep this as a potential interaction.
           
           //the below checks for the inverse - which is that at least 2 distances are above the threshold.
@@ -812,7 +811,6 @@ double findClosestDistance(AminoAcid& aa1,
   // for the closet pair
   for( unsigned int i = 0; i < aa1.center.size(); i++ )
     {
-	//cout << "here" << endl;
       if(aa1.center[i].skip) continue;
       for( unsigned int j = 0; j < aa2.center.size(); j++ )
         {
@@ -1103,7 +1101,7 @@ void write_output_head(ofstream& out,bool triplets)
 {
 
 if(triplets){
-	out << "#res1,res2,res3,distance1to2,distance1to3,distance2to3,loc1,loc2,loc3,pdbID,resolution,model,chain1,chain2,chain3" << endl;
+        out << "#res1,res2,res3,distance1to2,distance1to3,distance2to3,loc1,loc2,loc3,pdbID,resolution,model,chain1,chain2,chain3" << endl;
 
 }
 else{
