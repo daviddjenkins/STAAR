@@ -324,11 +324,11 @@ void Options::parseCmdline( int argc, char **argv )
       printHelp();
       failure=true;      
     }
-  else if( chain_list && !sameChain)
-    {
-      sameChain = true;
-      cout << blue << "Note" << reset << ": -s flag must be set with -C. Setting it." << endl;
-    }
+//  else if( chain_list && !sameChain)
+//    {
+//      sameChain = true;
+//     cout << blue << "Note" << reset << ": -s flag must be set with -C. Setting it." << endl;
+//   }
   else if( !gamessfolder )
     {
       outputGamessINP = false;
