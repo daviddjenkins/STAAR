@@ -246,7 +246,7 @@ bool processSinglePDBFile(const char* filename,
 
         if(opts.sameChain){
           searchTripletInformation(PDBfile,opts,i,i,i,output_file,pairlistfile);
-          return true;
+          continue;
         }
 
         // in the future we may have the below double for loop go through each chain combination.
@@ -258,7 +258,7 @@ bool processSinglePDBFile(const char* filename,
             }
           }
         }
-        return true;  //end here if we're processing triplets
+        continue;  //end here if we're processing triplets
       }
 
 
@@ -750,16 +750,18 @@ void searchTripletInformation(PDB & PDBfile,
                       << angleP[1]                          << ","
                       << endl;
 
-         if(opts.pairlistfile != NULL){
-           for(pairmapit=pairmap.begin(); pairmapit!=pairmap.end(); ++pairmapit)
-           {
-             pairlistfile << (*pairmapit).first << "," << (*pairmapit).second << endl;
-           }
-         }
-          
+
       }
     }
   }
+
+  if(opts.pairlistfile != NULL){
+    for(pairmapit=pairmap.begin(); pairmapit!=pairmap.end(); pairmapit++)
+    {
+      pairlistfile << (*pairmapit).first << "," << (*pairmapit).second << endl;
+    }
+  }
+
 }
 
 string buildKeyString(PDB & PDBfile,
