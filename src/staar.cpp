@@ -91,7 +91,8 @@ void searchTripletInformation(PDB & PDBfile,
                             unsigned int chain2,
                             unsigned int chain3,
                             ofstream& output_file,
-                            ofstream& pairlistfile);
+                            ofstream& pairlistfile,
+                            map<string,int> &pairmap);
 
 string buildKeyString(PDB & PDBfile,
                       AminoAcid &aa1,
@@ -204,6 +205,9 @@ bool processSinglePDBFile(const char* filename,
   int numRes1 = opts.residue1.size();
   int numRes2 = opts.residue2.size();
 
+  map<string,int> pairmap;
+  map<string,int>::iterator pairmapit;
+
   // Read in the PDB file
   // This function actually reads and stores more information than
   // we really need, but the files are relatively small so it isn't
@@ -245,7 +249,7 @@ bool processSinglePDBFile(const char* filename,
         {
 
         if(opts.sameChain){
-          searchTripletInformation(PDBfile,opts,i,i,i,output_file,pairlistfile);
+          searchTripletInformation(PDBfile,opts,i,i,i,output_file,pairlistfile,pairmap);
           continue;
         }
 
@@ -254,7 +258,7 @@ bool processSinglePDBFile(const char* filename,
           {
             for(unsigned int k = j; k < PDBfile.chains.size(); k++)
             {
-                searchTripletInformation(PDBfile,opts,i,j,k,output_file,pairlistfile);
+                searchTripletInformation(PDBfile,opts,i,j,k,output_file,pairlistfile,pairmap);
             }
           }
         }
@@ -322,6 +326,14 @@ bool processSinglePDBFile(const char* filename,
             }
         }
     }
+
+  if(opts.pairlistfile != NULL){
+    for(pairmapit=pairmap.begin(); pairmapit!=pairmap.end(); pairmapit++)
+    {
+      pairlistfile << (*pairmapit).first << "," << (*pairmapit).second << endl;
+    }
+  }
+
   return true;
 }
 
@@ -567,13 +579,13 @@ void searchTripletInformation(PDB & PDBfile,
                             unsigned int chain2,
                             unsigned int chain3,
                             ofstream& output_file,
-                            ofstream& pairlistfile)
+                            ofstream& pairlistfile,
+                            map<string,int> &pairmap)
 {
   Chain* c1 = &(PDBfile.chains[chain1]);
   Chain* c2 = &(PDBfile.chains[chain2]);
   Chain* c3 = &(PDBfile.chains[chain3]);
 
-  map<string,int> pairmap;
   map<string,int>::iterator pairmapit;
 
   double threshold = 7.0;
@@ -754,14 +766,6 @@ void searchTripletInformation(PDB & PDBfile,
       }
     }
   }
-
-  if(opts.pairlistfile != NULL){
-    for(pairmapit=pairmap.begin(); pairmapit!=pairmap.end(); pairmapit++)
-    {
-      pairlistfile << (*pairmapit).first << "," << (*pairmapit).second << endl;
-    }
-  }
-
 }
 
 string buildKeyString(PDB & PDBfile,
