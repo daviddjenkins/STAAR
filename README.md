@@ -1,6 +1,8 @@
 #STAAR: __ST__atistical __A__nalysis of __A__romatic __R__ings
 Version 2.0; October 2012
+
 Copyright (C) 2012 University of Tennessee, Knoxville
+
 -----------------------------------------------------------------------
 
 STAAR searches a set of PDB files for possible anion-quadrupole 
@@ -8,8 +10,8 @@ interactions.
 
 Other files to read in the top-level source directory:
 
-    INSTALL           Installation instructions.
-    LICENSE           The GNU General Public License (GPLv3).
+     INSTALL           Installation instructions.
+     LICENSE           The GNU General Public License (GPLv3).
 
 STAAR uses the gzstream library for the decompression of PDB files that
 are compressed.  The library source code can be found in its entirety
@@ -41,6 +43,7 @@ some explanations of the codes in there [Disclaimer: they weren't
 created with general applicability in mind. They were simply created
 for our own specific needs, but we are including them in case you
 might need them for reference]:
+
      downloadPDB - This will download a supplied list of PDBs from 
                     the RCSB website
      getNewPDBFiles - Similar to downloadPDB, but it will only 
