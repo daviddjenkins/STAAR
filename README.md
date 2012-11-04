@@ -5,6 +5,8 @@ Copyright (C) 2012 University of Tennessee, Knoxville
 
 -----------------------------------------------------------------------
 
+![Example anion-pi pair](http://staar.bio.utk.edu/aqpretty_trim.png)
+
 STAAR searches a set of PDB files for possible anion-quadrupole 
 interactions.
 
