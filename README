@@ -1,6 +1,6 @@
-STAAR
-Version 2.0; January 2011
-Copyright (C) 2011 University of Tennessee, Knoxville
+#STAAR: __ST__atistical __A__nalysis of __A__romatic __R__ings
+Version 2.0; October 2012
+Copyright (C) 2012 University of Tennessee, Knoxville
 -----------------------------------------------------------------------
 
 STAAR searches a set of PDB files for possible anion-quadrupole 
@@ -29,7 +29,7 @@ mainly due to the OpenBabel dependency.  However, if you wish to use
 it as a library, you should be able to as we have done it a couple
 of times.  The only thing that is truly specifc to STAAR are the 
 Options.{cpp,hpp} files, but from my recollection nothing else
-depends on those files.  There is limited options in the PDB reader
+depends on those files.  There are limited options in the PDB reader
 as we were only concerned with the ATOM lines (well, for one of our
 side projects, HETATM lines). If you need support for other PDB 
 features, you will need to edit PDB.{cpp,hpp}.  Anyway, good luck.
@@ -60,9 +60,17 @@ might need them for reference]:
              can use on your own, assuming you don't have results 
              split up. 
 
-Oh, and if you don't want to use this code on your own computer, we 
-have considered developing a web page to take user requests to run on
-our own server.  Stay tuned!
+If you would rather not download and compile this code on your own 
+system, please visit staar.bio.utk.edu where you can upload your zipped
+PDB file and run through the analysis on our servers.  This website 
+already includes the results for all PDB files from 9 May 2012.
+
+If you choose to use this code, website, or results produced from this 
+work, please cite the following paper:
+
+> Jenkins, D. D., Harris, J. B., Howell, E. E., Hinde, R. J. and Baudry, J. 
+> (2012), STAAR: Statistical analysis of aromatic rings. J. Comput. Chem.. 
+> doi: [10.1002/jcc.23164](http://dx.doi.org/10.1002/jcc.23164)
 
 -----------------------------------------------------------------------
 
